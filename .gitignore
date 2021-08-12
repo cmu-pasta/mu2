@@ -6,6 +6,12 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
-.mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
+.DS_Store
+.java-version
+.cache
+.idea
+*.iml
+*.log
+*-results
+*.swp
+*~
