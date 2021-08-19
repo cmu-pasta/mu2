@@ -1,0 +1,89 @@
+package cmu.pasta.mu2;
+
+import cmu.pasta.mu2.instrument.Mutator;
+import java.util.ArrayList;
+
+public class MutationInstance {
+
+  /**
+   * Globally unique identifier for this mutation instance
+   */
+  public final int id;
+
+  /**
+   * Static list of all registered mutation instances.
+   */
+  private static final ArrayList<MutationInstance> mutationInstances = new ArrayList<>();
+
+  /**
+   * The type of mutation represented by a mutator
+   */
+  public final Mutator mutator;
+
+  /**
+   * Name of the class to mutate
+   */
+  public final String className;
+
+  /**
+   * Numbered instance of the opportunity for mutation this classloader uses
+   */
+  public final long sequenceIdx;
+
+  /**
+   * Counter that is incremented during execution of this mutation instance to catch infinite
+   * loops.
+   */
+  private long timeoutCounter = 0;
+
+  // TODO potential for more information:
+  // line number
+  // who's seen it
+  // whether this mutation is likely to be killed by a particular input
+
+  public MutationInstance(Mutator m, long i, String n) {
+    this.id = mutationInstances.size();
+    this.className = n;
+    this.mutator = m;
+    this.sequenceIdx = i;
+
+    // Register mutation instance
+    mutationInstances.add(this);
+  }
+
+  public void resetTimer() {
+    this.timeoutCounter = 0;
+  }
+
+  public long getTimeoutCounter() {
+    return this.timeoutCounter;
+  }
+
+  public long incrementTimeoutCounter() {
+    return ++this.timeoutCounter;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("%s::%s::%d", className, mutator, sequenceIdx);
+  }
+
+  public static MutationInstance getInstance(int id) {
+    return mutationInstances.get(id);
+  }
+
+  public static int getNumInstances() {
+    return mutationInstances.size();
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    // Mutation instances are globally unique
+    return this == that;
+  }
+
+  @Override
+  public int hashCode() {
+    return id;
+  }
+}
