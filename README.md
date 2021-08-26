@@ -6,12 +6,28 @@ Documentation for running and understanding the implementation of mutation-guide
 
 For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
+## Installing
+
+Install mu2 with:
+```
+mvn install
+```
+
+Now mu2 can be used as a dependency of JQF (see next section).
+
+
+To simply build and test locally:
+```
+mvn verify
+```
+
+
 ## Running
 
 You need to install JQF from the `mu2` branch: https://github.com/rohanpadhye/JQF/tree/mu2
 
 ```
-git clone https://github.com/rohanpadhye/JQF --branch mu2
+git clone https://github.com/rohanpadhye/JQF --branch mu2 && cd JQF
 mvn install
 ```
 
