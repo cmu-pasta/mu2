@@ -16,7 +16,7 @@ mvn install -DskipTests
 Now mu2 can be used as a dependency of JQF (see next section).
 
 
-To build and test locally, first install the [sort benchmarks](https://github.com/cmu-pasta/mu2), then run Mu2's integration tests:
+To build and test locally, first install the [sort benchmarks](https://github.com/cmu-pasta/sort-benchmarks), then run Mu2's integration tests:
 ```
 mvn verify
 ```
