@@ -10,13 +10,13 @@ For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.c
 
 Install mu2 with:
 ```
-mvn install
+mvn install -DskipTests
 ```
 
 Now mu2 can be used as a dependency of JQF (see next section).
 
 
-To simply build and test locally:
+To build and test locally, first install the [sort benchmarks](https://github.com/cmu-pasta/mu2), then run Mu2's integration tests:
 ```
 mvn verify
 ```
@@ -38,11 +38,7 @@ Runs like Zest, just add flag `-Dengine=mutation` on `jqf:fuzz` terminal command
 Example: 
 
 ```sh
-mvn jqf:fuzz -Dclass=package.class \
-             -Dmethod=method \
-			 -Dengine=mutation \
-			 -DrandomSeed=0 \
-			 -Dtrials=1000
+mvn jqf:fuzz -Dclass=package.class -Dmethod=method -Dengine=mutation -Dtrials=1000 -Dincludes=prefix
 ```
 
 ### Mutate Goal
@@ -53,25 +49,16 @@ You can set an explicit corpus by providing the `-Dcorpus` flag.
 Example: 
 
 ```sh
-mvn jqf:mutate -Dclass=package.class \
-               -Dmethod=method \
-			   -Dcorpus=./target/fuzz-results/package.class/method/corpus/ 
+mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=/path/to/corpus
 ```
 
-### Including/Excluding
+### Selecting Instrumentable Classes
 
-You can use the `-Dincludes` and `-Dexcludes` flags to limit which code will be mutated. 
-The selection works by removing fully qualified class name that begins with `excludes`, then including the packages which begin with `includes`.
-For example, suppose you only want to mutate code in the `package.code` package. The following would work:
+You can use the `-Dincludes` flags to select which code will be mutated. 
 
 ```sh
-mvn jqf:mutate -Dclass=package.class \
-	           -Dmethod=method \
-			   -Dexcludes= \
-			   -Dincludes=package.code
+mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix1,prefix2
 ```
-
-By adding the `-Dexcludes=` flag, we effectively make `-Dincludes` into a whitelist, only allowing what we want to mutate.
 
 ## Implementation
 
