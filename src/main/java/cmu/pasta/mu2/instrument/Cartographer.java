@@ -15,7 +15,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
- * A {@link ClassWriter} which takes as input a {@link ClassReader}, instrumenting it to collect
+ * A {@link ClassVisitor} which collects
  * data about what mutation opportunities are available, and which run during the initial
  * "exploration".
  */
@@ -32,14 +32,12 @@ public class Cartographer extends ClassVisitor {
   private static final int API = Opcodes.ASM8;
 
   /**
-   * The name of the class we're visitng
+   * The name of the class we're visiting
    */
   private String name = null;
 
-  /**
-   * Whether or not relevant mutants should be run
-   */
-  private final boolean runRelevant = System.getProperty("runRelevant", "true") == "true";
+  /** The opt level to be used. */
+  private final OptLevel optLevel;
 
   /**
    * Creates a Cartographer for a specific {@link ClassReader}, which allows for optimization
@@ -49,34 +47,28 @@ public class Cartographer extends ClassVisitor {
    * @note {@code cl} should be able to find all the classes that may want to be instrumented. They
    * aren't loaded, they're just read.
    */
-  public Cartographer(ClassReader classReader, ClassLoader cl) {
+  public Cartographer(ClassReader classReader, ClassLoader cl, OptLevel optLevel) {
     super(API, new SafeClassWriter(classReader, cl,
         ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES));
-    init();
+
+    this.opportunities = new HashMap<>(Mutator.values().length);
+    for (Mutator mutator : Mutator.values()) {
+      this.opportunities.put(mutator, new ArrayList<>());
+    }
+
+    this.optLevel = optLevel;
   }
 
   /**
-   * Initializes the {@code opportunities} and {@code occurances}
-   */
-  private void init() {
-    // I can't just add this to one of the constructors
-    opportunities = new HashMap<>(Mutator.values().length);
-
-      for (Mutator mutator : Mutator.values()) {
-          opportunities.put(mutator, new ArrayList<>());
-      }
-  }
-
-  /**
-   * Creates a cartographer specialized on a {@link ClassReader}, then runs it on that {@link
-   * ClassReader}, returning the cartographer.
+   * Creates and runs a cartographer for a given class, using a specified classloader.
    *
-   * @param r a reader for reading the class in question
+   * @param classBytes the bytecode for the class to map
    * @return the cartographer which has walked the class
    */
-  public static Cartographer explore(ClassReader r, ClassLoader l) {
-    Cartographer c = new Cartographer(r, l);
-    r.accept(c, 0);
+  public static Cartographer explore(byte[] classBytes, CartographyClassLoader ccl) {
+    ClassReader reader = new ClassReader(classBytes);
+    Cartographer c = new Cartographer(reader, ccl, ccl.getOptLevel());
+    reader.accept(c, 0);
     return c;
   }
 
@@ -98,9 +90,9 @@ public class Cartographer extends ClassVisitor {
   }
 
   @Override
-  public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
+  public MethodVisitor visitMethod(int access, String className, String descriptor, String signature,
       String[] exceptions) {
-    return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
+    return new MethodVisitor(API, cv.visitMethod(access, className, descriptor, signature, exceptions)) {
 
       /**
        * Logs that a mutator can be used at the current location in the tree.
@@ -109,10 +101,10 @@ public class Cartographer extends ClassVisitor {
        */
       private void logMutOp(Mutator mut) {
         List<MutationInstance> ops = opportunities.get(mut);
-        MutationInstance mi = new MutationInstance(mut, ops.size(), Cartographer.this.name);
+        MutationInstance mi = new MutationInstance(className, mut, ops.size());
         ops.add(mi);
 
-        if (runRelevant) {
+        if (optLevel == OptLevel.EXECUTION) {
           super.visitLdcInsn(mi.id);
           super.visitMethodInsn(Opcodes.INVOKESTATIC,
               Type.getInternalName(MutationSnoop.class),

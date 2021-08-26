@@ -42,15 +42,19 @@ public class CartographyClassLoader extends URLClassLoader {
    */
   private final ClassFileTransformer lineCoverageTransformer = new SnoopInstructionTransformer();
 
+  /** The optimization level to be applied. */
+  private final OptLevel optLevel;
+
   /**
    * Constructor
    */
   public CartographyClassLoader(URL[] paths, String[] mutables, String[] immutables,
-      ClassLoader parent) {
+      ClassLoader parent, OptLevel opt) {
     super(paths, parent);
     includeClasses = new ArrayList<>(Arrays.asList(mutables));
     excludeClasses = new ArrayList<>(Arrays.asList(immutables));
     mutationInstances = new ArrayList<>();
+    optLevel = opt;
   }
 
   public List<MutationInstance> getMutationInstances() {
@@ -91,13 +95,12 @@ public class CartographyClassLoader extends URLClassLoader {
 
     // Make cartograph
     if (mutable) {
-      Cartographer c = Cartographer.explore(new ClassReader(bytes), this);
-
-        for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
-            for (MutationInstance chance : opportunities) {
-                mutationInstances.add(chance);
-            }
-        }
+      Cartographer c = Cartographer.explore(bytes, this);
+      for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
+          for (MutationInstance mi : opportunities) {
+              mutationInstances.add(mi);
+          }
+      }
 
       bytes = c.toByteArray();
     }
@@ -115,5 +118,9 @@ public class CartographyClassLoader extends URLClassLoader {
     }
 
     return defineClass(name, bytes, 0, bytes.length);
+  }
+
+  public OptLevel getOptLevel() {
+    return optLevel;
   }
 }

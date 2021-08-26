@@ -3,6 +3,17 @@ package cmu.pasta.mu2;
 import cmu.pasta.mu2.instrument.Mutator;
 import java.util.ArrayList;
 
+/**
+ * A mutation instance represents a single point mutation.
+ *
+ * <p>A mutation instance is uniquely represented by the class being mutated,
+ * the type of mutator, and the index of that mutation operation within the class.</p>
+ *
+ * <p>Each mutation instance is also assigned a globally unique identifier, which allows
+ * other classes to store information about mutation instances without having a reference
+ * to the object itself. This is useful for referencing a mutation instance from instrumented
+ * code, which typically only makes static method calls.</p>
+ */
 public class MutationInstance {
 
   /**
@@ -41,11 +52,18 @@ public class MutationInstance {
   // who's seen it
   // whether this mutation is likely to be killed by a particular input
 
-  public MutationInstance(Mutator m, long i, String n) {
+  /**
+   * Creates a new mutation instance.
+   *
+   * @param className   the fully-qualified name of the class being mutated
+   * @param mutator     the mutator being applied
+   * @param sequenceIdx the index of the mutator being applied on this class
+   */
+  public MutationInstance(String className, Mutator mutator, long sequenceIdx) {
     this.id = mutationInstances.size();
-    this.className = n;
-    this.mutator = m;
-    this.sequenceIdx = i;
+    this.className = className;
+    this.mutator = mutator;
+    this.sequenceIdx = sequenceIdx;
 
     // Register mutation instance
     mutationInstances.add(this);
