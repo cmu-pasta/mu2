@@ -3,6 +3,7 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.MutationSnoop;
+import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
@@ -73,9 +74,9 @@ public class MutationGuidance extends ZestGuidance {
   private MovingAverage recentRun = new MovingAverage(MOVING_AVERAGE_CAP);
 
   /**
-   * Whether or not relevant mutants should be run
+   * Current optimization level
    */
-  private final boolean runRelevant = System.getProperty("runRelevant", "true") == "true";
+  private final OptLevel optLevel;
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
@@ -85,6 +86,7 @@ public class MutationGuidance extends ZestGuidance {
     this.totalCoverage = new MutationCoverage();
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
+    this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
   }
 
   // Retreive the latest list of mutation instances
@@ -138,7 +140,8 @@ public class MutationGuidance extends ZestGuidance {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
       }
-      if (runRelevant && !runMutants.contains(mutationInstance.id)) {
+      if (optLevel.ordinal() >= OptLevel.EXECUTION.ordinal() &&
+          !runMutants.contains(mutationInstance.id)) {
         continue;
       }
 

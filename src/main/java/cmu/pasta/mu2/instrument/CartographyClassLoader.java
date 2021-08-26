@@ -12,7 +12,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.objectweb.asm.ClassReader;
 
 /**
  * ClassLoader for initial run in mutation guidance Runs like InstrumentingClassLoader while also
@@ -28,14 +27,9 @@ public class CartographyClassLoader extends URLClassLoader {
   private final List<MutationInstance> mutationInstances;
 
   /**
-   * if nonempty, class must be here to be mutable
+   * List of prefixes of fully-qualified class names that are mutable
    */
-  private final List<String> includeClasses;
-
-  /**
-   * class must not be here to be mutable
-   */
-  private final List<String> excludeClasses;
+  private final List<String> mutableClasses;
 
   /**
    * see {@link InstrumentingClassLoader}
@@ -48,13 +42,12 @@ public class CartographyClassLoader extends URLClassLoader {
   /**
    * Constructor
    */
-  public CartographyClassLoader(URL[] paths, String[] mutables, String[] immutables,
-      ClassLoader parent, OptLevel opt) {
+  public CartographyClassLoader(URL[] paths, String[] mutableClasses, ClassLoader parent,
+      OptLevel opt) {
     super(paths, parent);
-    includeClasses = new ArrayList<>(Arrays.asList(mutables));
-    excludeClasses = new ArrayList<>(Arrays.asList(immutables));
-    mutationInstances = new ArrayList<>();
-    optLevel = opt;
+    this.mutableClasses = Arrays.asList(mutableClasses);
+    this.mutationInstances = new ArrayList<>();
+    this.optLevel = opt;
   }
 
   public List<MutationInstance> getMutationInstances() {
@@ -76,17 +69,10 @@ public class CartographyClassLoader extends URLClassLoader {
       throw new ClassNotFoundException("I/O exception while loading class.", e);
     }
 
-    // Check includes + excludes
-    boolean mutable = true;
+    // Check whether this class is mutable
+    boolean mutable = false;
 
-    for (String s : excludeClasses) {
-      if (name.startsWith(s)) {
-        mutable = false;
-        break;
-      }
-    }
-
-    for (String s : includeClasses) {
+    for (String s : mutableClasses) {
       if (name.startsWith(s)) {
         mutable = true;
         break;

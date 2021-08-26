@@ -34,7 +34,7 @@ public class Cartographer extends ClassVisitor {
   /**
    * The name of the class we're visiting
    */
-  private String name = null;
+  private String className = null;
 
   /** The opt level to be used. */
   private final OptLevel optLevel;
@@ -76,7 +76,7 @@ public class Cartographer extends ClassVisitor {
   public void visit(int version, int access, String name, String signature, String superName,
       String[] interfaces) {
     // Change from the ASM's internal naming scheme to the package naming scheme
-    this.name = name.replace("/", ".");
+    this.className = name.replace("/", ".");
     super.visit(version, access, name, signature, superName, interfaces);
   }
 
@@ -90,9 +90,9 @@ public class Cartographer extends ClassVisitor {
   }
 
   @Override
-  public MethodVisitor visitMethod(int access, String className, String descriptor, String signature,
+  public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
       String[] exceptions) {
-    return new MethodVisitor(API, cv.visitMethod(access, className, descriptor, signature, exceptions)) {
+    return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
       /**
        * Logs that a mutator can be used at the current location in the tree.
@@ -101,7 +101,7 @@ public class Cartographer extends ClassVisitor {
        */
       private void logMutOp(Mutator mut) {
         List<MutationInstance> ops = opportunities.get(mut);
-        MutationInstance mi = new MutationInstance(className, mut, ops.size());
+        MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size());
         ops.add(mi);
 
         if (optLevel == OptLevel.EXECUTION) {
