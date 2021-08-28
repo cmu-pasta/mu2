@@ -6,32 +6,77 @@ Documentation for running and understanding the implementation of mutation-guide
 
 For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
-## Installing
+## Build + Test + Install
+
+This repository works together with the [`mu2` branch of JQF](https://github.com/rohanpadhye/JQF/tree/mu2) and the [`sort-benchmarks`](https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
+
+```
+jqf-fuzz --> jqf-instrument
+sort-benchmarks --> jqf-fuzz (for API only)
+mu2 --> jqf-fuzz
+mu2 --> sort-benchmarks (for testing only)
+jqf-maven-plugin --> jqf-fuzz
+jqf-maven-plugin --> mu2 (to be able to run MutationGuidance)
+```
+
+Due to build inter-dependencies between Mu2 and JQF, the current process to bootstrap the build for the first time is as follows.
+
+### Step 1: Install JQF from `mu2` branch but disable the `maven-plugin`
+
+```
+git clone https://github.com/rohanpadhye/JQF --branch mu2 && cd JQF
+mvn install -pl '!maven-plugin'
+cd ..
+```
+
+This installs `jqf-fuzz` and `jqf-instrument`, but does not compile the maven plugin, which itself depends on `mu2`. 
+
+### Step 2 (optional): Install `sort-benchmarks` for testing
+
+```
+git clone https://github.com/cmu-pasta/sort-benchmarks && cd sort-benchmarks
+mvn install
+cd ..
+```
+
+### Step 3: Install `mu2` with full integration tests
 
 Install mu2 with:
 ```
-mvn install -DskipTests
+git clone https://github.com/cmu-pasta/mu2 && cd mu2
+mvn install
+cd ..
 ```
 
+This step depends on step 1 (because `mu2` depends on `jqf-fuzz` to compile) as well as step 2 (because the integration tests depend on `sort-benchmarks`). If you don't install the `sort-benchmarks`, you can install `mu2` via `mvn install -DskipTests`. This is not recommended.
+
+### Step 4: Install JQF with `maven-plugin`
+
 Now mu2 can be used as a dependency of JQF (see next section).
+```
+cd JQF
+mvn install -pl 'maven-plugin'
+cd ..
+```
 
+This step builds the `maven-plugin` from JQF's `mu2` branch, which allows you to run `mvn jqf:fuzz -Dengine=mutation`.
 
-To build and test locally, first install the [sort benchmarks](https://github.com/cmu-pasta/sort-benchmarks), then run Mu2's integration tests:
+(TODO: Improve the build process to untangle the bootsrap dependencies)
+
+### Development
+
+When making changes to mu2 or JQF, you only need to install that particular project's SNAPSHOT for the changes to take effect. You do not have to do the long bootstrap build as above during regular development.
+
+To test changes to `mu2`, run the integration tests as follows from the `mu2` repository:
 ```
 mvn verify
 ```
 
+## External Usage
 
-## Running
+Once everything is installed, you can use JQF/mu2 to fuzz target applications as follows.
 
-You need to install JQF from the `mu2` branch: https://github.com/rohanpadhye/JQF/tree/mu2
-
-```
-git clone https://github.com/rohanpadhye/JQF --branch mu2 && cd JQF
-mvn install
-```
-
-### Mutation Guidance
+### Mutation-Guided Fuzzing
 
 Runs like Zest, just add flag `-Dengine=mutation` on `jqf:fuzz` terminal commands. You can also use the flag `-DrandomSeed` to set the fuzzing seed to an explicit value and `-Dtrials` to set a limit on the number of trials to be run. Adding these two together gives you an entirely deterministic run (assuming the test you're running is deterministic).
 
@@ -41,7 +86,7 @@ Example:
 mvn jqf:fuzz -Dclass=package.class -Dmethod=method -Dengine=mutation -Dtrials=1000 -Dincludes=prefix
 ```
 
-### Mutate Goal
+### Mutate Goal (aka Mu2 Repro)
 
 For reproducing results from mutation-guided fuzzing. Run using `jqf:mutate` with the `-Dclass` and `-Dmethod` flags. 
 You can set an explicit corpus by providing the `-Dcorpus` flag.
@@ -77,6 +122,10 @@ This class can be used on its own, or can be used through a `MutationClassLoader
 #### CartographyClassLoader
 
 Initial class loading should take place using this ClassLoader. It creates a list of MutationInstances representing all of the mutation opportunities (the "cartograph"). It does this by instrumenting the input class using the `Cartographer`: a `SafeClassWriter` which both logs which mutants are possible, and transforms the input class into one which measures which mutants are run for later optimization.
+
+#### MutationClassLoaders
+
+A class that contains references to both the `CartographyClassLoader` and a mapping of each `MutationInstance` to its `MutationClassLoader`. A `MutationClassLoaders` object is the external entry point, and such an object is passed to a `MutationGuidance` during construction.
 
 ### Mutators
 
