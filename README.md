@@ -72,6 +72,8 @@ To test changes to `mu2`, run the integration tests as follows from the `mu2` re
 mvn verify
 ```
 
+Coverage reports should be available in `target/site/jacoco-integration-test-coverage-report/index.html`.
+
 ## External Usage
 
 Once everything is installed, you can use JQF/mu2 to fuzz target applications as follows.
