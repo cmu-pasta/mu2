@@ -43,7 +43,7 @@ public class MutationTestingIT extends AbstractMutationTest {
     int killed = 0;
     for (MutationInstance mutant : mutants) {
       // Skip if optimization is enabled
-      if (opt.ordinal() >= OptLevel.EXECUTION.ordinal() && !seenMutants.contains(mutant)) {
+      if (opt != OptLevel.NONE && !seenMutants.contains(mutant)) {
         continue;
       }
 

@@ -6,6 +6,6 @@ package cmu.pasta.mu2.instrument;
 public enum OptLevel {
   NONE,
   EXECUTION,
-  INFECTION,
-  PROPAGATION,
+  INFECTION,   // Not yet implemented
+  PROPAGATION, // Not yet implemented
 }

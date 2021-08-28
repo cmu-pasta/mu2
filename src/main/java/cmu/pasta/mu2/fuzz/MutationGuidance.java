@@ -78,6 +78,17 @@ public class MutationGuidance extends ZestGuidance {
    */
   private final OptLevel optLevel;
 
+  /**
+   * The set of mutants to execute for a given trial.
+   *
+   * This is used when the optLevel is set to something higher than NONE,
+   * in order to selectively choose which mutants are interesting for a given
+   * input. This may include already killed mutants; those are skipped separately.
+   *
+   * This set must be reset/cleared before execution of every new input.
+   */
+  private static ArraySet runMutants = new ArraySet();
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -116,8 +127,6 @@ public class MutationGuidance extends ZestGuidance {
     return criteria;
   }
 
-  private static ArraySet runMutants = new ArraySet();
-
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numTrials++;
@@ -140,7 +149,7 @@ public class MutationGuidance extends ZestGuidance {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
       }
-      if (optLevel.ordinal() >= OptLevel.EXECUTION.ordinal() &&
+      if (optLevel != OptLevel.NONE &&
           !runMutants.contains(mutationInstance.id)) {
         continue;
       }
