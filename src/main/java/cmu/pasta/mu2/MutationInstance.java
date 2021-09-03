@@ -69,6 +69,10 @@ public class MutationInstance {
     mutationInstances.add(this);
   }
 
+  public static void resetMutationInstances() {
+      mutationInstances.clear();
+  }
+
   public void resetTimer() {
     this.timeoutCounter = 0;
   }

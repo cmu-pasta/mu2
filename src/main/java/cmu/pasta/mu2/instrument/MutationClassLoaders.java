@@ -33,6 +33,7 @@ public class MutationClassLoaders {
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),
         parent, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
+    MutationInstance.resetMutationInstances();
   }
 
   /**
