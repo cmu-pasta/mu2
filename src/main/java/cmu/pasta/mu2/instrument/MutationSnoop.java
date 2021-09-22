@@ -45,6 +45,12 @@ public class MutationSnoop {
     callback.accept(MutationInstance.getInstance(id));
   }
 
+  public static void logInfectedMutant(Object originalValue, Object mutatedValue, int id) {
+    if (!originalValue.equals(mutatedValue)) {
+      callback.accept(MutationInstance.getInstance(id));
+    }
+  }
+
   /**
    * Set the callback which will be run each time a mutant is run in the initial run of the tested
    * class

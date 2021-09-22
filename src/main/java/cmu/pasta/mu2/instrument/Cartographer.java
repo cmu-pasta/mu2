@@ -13,6 +13,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.Method;
 
 /**
  * A {@link ClassVisitor} which collects
@@ -94,6 +95,82 @@ public class Cartographer extends ClassVisitor {
       String[] exceptions) {
     return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
+      private void dup(Type operandType, int numArgs) {
+        for (int i = 0; i < numArgs; i++) {
+          if (operandType.getSize() == 2) {
+            super.visitInsn(Opcodes.DUP2);
+          } else {
+            super.visitInsn(Opcodes.DUP);
+          }
+        }
+      }
+
+      // TODO: figure out more understandable logic
+      private void insertTopBelow(Type operandType, int insertBelow) {
+        switch (operandType.getSize() * insertBelow) {
+          case 1:
+            super.visitInsn(Opcodes.SWAP);
+            return;
+          case 2:
+            super.visitInsn(Opcodes.DUP_X2);
+            super.visitInsn(Opcodes.POP);
+            return;
+          case 4:
+            // TODO: translate from existing dups
+          default:
+            return;
+        }
+      }
+
+      private Type getBoxedType(final Type type) {
+        switch (type.getSort()) {
+          case Type.BYTE:
+            return Type.getObjectType("java/lang/Byte");
+          case Type.BOOLEAN:
+            return Type.getObjectType("java/lang/Boolean");
+          case Type.SHORT:
+          return Type.getObjectType("java/lang/Short");
+          case Type.CHAR:
+            return Type.getObjectType("java/lang/Character");
+          case Type.INT:
+            return Type.getObjectType("java/lang/Integer");
+          case Type.FLOAT:
+            return Type.getObjectType("java/lang/Float");
+          case Type.LONG:
+            return Type.getObjectType("java/lang/Long");
+          case Type.DOUBLE:
+            return Type.getObjectType("java/lang/Double");
+          default:
+            return type;
+        }
+      }
+
+
+      private void box(Type type) {
+        if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
+          return;
+        }
+        if (type == Type.VOID_TYPE) {
+          super.visitLdcInsn((String) null);
+        } else {
+          Type boxedType = getBoxedType(type);
+          super.visitTypeInsn(Opcodes.NEW, boxedType.getInternalName());
+          if (type.getSize() == 2) {
+            // Pp -> Ppo -> oPpo -> ooPpo -> ooPp -> o
+            super.visitInsn(Opcodes.DUP_X2);
+            super.visitInsn(Opcodes.DUP_X2);
+            super.visitInsn(Opcodes.POP);
+          } else {
+            // p -> po -> opo -> oop -> o
+            super.visitInsn(Opcodes.DUP_X1);
+            super.visitInsn(Opcodes.SWAP);
+          }
+          String owner = boxedType.getSort() == Type.ARRAY ? boxedType.getDescriptor() : boxedType.getInternalName();
+          Method constructorMethod = new Method("<init>", Type.VOID_TYPE, new Type[] {type});
+          super.visitMethodInsn(Opcodes.INVOKESPECIAL, owner, constructorMethod.getName(), constructorMethod.getDescriptor(), false);
+        }
+      }
+
       /**
        * Logs that a mutator can be used at the current location in the tree.
        *
@@ -112,6 +189,34 @@ public class Cartographer extends ClassVisitor {
               "(I)V",
               false);
         }
+
+        if (optLevel == OptLevel.INFECTION) {
+          if (mut.isInfectionImplemented()) {
+            dup(mut.getOperandType(), mut.getNumArgs());
+            dup(mut.getOperandType(), mut.getNumArgs());
+            super.visitInsn(mut.toReplace());
+            box(mut.getTypedReturnType());
+            insertTopBelow(mut.getOperandType(), mut.getNumArgs());
+            for (InstructionCall ic : mut.replaceWith()) {
+              super.visitInsn(ic.getOpcode());
+            }
+            box(mut.getTypedReturnType());
+            super.visitLdcInsn(mi.id);
+
+            super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    Type.getInternalName(MutationSnoop.class),
+                    "logInfectedMutant",
+                    "(Ljava/lang/Object;Ljava/lang/Object;I)V",
+                    false);
+          } else {
+            super.visitLdcInsn(mi.id);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    Type.getInternalName(MutationSnoop.class),
+                    "logMutant",
+                    "(I)V",
+                    false);
+          }
+        }
       }
 
       /**
@@ -122,9 +227,9 @@ public class Cartographer extends ClassVisitor {
        */
       private void check(int opcode, String descriptor) {
           for (Mutator m : Mutator.values()) {
-              if (m.isOpportunity(opcode, descriptor)) {
-                  logMutOp(m);
-              }
+            if (m.isOpportunity(opcode, descriptor)) {
+                logMutOp(m);
+            }
           }
       }
 

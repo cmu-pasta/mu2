@@ -13,59 +13,59 @@ import org.objectweb.asm.Type;
  */
 public enum Mutator {
   //Math Ops (MATH) (note logic is bitwise, not to be confused with bool ops)
-  I_ADD_TO_SUB(Opcodes.IADD, null, new InstructionCall(Opcodes.ISUB)),
-  I_SUB_TO_ADD(Opcodes.ISUB, null, new InstructionCall(Opcodes.IADD)),
-  I_MUL_TO_DIV(Opcodes.IMUL, null, new InstructionCall(Opcodes.IDIV)),
-  I_DIV_TO_MUL(Opcodes.IDIV, null, new InstructionCall(Opcodes.IMUL)),
-  I_REM_TO_MUL(Opcodes.IREM, null, new InstructionCall(Opcodes.IMUL)),
-  I_OR_TO_AND(Opcodes.IOR, null, new InstructionCall(Opcodes.IAND)),
-  I_AND_TO_OR(Opcodes.IAND, null, new InstructionCall(Opcodes.IOR)),
-  I_XOR_TO_AND(Opcodes.IXOR, null, new InstructionCall(Opcodes.IAND)),
-  I_SHL_TO_SHR(Opcodes.ISHL, null, new InstructionCall(Opcodes.ISHR)),
-  I_SHR_TO_SHL(Opcodes.ISHR, null, new InstructionCall(Opcodes.ISHL)),
-  I_USHR_TO_SHL(Opcodes.IUSHR, null, new InstructionCall(Opcodes.ISHL)),
-  L_ADD_TO_SUB(Opcodes.LADD, null, new InstructionCall(Opcodes.LSUB)),
-  L_SUB_TO_ADD(Opcodes.LSUB, null, new InstructionCall(Opcodes.LADD)),
-  L_MUL_TO_DIV(Opcodes.LMUL, null, new InstructionCall(Opcodes.LDIV)),
-  L_DIV_TO_MUL(Opcodes.LDIV, null, new InstructionCall(Opcodes.LMUL)),
-  L_REM_TO_MUL(Opcodes.LREM, null, new InstructionCall(Opcodes.LMUL)),
-  L_OR_TO_AND(Opcodes.LOR, null, new InstructionCall(Opcodes.LAND)),
-  L_AND_TO_OR(Opcodes.LAND, null, new InstructionCall(Opcodes.LOR)),
-  L_XOR_TO_AND(Opcodes.LXOR, null, new InstructionCall(Opcodes.LAND)),
-  L_SHL_TO_SHR(Opcodes.LSHL, null, new InstructionCall(Opcodes.LSHR)),
-  L_SHR_TO_SHL(Opcodes.LSHR, null, new InstructionCall(Opcodes.LSHL)),
-  L_USHR_TO_SHL(Opcodes.LUSHR, null, new InstructionCall(Opcodes.LSHL)),
-  F_ADD_TO_SUB(Opcodes.FADD, null, new InstructionCall(Opcodes.FSUB)),
-  F_SUB_TO_ADD(Opcodes.FSUB, null, new InstructionCall(Opcodes.FADD)),
-  F_MUL_TO_DIV(Opcodes.FMUL, null, new InstructionCall(Opcodes.FDIV)),
-  F_DIV_TO_MUL(Opcodes.FDIV, null, new InstructionCall(Opcodes.FMUL)),
-  F_REM_TO_MUL(Opcodes.FREM, null, new InstructionCall(Opcodes.FMUL)),
-  D_ADD_TO_SUB(Opcodes.DADD, null, new InstructionCall(Opcodes.DSUB)),
-  D_SUB_TO_ADD(Opcodes.DSUB, null, new InstructionCall(Opcodes.DADD)),
-  D_MUL_TO_DIV(Opcodes.DMUL, null, new InstructionCall(Opcodes.DDIV)),
-  D_DIV_TO_MUL(Opcodes.DDIV, null, new InstructionCall(Opcodes.DMUL)),
-  D_REM_TO_MUL(Opcodes.DREM, null, new InstructionCall(Opcodes.DMUL)),
+  I_ADD_TO_SUB(Opcodes.IADD, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.ISUB)),
+  I_SUB_TO_ADD(Opcodes.ISUB, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IADD)),
+  I_MUL_TO_DIV(Opcodes.IMUL, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IDIV)),
+  I_DIV_TO_MUL(Opcodes.IDIV, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IMUL)),
+  I_REM_TO_MUL(Opcodes.IREM, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IMUL)),
+  I_OR_TO_AND(Opcodes.IOR, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IAND)),
+  I_AND_TO_OR(Opcodes.IAND, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IOR)),
+  I_XOR_TO_AND(Opcodes.IXOR, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.IAND)),
+  I_SHL_TO_SHR(Opcodes.ISHL, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.ISHR)),
+  I_SHR_TO_SHL(Opcodes.ISHR, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.ISHL)),
+  I_USHR_TO_SHL(Opcodes.IUSHR, Type.INT_TYPE, Type.INT_TYPE, 2, true, null, new InstructionCall(Opcodes.ISHL)),
+  L_ADD_TO_SUB(Opcodes.LADD, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LSUB)),
+  L_SUB_TO_ADD(Opcodes.LSUB, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LADD)),
+  L_MUL_TO_DIV(Opcodes.LMUL, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LDIV)),
+  L_DIV_TO_MUL(Opcodes.LDIV, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LMUL)),
+  L_REM_TO_MUL(Opcodes.LREM, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LMUL)),
+  L_OR_TO_AND(Opcodes.LOR, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LAND)),
+  L_AND_TO_OR(Opcodes.LAND, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LOR)),
+  L_XOR_TO_AND(Opcodes.LXOR, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LAND)),
+  L_SHL_TO_SHR(Opcodes.LSHL, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LSHR)),
+  L_SHR_TO_SHL(Opcodes.LSHR, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LSHL)),
+  L_USHR_TO_SHL(Opcodes.LUSHR, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.LSHL)),
+  F_ADD_TO_SUB(Opcodes.FADD, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.FSUB)),
+  F_SUB_TO_ADD(Opcodes.FSUB, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.FADD)),
+  F_MUL_TO_DIV(Opcodes.FMUL, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.FDIV)),
+  F_DIV_TO_MUL(Opcodes.FDIV, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.FMUL)),
+  F_REM_TO_MUL(Opcodes.FREM, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.FMUL)),
+  D_ADD_TO_SUB(Opcodes.DADD, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.DSUB)),
+  D_SUB_TO_ADD(Opcodes.DSUB, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.DADD)),
+  D_MUL_TO_DIV(Opcodes.DMUL, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.DDIV)),
+  D_DIV_TO_MUL(Opcodes.DDIV, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.DMUL)),
+  D_REM_TO_MUL(Opcodes.DREM, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.DMUL)),
   //Conditional Ops (CONDITIONALS_BOUNDARY):
-  I_FLE_TO_FLT(Opcodes.IFLE, null, new InstructionCall(Opcodes.IFGE, null)),
-  I_FGE_TO_FGT(Opcodes.IFGE, null, new InstructionCall(Opcodes.IFGT, null)),
-  I_FGT_TO_FGE(Opcodes.IFGT, null, new InstructionCall(Opcodes.IFGE, null)),
-  I_FLT_TO_FLE(Opcodes.IFLT, null, new InstructionCall(Opcodes.IFLE, null)),
-  IF_ICM_PLE_TO_PLT(Opcodes.IF_ICMPLE, null, new InstructionCall(Opcodes.IF_ICMPLT, null)),
-  IF_ICM_PGE_TO_PGT(Opcodes.IF_ICMPGE, null, new InstructionCall(Opcodes.IF_ICMPGT, null)),
-  IF_ICM_PGT_TO_PGE(Opcodes.IF_ICMPGT, null, new InstructionCall(Opcodes.IF_ICMPGE, null)),
-  IF_ICM_PLT_TO_PLE(Opcodes.IF_ICMPLT, null, new InstructionCall(Opcodes.IF_ICMPLE, null)),
+  I_FLE_TO_FLT(Opcodes.IFLE, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFGE, null)),
+  I_FGE_TO_FGT(Opcodes.IFGE, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFGT, null)),
+  I_FGT_TO_FGE(Opcodes.IFGT, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFGE, null)),
+  I_FLT_TO_FLE(Opcodes.IFLT, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFLE, null)),
+  IF_ICM_PLE_TO_PLT(Opcodes.IF_ICMPLE, Type.INT_TYPE, Type.INT_TYPE, 2, null, new InstructionCall(Opcodes.IF_ICMPLT, null)),
+  IF_ICM_PGE_TO_PGT(Opcodes.IF_ICMPGE, Type.INT_TYPE, Type.INT_TYPE, 2, null, new InstructionCall(Opcodes.IF_ICMPGT, null)),
+  IF_ICM_PGT_TO_PGE(Opcodes.IF_ICMPGT, Type.INT_TYPE, Type.INT_TYPE, 2, null, new InstructionCall(Opcodes.IF_ICMPGE, null)),
+  IF_ICM_PLT_TO_PLE(Opcodes.IF_ICMPLT, Type.INT_TYPE, Type.INT_TYPE, 2, null, new InstructionCall(Opcodes.IF_ICMPLE, null)),
   //Removing Negations (INVERT_NEGS):
-  I_NEG_TO_NOP(Opcodes.INEG, null, new InstructionCall(Opcodes.NOP)),
-  D_NEG_TO_NOP(Opcodes.DNEG, null, new InstructionCall(Opcodes.NOP)),
-  F_NEG_TO_NOP(Opcodes.FNEG, null, new InstructionCall(Opcodes.NOP)),
-  L_NEG_TO_NOP(Opcodes.LNEG, null, new InstructionCall(Opcodes.NOP)),
+  I_NEG_TO_NOP(Opcodes.INEG, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.NOP)),
+  D_NEG_TO_NOP(Opcodes.DNEG, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, 2, null, new InstructionCall(Opcodes.NOP)),
+  F_NEG_TO_NOP(Opcodes.FNEG, Type.FLOAT_TYPE, Type.FLOAT_TYPE, 2, null, new InstructionCall(Opcodes.NOP)),
+  L_NEG_TO_NOP(Opcodes.LNEG, Type.LONG_TYPE, Type.LONG_TYPE, 2, null, new InstructionCall(Opcodes.NOP)),
   //Conditional Negation (NEGATE_CONDITIONALS):
-  I_FEQ_TO_FNE(Opcodes.IFEQ, null, new InstructionCall(Opcodes.IFNE, null)),
-  I_FNE_TO_FEQ(Opcodes.IFNE, null, new InstructionCall(Opcodes.IFEQ, null)),
-  I_FLE_TO_FGT(Opcodes.IFLE, null, new InstructionCall(Opcodes.IFGT, null)),
-  I_FGE_TO_FLT(Opcodes.IFGE, null, new InstructionCall(Opcodes.IFLT, null)),
-  I_FGT_TO_FLE(Opcodes.IFGT, null, new InstructionCall(Opcodes.IFLE, null)),
-  I_FLT_TO_FGE(Opcodes.IFLT, null, new InstructionCall(Opcodes.IFGE, null)),
+  I_FEQ_TO_FNE(Opcodes.IFEQ, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFNE, null)),
+  I_FNE_TO_FEQ(Opcodes.IFNE, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFEQ, null)),
+  I_FLE_TO_FGT(Opcodes.IFLE, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFGT, null)),
+  I_FGE_TO_FLT(Opcodes.IFGE, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFLT, null)),
+  I_FGT_TO_FLE(Opcodes.IFGT, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFLE, null)),
+  I_FLT_TO_FGE(Opcodes.IFLT, Type.INT_TYPE, Type.INT_TYPE, 1, null, new InstructionCall(Opcodes.IFGE, null)),
   IF_NULL_TO_NON(Opcodes.IFNULL, null, new InstructionCall(Opcodes.IFNONNULL, null)),
   IF_NON_TO_NULL(Opcodes.IFNONNULL, null, new InstructionCall(Opcodes.IFNULL, null)),
   IF_ICM_PNE_TO_PEQ(Opcodes.IF_ICMPNE, null, new InstructionCall(Opcodes.IF_ICMPEQ, null)),
@@ -167,6 +167,10 @@ public enum Mutator {
   ;
 
   private final int toReplace;
+  private Type operandType;
+  private Type typedReturnType;
+  private int numArgs;
+  private boolean infectionImplemented = false;
   private final String returnType;
   private final List<InstructionCall> replaceWith;
   public static int cvArg = Opcodes.ASM8;
@@ -176,6 +180,21 @@ public enum Mutator {
     returnType = rT;
     replaceWith = new ArrayList<>();
     replaceWith.addAll(Arrays.asList(rw));
+  }
+
+  Mutator(int tR, Type operandType, Type returnType, int numArgs, String rT, InstructionCall... rw) {
+    this(tR, rT, rw);
+    this.operandType = operandType;
+    this.typedReturnType = returnType;
+    this.numArgs = numArgs;
+  }
+
+  Mutator(int tR, Type operandType, Type returnType, int numArgs, boolean infectionImplemented, String rT, InstructionCall... rw) {
+    this(tR, rT, rw);
+    this.operandType = operandType;
+    this.typedReturnType = returnType;
+    this.numArgs = numArgs;
+    this.infectionImplemented = infectionImplemented;
   }
 
   public int toReplace() {
@@ -190,6 +209,22 @@ public enum Mutator {
 
   public List<InstructionCall> replaceWith() {
     return replaceWith;
+  }
+
+  public int getNumArgs() {
+    return numArgs;
+  }
+
+  public Type getOperandType() {
+    return operandType;
+  }
+
+  public Type getTypedReturnType() {
+    return typedReturnType;
+  }
+
+  public boolean isInfectionImplemented() {
+    return infectionImplemented;
   }
 
 }
