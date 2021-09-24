@@ -34,7 +34,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use for default insn
    */
-  InstructionCall(int op) {
+  public InstructionCall(int op) {
     type = CallType.INSN;
     opcode = op;
   }

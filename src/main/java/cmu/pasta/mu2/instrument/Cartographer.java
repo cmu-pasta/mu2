@@ -1,6 +1,8 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.mutators.Mutator;
+import cmu.pasta.mu2.mutators.Operators;
 import janala.instrument.SafeClassWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,8 +53,8 @@ public class Cartographer extends ClassVisitor {
     super(API, new SafeClassWriter(classReader, cl,
         ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES));
 
-    this.opportunities = new HashMap<>(Mutator.values().length);
-    for (Mutator mutator : Mutator.values()) {
+    this.opportunities = new HashMap<>(Mutator.allMutators.size());
+    for (Mutator mutator : Mutator.allMutators) {
       this.opportunities.put(mutator, new ArrayList<>());
     }
 
@@ -101,6 +103,16 @@ public class Cartographer extends ClassVisitor {
       String[] exceptions) {
     return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
+      private void dup(Type operandType, int numArgs) {
+        for (int i = 0; i < numArgs; i++) {
+          if (operandType.getSize() == 2) {
+            super.visitInsn(Opcodes.DUP2);
+          } else {
+            super.visitInsn(Opcodes.DUP);
+          }
+        }
+      }
+
       /**
        * Logs that a mutator can be used at the current location in the tree.
        *
@@ -119,6 +131,32 @@ public class Cartographer extends ClassVisitor {
               "(I)V",
               false);
         }
+        if (optLevel == OptLevel.INFECTION) {
+          dup(mut.getOperandType(), mut.getNumArgs());
+          super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                  Type.getInternalName(Operators.class),
+                  mut.getOriginalOperatorName(),
+                  mut.getMethodDescriptor(),
+                  false);
+          super.visitLdcInsn(mi.id);
+          super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                  Type.getInternalName(MutationSnoop.class),
+                  "logValue",
+                  mut.getLogMethodDescriptor(),
+                  false);
+          dup(mut.getOperandType(), mut.getNumArgs());
+          super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                  Type.getInternalName(Operators.class),
+                  mut.getMutatedOperatorName(),
+                  mut.getMethodDescriptor(),
+                  false);
+          super.visitLdcInsn(mi.id);
+          super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                  Type.getInternalName(MutationSnoop.class),
+                  "logValue",
+                  mut.getLogMethodDescriptor(),
+                  false);
+        }
       }
 
       /**
@@ -128,7 +166,7 @@ public class Cartographer extends ClassVisitor {
        * @param descriptor The descriptor of the method, if it has one
        */
       private void check(int opcode, String descriptor) {
-          for (Mutator m : Mutator.values()) {
+          for (Mutator m : Mutator.allMutators) {
               if (m.isOpportunity(opcode, descriptor)) {
                   logMutOp(m);
               }

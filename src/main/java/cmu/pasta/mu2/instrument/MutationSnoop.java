@@ -1,6 +1,8 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -34,6 +36,8 @@ public class MutationSnoop {
    */
   private static Consumer<MutationInstance> callback = x -> {
   };
+  private static BiConsumer<MutationInstance, Object> infectionCallback = (x, id) -> {
+  };
 
   /**
    * Called when a mutant is run in the intial run
@@ -45,13 +49,38 @@ public class MutationSnoop {
     callback.accept(MutationInstance.getInstance(id));
   }
 
+  public static void logValue(Integer value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Double value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Float value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Long value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Boolean value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
   /**
    * Set the callback which will be run each time a mutant is run in the initial run of the tested
    * class
    *
    * @param cb The new callback
    */
+
   public static void setMutantCallback(Consumer<MutationInstance> cb) {
     callback = cb;
+  }
+
+  public static void setMutantInfectionCallback(BiConsumer<MutationInstance, Object> cb) {
+    infectionCallback = cb;
   }
 }
