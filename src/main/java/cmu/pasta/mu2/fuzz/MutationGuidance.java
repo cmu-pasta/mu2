@@ -1,6 +1,9 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.diff.DiffException;
+import cmu.pasta.mu2.diff.guidance.DiffGuidance;
+import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
@@ -13,6 +16,7 @@ import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +35,7 @@ import org.junit.runners.model.TestClass;
  * @author Rafaello Sanna
  * @author Rohan Padhye
  */
-public class MutationGuidance extends ZestGuidance {
+public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   /**
    * The classloaders for cartography and individual mutation instances
@@ -89,6 +93,8 @@ public class MutationGuidance extends ZestGuidance {
    */
   private static ArraySet runMutants = new ArraySet();
 
+  private Method compare;
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -98,12 +104,21 @@ public class MutationGuidance extends ZestGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
+    try {
+      compare = Object.class.getMethod("equals", Object.class);
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    }
   }
 
   // Retreive the latest list of mutation instances
   protected List<MutationInstance> getMutationInstances() {
     // The latest list is available in the cartography class loader, which runs the initial test execution
     return mutationClassLoaders.getCartographyClassLoader().getMutationInstances();
+  }
+
+  public void setCompare(Method m) {
+    compare = m;
   }
 
   /**
@@ -136,8 +151,9 @@ public class MutationGuidance extends ZestGuidance {
 
     long startTime = System.currentTimeMillis();
 
-    new TrialRunner(testClass.getJavaClass(), method, args)
-        .run(); // loaded by CartographyClassLoader
+    DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
+    dtr.run(); // loaded by CartographyClassLoader
+    Object cclResult = dtr.getResult();
 
     long trialTime = System.currentTimeMillis() - startTime;
 
@@ -159,10 +175,14 @@ public class MutationGuidance extends ZestGuidance {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
             mutationClassLoaders.getMutationClassLoader(mutationInstance));
-        new TrialRunner(clazz,
+        dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
                 method.getMethod().getParameterTypes())),
-            args).run();
+            args);
+        dtr.run();
+        if(compare != null && !Boolean.TRUE.equals(compare.invoke(clazz.getConstructors()[0].newInstance(), cclResult, dtr.getResult()))) {
+          throw new DiffException("diff!");
+        }
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);
       } catch (GuidanceException e) {
