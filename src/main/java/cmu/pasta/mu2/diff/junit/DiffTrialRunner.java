@@ -1,11 +1,13 @@
 package cmu.pasta.mu2.diff.junit;
 
 import cmu.pasta.mu2.diff.Diff;
+import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.junit.TrialRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DiffTrialRunner extends TrialRunner {
@@ -16,7 +18,12 @@ public class DiffTrialRunner extends TrialRunner {
     }
 
     @Override protected List<FrameworkMethod> computeTestMethods() {
-        return getTestClass().getAnnotatedMethods(Diff.class);
+        List<FrameworkMethod> diffMethods = getTestClass().getAnnotatedMethods(Diff.class);
+        List<FrameworkMethod> fuzzMethods = getTestClass().getAnnotatedMethods(Fuzz.class);
+        List<FrameworkMethod> testMethods = new ArrayList<>();
+        if(diffMethods.size() > 0) testMethods.addAll(diffMethods);
+        if(fuzzMethods.size() > 0) testMethods.addAll(fuzzMethods);
+        return testMethods;
     }
 
     @Override protected Statement methodInvoker(
