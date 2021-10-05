@@ -118,8 +118,9 @@ public class MutationGuidance extends ZestGuidance {
   @Override
   protected List<String> checkSavingCriteriaSatisfied(Result result) {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
-    if (((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage))) {
-      criteria.add("+mutants");
+    int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
+    if (newKilledMutants > 0) {
+      criteria.add(String.format("+%d mutants", newKilledMutants));
     }
 
     // TODO: Add responsibilities for mutants killed
