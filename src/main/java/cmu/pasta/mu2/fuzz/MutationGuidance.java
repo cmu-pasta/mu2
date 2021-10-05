@@ -18,11 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.junit.AssumptionViolatedException;
 import org.junit.runners.model.FrameworkMethod;
@@ -104,11 +100,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
-    try {
-      compare = Object.class.getMethod("equals", Object.class);
+    /*try {
+      compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
-    }
+    } //TODO test*/
   }
 
   // Retreive the latest list of mutation instances
@@ -175,12 +171,15 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
             mutationClassLoaders.getMutationClassLoader(mutationInstance));
+        //TODO documentation, testing, copy small things from JQF-examples
+        //TODO plot availability/args - comparison to zest
+        //TODO script run mu2, run zest, run repro on corpus, get mutation scores, compare
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
                 method.getMethod().getParameterTypes())),
             args);
         dtr.run();
-        if(compare != null && !Boolean.TRUE.equals(compare.invoke(clazz.getConstructors()[0].newInstance(), cclResult, dtr.getResult()))) {
+        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclResult, dtr.getResult()))) {
           throw new DiffException("diff!");
         }
       } catch (InstrumentationException e) {
