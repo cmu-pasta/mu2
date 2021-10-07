@@ -172,3 +172,20 @@ Saves for reason `+mutants` along with Zest's `+coverage`, etc.
 
 To prevent hanging forever on an infinite loop, both MutationInstances and CartographyClassLoaders outfit their classes with a timeout functionality that essentially kills the program after some maximum number of control jumps.
 This assumes that if the number of control jumps exceeds that then the program has encountered an infinite loop and will not ascertain any new information by continuing to run.
+
+## Scripts
+
+### Setup
+
+```
+pip install -r requirements.txt
+```
+
+### Plot Mutants
+
+This is a script for visualizing the various mutant numbers across trials of a given fuzzing session run with `-Dengine=mutation`. It takes in an input `plot_data` CSV file and 
+outputs an image plotting found mutants, killed mutants, and optionally seen/infected mutants.
+Usage:
+```
+python scripts/plot_mutant_data.py <plot_data_file> <output_image_file> 
+```
