@@ -2,7 +2,7 @@
 
 #Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the the directory at $6.
 #example usage:
-#  ./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../jqf/examples
+#  ./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
 
 getResults() {
     mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest -Dengine=zest -Dtrials=$5
