@@ -94,7 +94,8 @@ public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (co
     @Parameter(property = "includes")
     String includes;
 
-    Object reproResult;
+    List<Object> reproResults;
+    int ind = 0;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -112,8 +113,9 @@ public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (co
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            Result initialResults = runRepro(ccl, null);
-            Object cclResult = reproResult;
+            Result initialResults = runRepro(ccl, null, false);
+            List<Object> cclResults = reproResults;
+            System.out.println("cclResults: " + cclResults);
             if (!initialResults.wasSuccessful()) {
                 throw new MojoFailureException("Initial test run fails",
                         initialResults.getFailures().get(0).getException());
@@ -129,7 +131,7 @@ public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (co
             for (MutationInstance mutationInstance : mutationInstances) {
                 log.info("Running Mutant " + mutationInstance.toString());
                 MutationClassLoader mcl = mcls.getMutationClassLoader(mutationInstance);
-                Result res = runRepro(mcl, cclResult);
+                Result res = runRepro(mcl, cclResults, true);
                 if (!res.wasSuccessful()) {
                     killedMutants.add(mutationInstance);
                 }
@@ -156,11 +158,16 @@ public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (co
     }
 
     // Executes a fresh repro with a given classloader
-    private Result runRepro(ClassLoader classLoader, Object cclReturn) throws ClassNotFoundException, IOException {
-        DiffReproGuidance repro = new DiffReproGuidance(input, null, classLoader, cclReturn);
+    private Result runRepro(ClassLoader classLoader, List<Object> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
+        DiffReproGuidance repro;
+        if(useCR) {
+            repro = new DiffReproGuidance(input, null, classLoader, cclReturn);
+        } else {
+            repro = new DiffReproGuidance(input, null, classLoader);
+        }
         repro.setStopOnFailure(true);
         Result toReturn = DiffedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
-        reproResult = repro.getResult();
+        reproResults = repro.getResults();
         return toReturn;
     }
 }

@@ -9,16 +9,21 @@ import org.junit.runners.model.TestClass;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
-    private Object cmpTo, result;
+    private List<Object> cmpTo, results;
     private final ClassLoader classLoader;
+    private boolean comparing;
 
     public DiffReproGuidance(File inputFile, File traceDir, ClassLoader cl) throws IOException {
         super(inputFile, traceDir);
         classLoader = cl;
         cmpTo = null;
+        comparing = false;
+        results = new ArrayList<>();
         try {
             compare = Object.class.getMethod("equals", Object.class);
         } catch (NoSuchMethodException e) {
@@ -26,9 +31,11 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
     }
 
-    public DiffReproGuidance(File inputFile, File traceDir, ClassLoader cl, Object cT) throws IOException {
+    public DiffReproGuidance(File inputFile, File traceDir, ClassLoader cl, List<Object> cT) throws IOException {
         this(inputFile, traceDir, cl);
+        results = new ArrayList<>();
         cmpTo = cT;
+        comparing = true;
     }
 
     @Override
@@ -36,23 +43,23 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         compare = m;
     }
 
-    public Object getResult() {
-        return result;
+    public List<Object> getResults() {
+        return results;
     }
 
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-        System.out.print("args: ");
+        /*System.out.print("args: ");
         for(Object a : args) {
             System.out.print(a + ", ");
         }
-        System.out.println();
+        System.out.println();*/
         DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
         dtr.run();
-        result = dtr.getResult();
-        if(cmpTo == null) return;
-        Class<?> clazz = Class.forName(testClass.getName(),true, classLoader);
-        Object o = compare.invoke(clazz.getConstructors()[0].newInstance(), cmpTo, result);
+        results.add(dtr.getResult());
+        if(!comparing) return;
+        //Class<?> clazz = Class.forName(testClass.getName(),true, classLoader);
+        Object o = compare.invoke(null, cmpTo.get(results.size() - 1), results.get(results.size() - 1));
         if (!Boolean.TRUE.equals(o)) {
             throw new DiffException("diff!");
         }

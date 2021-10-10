@@ -100,11 +100,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
-    /*try {
+    try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
-    } //TODO test*/
+    } //TODO test
   }
 
   // Retreive the latest list of mutation instances
