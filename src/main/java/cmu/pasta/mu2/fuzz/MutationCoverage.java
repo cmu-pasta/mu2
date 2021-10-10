@@ -38,11 +38,11 @@ public class MutationCoverage extends Coverage {
     return caughtMutants.size();
   }
 
-  public boolean updateMutants(MutationCoverage that) {
+  public int updateMutants(MutationCoverage that) {
     int prevSize = caughtMutants.size();
     caughtMutants.addAll(that.caughtMutants);
     seenMutants.addAll(that.seenMutants);
-    return caughtMutants.size() > prevSize;
+    return caughtMutants.size() - prevSize;
   }
 
   public int numSeenMutants() {
