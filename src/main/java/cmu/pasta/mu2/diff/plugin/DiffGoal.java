@@ -87,6 +87,19 @@ public class DiffGoal extends AbstractMojo {
     private Long trials;
 
     /**
+     * A number to seed the source of randomness in the fuzzing algorithm.
+     *
+     * <p>
+     * Setting this to any value will make the result of running the same fuzzer
+     * with on the same input the same. This is useful for testing the fuzzer, but
+     * shouldn't be used on code attempting to find real bugs. By default, the
+     * seed is chosen randomly based on system state.
+     * </p>
+     */
+    @Parameter(property="randomSeed")
+    private Long randomSeed;
+
+    /**
      * The name of the output directory where fuzzing results will
      * be stored.
      *
@@ -116,7 +129,7 @@ public class DiffGoal extends AbstractMojo {
             URL[] classPath = stringsToUrls(classpathElements.toArray(new String[0]));
             ClassLoader baseClassLoader = getClass().getClassLoader();
             String targetName = testClassName + "#" + testMethod;
-            Random rnd = new Random();
+            Random rnd = randomSeed != null ? new Random(randomSeed) : new Random();
             File resultsDir = new File(target, outputDirectory);
 
             //assume MutationGuidance for the moment

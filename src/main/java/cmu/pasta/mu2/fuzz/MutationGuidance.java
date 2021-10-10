@@ -171,9 +171,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
             mutationClassLoaders.getMutationClassLoader(mutationInstance));
-        //TODO documentation, testing, copy small things from JQF-examples
-        //TODO plot availability/args - comparison to zest
-        //TODO script run mu2, run zest, run repro on corpus, get mutation scores, compare
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
                 method.getMethod().getParameterTypes())),
