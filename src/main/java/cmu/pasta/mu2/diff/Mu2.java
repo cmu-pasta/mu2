@@ -81,7 +81,7 @@ public class Mu2 extends JQF {
         }
 
         // Get currently set fuzzing guidance
-        DiffGuidance guidance = (DiffGuidance) DiffedFuzzing.getCurrentGuidance();
+        DiffGuidance guidance = DiffedFuzzing.getCurrentGuidance();
 
         if(guidance == null) {
             guidance = new DiffNoGuidance(GuidedFuzzing.DEFAULT_MAX_TRIALS, System.err);

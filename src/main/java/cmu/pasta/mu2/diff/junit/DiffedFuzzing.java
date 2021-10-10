@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.diff.junit;
 
 import cmu.pasta.mu2.diff.Mu2;
+import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.instrument.tracing.SingleSnoop;
@@ -12,7 +13,7 @@ import java.io.PrintStream;
 
 //copied from GuidedFuzzing
 public class DiffedFuzzing {
-    private static Guidance guidance;
+    private static DiffGuidance guidance;
 
     public static long DEFAULT_MAX_TRIALS = 100;
 
@@ -31,7 +32,7 @@ public class DiffedFuzzing {
      * @param g the guidance instance
      * @throws IllegalStateException if a guidance has already been set
      */
-    public static synchronized void setGuidance(Guidance g) {
+    public static synchronized void setGuidance(DiffGuidance g) {
         if (guidance != null) {
             throw new IllegalStateException("Cannot set more than one guidance simultaneously");
         }
@@ -43,7 +44,7 @@ public class DiffedFuzzing {
      *
      * @return the currently registered Guidance instance
      */
-    public static Guidance getCurrentGuidance() {
+    public static DiffGuidance getCurrentGuidance() {
         return guidance;
     }
 
@@ -52,7 +53,7 @@ public class DiffedFuzzing {
      *
      * This allows running multiple fuzzing sessions in the same
      * JVM instance sequentially. This method should be invoked
-     * from the same thread that last invoked {@link #setGuidance(Guidance)}.
+     * from the same thread that last invoked {@link #setGuidance(DiffGuidance)}.
      * This method removes any tracers associated with the
      * current thread, so that the entry point can be detected again.
      * This property is ensured by {@link GuidedFuzzing#run(Class, String, Guidance, PrintStream)}.
@@ -86,7 +87,7 @@ public class DiffedFuzzing {
      * @return the Junit-style test result
      */
     public synchronized static Result run(String testClassName, String testMethod,
-                                          Guidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
+                                          DiffGuidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
 
         // Run with the system class loader
         return run(testClassName, testMethod, ClassLoader.getSystemClassLoader(), guidance, out);
@@ -116,7 +117,7 @@ public class DiffedFuzzing {
      */
     public synchronized static Result run(String testClassName, String testMethod,
                                           ClassLoader loader,
-                                          Guidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
+                                          DiffGuidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
         Class<?> testClass =
                 java.lang.Class.forName(testClassName, true, loader);
 
@@ -144,7 +145,7 @@ public class DiffedFuzzing {
      * @return the Junit-style test result
      */
     public synchronized static Result run(Class<?> testClass, String testMethod,
-                                          Guidance guidance, PrintStream out) throws IllegalStateException {
+                                          DiffGuidance guidance, PrintStream out) throws IllegalStateException {
 
         // Ensure that the class uses the right test runner
         RunWith annotation = testClass.getAnnotation(RunWith.class);

@@ -115,7 +115,7 @@ public class DiffGoal extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
-        ZestGuidance guidance;
+        MutationGuidance guidance;
         Log log = getLog();
         PrintStream out = log.isDebugEnabled() ? System.out : null;
         Result result;
