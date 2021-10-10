@@ -74,7 +74,7 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, null); //saved 11 w/opt EXECUTION
+        MutationClassLoaders mcls = initClassLoaders(targetInst, null); //saved 11 w/opt NONE
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz

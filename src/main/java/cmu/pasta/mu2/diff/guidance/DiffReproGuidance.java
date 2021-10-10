@@ -42,6 +42,11 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
 
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
+        System.out.print("args: ");
+        for(Object a : args) {
+            System.out.print(a + ", ");
+        }
+        System.out.println();
         DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
         dtr.run();
         result = dtr.getResult();
