@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//TODO:
-//  current goal: integration testing
 public class Mu2 extends JQF {
     Map<String, FrameworkMethod> cmpNames;
 
@@ -64,10 +62,10 @@ public class Mu2 extends JQF {
             }
 
             String cmp = method.getAnnotation(Diff.class).cmp();
-            if(!cmpNames.containsKey(cmp)) {
+            if(!cmp.equals("") && !cmpNames.containsKey(cmp)) {
                 errors.add(new Exception("cmp() in Diff annotation of method " + method.getName()
                         + " must be the name of a function in this class marked with the @Comparison annotation"));
-            } else if(cmpNames.get(cmp).getMethod().getParameterTypes()[0] != method.getReturnType()) {
+            } else if(!cmp.equals("") && cmpNames.get(cmp).getMethod().getParameterTypes()[0] != method.getReturnType()) {
                 errors.add(new Exception("The function referred to by cmp() in Regression annotation of method "
                         + method + " must accept arguments matching the return type of the method"));
             }
@@ -87,7 +85,10 @@ public class Mu2 extends JQF {
             guidance = new DiffNoGuidance(GuidedFuzzing.DEFAULT_MAX_TRIALS, System.err);
         }
 
-        guidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
+        System.out.println("annotation: " + method.getAnnotation(Diff.class).cmp() + "\ncompare method " + cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
+        if(!method.getAnnotation(Diff.class).cmp().equals("")) {
+            guidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
+        }
 
         FuzzStatement fs = new FuzzStatement(method, getTestClass(), generatorRepository, guidance);
         return fs;

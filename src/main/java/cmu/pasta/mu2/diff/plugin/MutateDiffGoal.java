@@ -63,7 +63,7 @@ import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToU
  */
 @Mojo(name="mutatediff",
         requiresDependencyResolution= ResolutionScope.TEST)
-public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (consider input storage)
+public class MutateDiffGoal extends AbstractMojo {
     @Parameter(defaultValue="${project}", required=true, readonly=true)
     MavenProject project;
 
@@ -161,9 +161,9 @@ public class MutateDiffGoal extends AbstractMojo { //TODO not working - why? (co
     private Result runRepro(ClassLoader classLoader, List<Object> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
         DiffReproGuidance repro;
         if(useCR) {
-            repro = new DiffReproGuidance(input, null, classLoader, cclReturn);
+            repro = new DiffReproGuidance(input, null, cclReturn);
         } else {
-            repro = new DiffReproGuidance(input, null, classLoader);
+            repro = new DiffReproGuidance(input, null);
         }
         repro.setStopOnFailure(true);
         Result toReturn = DiffedFuzzing.run(testClassName, testMethod, classLoader, repro, null);

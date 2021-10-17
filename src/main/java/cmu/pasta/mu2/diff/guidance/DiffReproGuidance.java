@@ -15,12 +15,10 @@ import java.util.List;
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
     private List<Object> cmpTo, results;
-    private final ClassLoader classLoader;
     private boolean comparing;
 
-    public DiffReproGuidance(File inputFile, File traceDir, ClassLoader cl) throws IOException {
+    public DiffReproGuidance(File inputFile, File traceDir) throws IOException {
         super(inputFile, traceDir);
-        classLoader = cl;
         cmpTo = null;
         comparing = false;
         results = new ArrayList<>();
@@ -31,8 +29,8 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
     }
 
-    public DiffReproGuidance(File inputFile, File traceDir, ClassLoader cl, List<Object> cT) throws IOException {
-        this(inputFile, traceDir, cl);
+    public DiffReproGuidance(File inputFile, File traceDir, List<Object> cT) throws IOException {
+        this(inputFile, traceDir);
         results = new ArrayList<>();
         cmpTo = cT;
         comparing = true;
@@ -49,16 +47,10 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
 
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-        /*System.out.print("args: ");
-        for(Object a : args) {
-            System.out.print(a + ", ");
-        }
-        System.out.println();*/
         DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
         dtr.run();
         results.add(dtr.getResult());
         if(!comparing) return;
-        //Class<?> clazz = Class.forName(testClass.getName(),true, classLoader);
         Object o = compare.invoke(null, cmpTo.get(results.size() - 1), results.get(results.size() - 1));
         if (!Boolean.TRUE.equals(o)) {
             throw new DiffException("diff!");

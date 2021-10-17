@@ -104,7 +104,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
-    } //TODO test
+    }
   }
 
   // Retreive the latest list of mutation instances
@@ -162,7 +162,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
       }
-      if (optLevel != OptLevel.NONE &&
+      if (optLevel != OptLevel.NONE /*&& optLevel != null*/  &&
           !runMutants.contains(mutationInstance.id)) {
         continue;
       }
