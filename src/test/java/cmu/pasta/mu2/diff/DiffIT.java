@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-//@RunWith(Mu2.class)
 public class DiffIT extends AbstractMutationTest {
     // Temp directory to store fuzz results
     protected static File resultsDir;
@@ -63,9 +62,8 @@ public class DiffIT extends AbstractMutationTest {
         }
     }
 
-
     @Test
-    public void fuzzBubbleSortO1() throws Exception {
+    public void compareBubbleSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";
         String testMethod = "testBubbleSort";
@@ -74,13 +72,69 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, null); //saved 11 w/opt NONE
+        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(11, mu2.corpusCount());
+    }
+
+    @Test
+    public void noncompareBubbleSort() throws Exception {
+        // Set up test params
+        String testClassName = "diff.DiffTest";
+        String testMethod = "otherBubbleSort";
+        String targetInst = "sort.BubbleSort";
+        long trials = 1000;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
         DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         Assert.assertEquals(10, mu2.corpusCount());
+    }
 
+    @Test
+    public void compareTimSort() throws Exception {
+        // Set up test params
+        String testClassName = "diff.DiffTest";
+        String testMethod = "testTimSort";
+        String targetInst = "sort.TimSort";
+        long trials = 1000;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(58, mu2.corpusCount());
+    }
+
+    @Test
+    public void noncompareTimSort() throws Exception {
+        // Set up test params
+        String testClassName = "diff.DiffTest";
+        String testMethod = "otherTimSort";
+        String targetInst = "sort.TimSort";
+        long trials = 1000;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(57, mu2.corpusCount());
     }
 }
