@@ -85,7 +85,6 @@ public class Mu2 extends JQF {
             guidance = new DiffNoGuidance(GuidedFuzzing.DEFAULT_MAX_TRIALS, System.err);
         }
 
-        System.out.println("annotation: " + method.getAnnotation(Diff.class).cmp() + "\ncompare method " + cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
         if(!method.getAnnotation(Diff.class).cmp().equals("")) {
             guidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
         }
