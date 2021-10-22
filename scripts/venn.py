@@ -5,9 +5,6 @@ import numpy as np
 import argparse
 import os
 
-prefix = "[INFO] Running Mutant "
-trim = (lambda strng : strng[len(prefix):-1])
-
 def get_killed_mutants(file_name):
     with open(file_name, "r") as f:
         lines = f.readlines()
@@ -22,7 +19,7 @@ def get_killed_mutants(file_name):
             while i < len(lines) and "Running Mutant" not in lines[i]:
                 if "FAILURE" in lines[i]:
                     killed = True
-                    i += 1
+                i += 1
         if killed:
             killed_mutants.add(mutant_name)
     return killed_mutants
