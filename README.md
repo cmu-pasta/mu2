@@ -130,19 +130,22 @@ The comparison function should be `static`, take two arguments of the same type 
 (`Boolean.TRUE` if the two inputs are equivalent, `Boolean.FALSE` otherwise).
 
 Multiple functions with these annotations can be included in a single test class, so, to uniquely match the diff function with a comparison function, 
-pass the name of the comparison function as an argument to `@Diff` as `cmp` (see below for example).
+pass the name of the comparison function as an argument to `@Diff` as `cmp` (see below for example). If no argument is passed to `cmp`, `Objects.equals()` 
+will be used as a default.
 
-Example of a differential test for a function `sortList(List<Integer>)`:
+Each diff function is associated with up to one comparison function, but arbitrarily many diff functions may use a comparison function.
+
+Example of a differential test for a function `populateList(List<Integer>)` when the comparison only cares about the size of the populated list:
 
 ```java
 @Diff(cmp = "compare")
-public List<Integer> testSort(List<Integer> input) {
-    return sortList(input);
+public List<Integer> testPopulate(List<Integer> input) {
+    return populateList(input);
 }
 
 @Compare
 public static Boolean compare(List<Integer> list1, List<Integer> list2) {
-    return list1.equals(list2);
+    return list1.size() == list2.size();
 }
 ```
 
