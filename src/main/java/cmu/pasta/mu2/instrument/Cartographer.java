@@ -80,6 +80,13 @@ public class Cartographer extends ClassVisitor {
     super.visit(version, access, name, signature, superName, interfaces);
   }
 
+  String fileName = "<unknown>";
+  @Override
+  public void visitSource(String source, String debug) {
+    fileName = source;
+    super.visitSource(source, debug);
+  }
+
   /**
    * Gets the possible opportunities the mutators
    *
@@ -101,7 +108,7 @@ public class Cartographer extends ClassVisitor {
        */
       private void logMutOp(Mutator mut) {
         List<MutationInstance> ops = opportunities.get(mut);
-        MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum);
+        MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum, fileName);
         ops.add(mi);
 
         if (optLevel == OptLevel.EXECUTION) {

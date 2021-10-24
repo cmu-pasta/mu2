@@ -48,6 +48,7 @@ public class MutationInstance {
   private long timeoutCounter = 0;
 
   private final int lineNum;
+  private final String fileName;
 
   // TODO potential for more information:
   // line number
@@ -61,12 +62,13 @@ public class MutationInstance {
    * @param mutator     the mutator being applied
    * @param sequenceIdx the index of the mutator being applied on this class
    */
-  public MutationInstance(String className, Mutator mutator, long sequenceIdx, int lineNum) {
+  public MutationInstance(String className, Mutator mutator, long sequenceIdx, int lineNum, String fileName) {
     this.id = mutationInstances.size();
     this.className = className;
     this.mutator = mutator;
     this.sequenceIdx = sequenceIdx;
     this.lineNum = lineNum;
+    this.fileName = fileName;
 
     // Register mutation instance
     mutationInstances.add(this);
@@ -86,7 +88,7 @@ public class MutationInstance {
 
   @Override
   public String toString() {
-    return String.format("%s::%s::%d::L%d", className, mutator, sequenceIdx, lineNum);
+    return String.format("%s::%s::%d (%s:L%d)", className, mutator, sequenceIdx, fileName, lineNum);
   }
 
   public static MutationInstance getInstance(int id) {
