@@ -83,7 +83,7 @@ public class Cartographer extends ClassVisitor {
   String fileName = "<unknown>";
   @Override
   public void visitSource(String source, String debug) {
-    fileName = source;
+    if(source != null) fileName = source;
     super.visitSource(source, debug);
   }
 
