@@ -206,7 +206,7 @@ public class MutationGuidance extends ZestGuidance {
   }
 
   @Override
-  protected void displayStats() {
+  protected void displayStats(boolean force) {
     Date now = new Date();
     long intervalTime = now.getTime() - lastRefreshTime.getTime();
     long totalTime = now.getTime() - startTime.getTime();
