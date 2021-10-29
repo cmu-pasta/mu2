@@ -83,7 +83,7 @@ public class MutationGuidanceIT extends AbstractMutationTest {
     GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
 
-    Assert.assertEquals(15, mu2.corpusCount());
+    Assert.assertEquals(22, mu2.corpusCount());
 
 
   }

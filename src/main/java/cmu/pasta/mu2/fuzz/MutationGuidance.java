@@ -91,6 +91,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private Method compare;
 
+  private final List<String> exceptions = new ArrayList<>();
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -131,7 +133,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
-      criteria.add(String.format("+%d mutants", newKilledMutants));
+      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptions.toString()));
     }
 
     // TODO: Add responsibilities for mutants killed
@@ -141,10 +143,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-    numTrials++;
     numRuns++;
     runMutants.reset();
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
+    exceptions.clear();
 
     long startTime = System.currentTimeMillis();
 
@@ -190,6 +192,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         if (!isExceptionExpected(e.getClass(), expectedExceptions)) {
           // failed
           deadMutants.add(mutationInstance.id);
+          exceptions.add(e.getClass().getName());
 
           ((MutationCoverage) runCoverage).kill(mutationInstance);
           fails.add(e);
@@ -218,7 +221,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   }
 
   @Override
-  protected void displayStats() {
+  protected void displayStats(boolean force) {
     Date now = new Date();
     long intervalTime = now.getTime() - lastRefreshTime.getTime();
     long totalTime = now.getTime() - startTime.getTime();
