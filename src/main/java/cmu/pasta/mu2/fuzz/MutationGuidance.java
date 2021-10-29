@@ -132,7 +132,6 @@ public class MutationGuidance extends ZestGuidance {
 
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-    numTrials++;
     numRuns++;
     runMutants.reset();
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
