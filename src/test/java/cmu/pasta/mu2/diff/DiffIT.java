@@ -68,7 +68,7 @@ public class DiffIT extends AbstractMutationTest {
         String testClassName = "diff.DiffTest";
         String testMethod = "testBubbleSort";
         String targetInst = "sort.BubbleSort";
-        long trials = 1000;
+        long trials = 100;
         Random rnd = new Random(42);
 
         // Create guidance
@@ -78,7 +78,7 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(11, mu2.corpusCount());
+        Assert.assertEquals(9, mu2.corpusCount());
     }
 
     @Test
@@ -87,7 +87,7 @@ public class DiffIT extends AbstractMutationTest {
         String testClassName = "diff.DiffTest";
         String testMethod = "otherBubbleSort";
         String targetInst = "sort.BubbleSort";
-        long trials = 1000;
+        long trials = 100;
         Random rnd = new Random(42);
 
         // Create guidance
@@ -97,7 +97,7 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(10, mu2.corpusCount());
+        Assert.assertEquals(8, mu2.corpusCount());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class DiffIT extends AbstractMutationTest {
         String testClassName = "diff.DiffTest";
         String testMethod = "testTimSort";
         String targetInst = "sort.TimSort";
-        long trials = 1000;
+        long trials = 100;
         Random rnd = new Random(42);
 
         // Create guidance
@@ -116,7 +116,7 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(58, mu2.corpusCount());
+        Assert.assertEquals(36, mu2.corpusCount());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class DiffIT extends AbstractMutationTest {
         String testClassName = "diff.DiffTest";
         String testMethod = "otherTimSort";
         String targetInst = "sort.TimSort";
-        long trials = 1000;
+        long trials = 100;
         Random rnd = new Random(42);
 
         // Create guidance
@@ -135,6 +135,6 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(57, mu2.corpusCount());
+        Assert.assertEquals(36, mu2.corpusCount());
     }
 }
