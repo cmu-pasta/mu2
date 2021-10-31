@@ -4,6 +4,7 @@ import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class MutationClassLoaders {
   public MutationClassLoaders(String[] paths, String mutableClasses, OptLevel optLevel)
       throws IOException {
     this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, optLevel,
-        MutationClassLoaders.class.getClassLoader());
+        new URLClassLoader(new URL[]{}, MutationClassLoaders.class.getClassLoader()));
   }
 
   /**

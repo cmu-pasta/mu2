@@ -35,6 +35,23 @@ public class MutationClassLoader extends URLClassLoader {
   }
 
   @Override
+  protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    if(!name.equals(this.mutationInstance.className)) {
+      return super.loadClass(name, resolve);
+    }
+    synchronized (getClassLoadingLock(name)) {
+      Class<?> c = findLoadedClass(name);
+      if (c == null) {
+        c = findClass(name);
+      }
+      if (resolve) {
+        resolveClass(c);
+      }
+      return c;
+    }
+  }
+
+  @Override
   public Class<?> findClass(String name) throws ClassNotFoundException {
     byte[] bytes;
 
