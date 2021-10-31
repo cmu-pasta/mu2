@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Random;
 
@@ -73,6 +75,22 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="includes")
     private String includes;
 
+    /**
+     * The duration of time for which to run fuzzing.
+     *
+     * <p>
+     * If neither this property nor {@code trials} are provided, the fuzzing
+     * session is run for an unlimited time until the process is terminated by the
+     * user (e.g. via kill or CTRL+C).
+     * </p>
+     *
+     * <p>
+     * Valid time durations are non-empty strings in the format [Nh][Nm][Ns], such
+     * as "60s" or "2h30m".
+     * </p>
+     */
+    @Parameter(property="time")
+    private String time;
 
     /**
      * The number of trials for which to run fuzzing.
@@ -100,6 +118,21 @@ public class DiffGoal extends AbstractMojo {
     private Long randomSeed;
 
     /**
+     * The fuzzing engine.
+     *///TODO
+    @Parameter(property="engine", defaultValue="mutation")
+    private String engine;
+
+    /**
+     * The name of the input directory containing seed files.
+     *
+     * <p>If not provided, then fuzzing starts with randomly generated
+     * initial inputs.</p>
+     */
+    @Parameter(property="in")
+    private String inputDirectory;
+
+    /**
      * The name of the output directory where fuzzing results will
      * be stored.
      *
@@ -112,6 +145,13 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="out")
     private String outputDirectory;
 
+    /**
+     * Allows user to set optimization level for mutation-guided fuzzing.
+     * Does nothing if mutation engine is not used.
+     */
+    @Parameter(property="optLevel", defaultValue = "NONE")
+    private String optLevel;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
@@ -120,8 +160,24 @@ public class DiffGoal extends AbstractMojo {
         PrintStream out = log.isDebugEnabled() ? System.out : null;
         Result result;
 
+        Duration duration = null;
+        if (time != null && !time.isEmpty()) {
+            try {
+                duration = Duration.parse("PT"+time);
+            } catch (DateTimeParseException e) {
+                throw new MojoExecutionException("Invalid time duration: " + time);
+            }
+        }
+
         if (outputDirectory == null || outputDirectory.isEmpty()) {
             outputDirectory = "fuzz-results" + File.separator + testClassName + File.separator + testMethod;
+        }
+
+        OptLevel ol;
+        try {
+            ol = OptLevel.valueOf(optLevel.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new MojoExecutionException("Invalid Mutation OptLevel!");
         }
 
         try {
@@ -130,16 +186,16 @@ public class DiffGoal extends AbstractMojo {
             ClassLoader baseClassLoader = getClass().getClassLoader();
             String targetName = testClassName + "#" + testMethod;
             Random rnd = randomSeed != null ? new Random(randomSeed) : new Random();
+            File seedsDir = inputDirectory == null ? null : new File(inputDirectory);
             File resultsDir = new File(target, outputDirectory);
 
             //assume MutationGuidance for the moment
             if (includes == null) {
                 throw new MojoExecutionException("Mutation-based fuzzing requires `-Dincludes`");
             }
-            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, OptLevel.EXECUTION,
-                    baseClassLoader); // TODO: Should opt level be configurable?
+            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, null, trials, resultsDir, null, rnd);
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {
