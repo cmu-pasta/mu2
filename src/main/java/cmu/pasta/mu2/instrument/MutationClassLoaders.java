@@ -30,7 +30,7 @@ public class MutationClassLoaders {
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
-    this.parentClassLoader = parent;
+    this.parentClassLoader = new URLClassLoader(new URL[]{}, parent);
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),
         parent, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
@@ -44,7 +44,7 @@ public class MutationClassLoaders {
   public MutationClassLoaders(String[] paths, String mutableClasses, OptLevel optLevel)
       throws IOException {
     this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, optLevel,
-        new URLClassLoader(new URL[]{}, MutationClassLoaders.class.getClassLoader()));
+            MutationClassLoaders.class.getClassLoader());
   }
 
   /**
