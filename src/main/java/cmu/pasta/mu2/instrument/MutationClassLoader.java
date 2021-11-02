@@ -29,14 +29,18 @@ public class MutationClassLoader extends URLClassLoader {
    */
   private final MutationInstance mutationInstance;
 
-  public MutationClassLoader(MutationInstance mutationInstance, URL[] paths, ClassLoader parent) {
+  //TODO there should be something more elegant than storing this in all of the MCLs
+  private final CartographyClassLoader cartographyClassLoader;
+
+  public MutationClassLoader(MutationInstance mutationInstance, URL[] paths, ClassLoader parent, CartographyClassLoader ccl) {
     super(paths, parent);
     this.mutationInstance = mutationInstance;
+    cartographyClassLoader = ccl;
   }
 
   @Override
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-    if(!name.equals(this.mutationInstance.className)) {
+    if(!cartographyClassLoader.mutable(name)) {
       return super.loadClass(name, resolve);
     }
     synchronized (getClassLoadingLock(name)) {
@@ -53,6 +57,7 @@ public class MutationClassLoader extends URLClassLoader {
 
   @Override
   public Class<?> findClass(String name) throws ClassNotFoundException {
+    System.out.println(mutationInstance + " finding " + name);
     byte[] bytes;
 
     String internalName = name.replace('.', '/');

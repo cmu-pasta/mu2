@@ -114,7 +114,7 @@ public class CartographyClassLoader extends URLClassLoader {
     return defineClass(name, bytes, 0, bytes.length);
   }
 
-  private boolean mutable(String name) {
+  protected boolean mutable(String name) {
     boolean mutable = false;
     for (String s : mutableClasses) {
       if (name.startsWith(s)) {
