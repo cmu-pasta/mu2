@@ -57,7 +57,6 @@ public class MutationClassLoader extends URLClassLoader {
 
   @Override
   public Class<?> findClass(String name) throws ClassNotFoundException {
-    System.out.println(mutationInstance + " finding " + name);
     byte[] bytes;
 
     String internalName = name.replace('.', '/');

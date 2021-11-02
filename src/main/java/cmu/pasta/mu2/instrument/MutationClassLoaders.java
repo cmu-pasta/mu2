@@ -30,19 +30,7 @@ public class MutationClassLoaders {
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
-    this.parentClassLoader = new URLClassLoader(paths, parent) {
-      @Override
-      protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        //System.out.println("parent loading " + name);
-        return super.loadClass(name, resolve);
-      }
-
-      @Override
-      public Class<?> findClass(String name) throws ClassNotFoundException {
-        System.out.println("parent finding " + name);
-        return super.findClass(name);
-      }
-    };
+    this.parentClassLoader = new URLClassLoader(paths, parent);
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),
         parent, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
