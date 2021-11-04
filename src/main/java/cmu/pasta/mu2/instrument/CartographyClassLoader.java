@@ -55,24 +55,6 @@ public class CartographyClassLoader extends URLClassLoader {
   }
 
   @Override
-  protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-    if(!mutable(name)) {
-      Class<?> cl = super.loadClass(name, resolve);
-      return cl;
-    }
-    synchronized (getClassLoadingLock(name)) {
-      Class<?> c = findLoadedClass(name);
-      if (c == null) {
-        c = findClass(name);
-      }
-      if (resolve) {
-        resolveClass(c);
-      }
-      return c;
-    }
-  }
-
-  @Override
   public Class<?> findClass(String name) throws ClassNotFoundException {
     byte[] bytes;
 
@@ -87,8 +69,18 @@ public class CartographyClassLoader extends URLClassLoader {
       throw new ClassNotFoundException("I/O exception while loading class.", e);
     }
 
+    // Check whether this class is mutable
+    boolean mutable = false;
+
+    for (String s : mutableClasses) {
+      if (name.startsWith(s)) {
+        mutable = true;
+        break;
+      }
+    }
+
     // Make cartograph
-    if (mutable(name)) { // Check whether this class is mutable
+    if (mutable) {
       Cartographer c = Cartographer.explore(bytes, this);
       for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
           for (MutationInstance mi : opportunities) {
@@ -112,17 +104,6 @@ public class CartographyClassLoader extends URLClassLoader {
     }
 
     return defineClass(name, bytes, 0, bytes.length);
-  }
-
-  protected boolean mutable(String name) {
-    boolean mutable = false;
-    for (String s : mutableClasses) {
-      if (name.startsWith(s)) {
-        mutable = true;
-        break;
-      }
-    }
-    return mutable;
   }
 
   public OptLevel getOptLevel() {
