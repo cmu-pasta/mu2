@@ -78,7 +78,7 @@ public class MutationClassLoaders {
   public MutationClassLoader getMutationClassLoader(MutationInstance mi) {
     MutationClassLoader mcl = mutationClassLoaderMap.get(mi);
     if (mcl == null) {
-      mcl = new MutationClassLoader(mi, paths, parentClassLoader, cartographyClassLoader);
+      mcl = new MutationClassLoader(mi, paths, parentClassLoader);
       mutationClassLoaderMap.put(mi, mcl);
     }
     return mcl;

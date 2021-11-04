@@ -29,13 +29,9 @@ public class MutationClassLoader extends URLClassLoader {
    */
   private final MutationInstance mutationInstance;
 
-  //TODO there should be something more elegant than storing this in all of the MCLs
-  private final CartographyClassLoader cartographyClassLoader;
-
-  public MutationClassLoader(MutationInstance mutationInstance, URL[] paths, ClassLoader parent, CartographyClassLoader ccl) {
+  public MutationClassLoader(MutationInstance mutationInstance, URL[] paths, ClassLoader parent) {
     super(paths, parent);
     this.mutationInstance = mutationInstance;
-    cartographyClassLoader = ccl;
   }
 
   @Override
