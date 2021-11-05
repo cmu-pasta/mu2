@@ -34,16 +34,23 @@ public class MutationClassLoaders {
     this.parentClassLoader = new URLClassLoader(paths, parent){
       @Override
       protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        System.out.println("parent loading " + name);
         for (String s : mutableStarts) {
           if (name.startsWith(s)) {
-            return null;
+            System.out.println("parent found mutable class");
+            throw new IllegalArgumentException("mutable classes!");
           }
         }
-        return super.loadClass(name, resolve);
+        try {
+          return super.loadClass(name, resolve);
+        } catch(Exception e) {
+          System.out.println(e + " with message " + e.getMessage());
+          throw e;
+        }
       }
     };
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableStarts,
-        parent, optLevel);
+        parentClassLoader, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
   }
 

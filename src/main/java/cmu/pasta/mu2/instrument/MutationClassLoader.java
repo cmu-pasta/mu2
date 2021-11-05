@@ -35,6 +35,16 @@ public class MutationClassLoader extends URLClassLoader {
   }
 
   @Override
+  protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    System.out.println("mcl loading " + name);
+    try {
+      return super.loadClass(name, resolve);
+    } catch (IllegalArgumentException e) {
+      return this.findClass(name);
+    }
+  }
+
+  @Override
   public Class<?> findClass(String name) throws ClassNotFoundException {
     byte[] bytes;
 
