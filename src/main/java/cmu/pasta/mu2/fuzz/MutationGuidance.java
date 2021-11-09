@@ -164,7 +164,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
       }
-      if (optLevel != OptLevel.NONE /*&& optLevel != null*/  &&
+      if (optLevel != OptLevel.NONE  &&
           !runMutants.contains(mutationInstance.id)) {
         continue;
       }
