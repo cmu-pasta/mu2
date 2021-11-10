@@ -31,7 +31,7 @@ cd ..
 
 This installs `jqf-fuzz` and `jqf-instrument`, but does not compile the maven plugin, which itself depends on `mu2`. 
 
-###Step 1.5: Install `mu2` with no integration tests
+### Step 1.5: Install `mu2` with no integration tests
 ```
 git clone https://github.com/cmu-pasta/mu2 && cd mu2
 mvn install -DskipTests
