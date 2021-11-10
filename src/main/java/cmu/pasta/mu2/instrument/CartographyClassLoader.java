@@ -56,12 +56,18 @@ public class CartographyClassLoader extends URLClassLoader {
 
   @Override
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-    System.out.println("ccl loading " + name);
-    try {
-      return super.loadClass(name, resolve);
-    } catch (IllegalArgumentException e) {
-      return this.findClass(name);
+    for (String s : MutationClassLoaders.dependencyStarts) {
+      if (s.length() > 0 && name.startsWith(s)) {
+        synchronized (getClassLoadingLock(name)) {
+          Class<?> c = findLoadedClass(name);
+          if (c == null) {
+            c = findClass(name);
+          }
+          return c;
+        }
+      }
     }
+    return super.loadClass(name, resolve);
   }
 
   @Override

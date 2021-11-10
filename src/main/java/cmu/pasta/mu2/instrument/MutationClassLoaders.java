@@ -21,32 +21,23 @@ public class MutationClassLoaders {
   private final CartographyClassLoader cartographyClassLoader;
   private final Map<MutationInstance, MutationClassLoader> mutationClassLoaderMap;
 
+  public static String[] dependencyStarts;
+
   /**
    * @param paths             The class path
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
    */
-  public MutationClassLoaders(URL[] paths, String mutableClasses, OptLevel optLevel,
+  public MutationClassLoaders(URL[] paths, String mutableClasses, String dependencyClasses, OptLevel optLevel,
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
     String[] mutableStarts = mutableClasses.split(",");
-    this.parentClassLoader = new URLClassLoader(paths, parent){
+    dependencyStarts = (dependencyClasses).split(",");
+    this.parentClassLoader = new URLClassLoader(paths, parent) {
       @Override
       protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        System.out.println("parent loading " + name);
-        for (String s : mutableStarts) {
-          if (name.startsWith(s)) {
-            System.out.println("parent found mutable class");
-            throw new IllegalArgumentException("mutable classes!");
-          }
-        }
-        try {
-          return super.loadClass(name, resolve);
-        } catch(Exception e) {
-          System.out.println(e + " with message " + e.getMessage());
-          throw e;
-        }
+        return super.loadClass(name, resolve);
       }
     };
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableStarts,
@@ -59,9 +50,9 @@ public class MutationClassLoaders {
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
    */
-  public MutationClassLoaders(String[] paths, String mutableClasses, OptLevel optLevel)
+  public MutationClassLoaders(String[] paths, String mutableClasses, String dependencyClasses, OptLevel optLevel)
       throws IOException {
-    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, optLevel,
+    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, dependencyClasses, optLevel,
             MutationClassLoaders.class.getClassLoader());
   }
 

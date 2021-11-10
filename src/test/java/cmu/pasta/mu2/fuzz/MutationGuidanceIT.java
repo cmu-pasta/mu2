@@ -76,7 +76,7 @@ public class MutationGuidanceIT extends AbstractMutationTest {
 
 
     // Create guidance
-    MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.EXECUTION);
+    MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", OptLevel.EXECUTION);
     ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
     // Fuzz
