@@ -1,0 +1,185 @@
+package cmu.pasta.mu2.diff.junit;
+
+import cmu.pasta.mu2.diff.Mu2;
+import cmu.pasta.mu2.diff.guidance.DiffGuidance;
+import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
+import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
+import edu.berkeley.cs.jqf.instrument.tracing.SingleSnoop;
+import edu.berkeley.cs.jqf.instrument.tracing.TraceLogger;
+import org.junit.internal.TextListener;
+import org.junit.runner.*;
+
+import java.io.PrintStream;
+
+//copied from GuidedFuzzing
+public class DiffedFuzzing {
+    private static DiffGuidance guidance;
+
+    public static long DEFAULT_MAX_TRIALS = 100;
+
+    /**
+     * Sets the current global fuzzing guidance.
+     *
+     * Note: There can only be one guidance in any given JVM,
+     * because the instrumented test classes make static method
+     * calls to generate callback events.
+     *
+     * The fuzzing entry point (i.e., the target method being fuzzed)
+     * should be invoked in the same thread as the thread that sets
+     * the global guidance. This property is ensured by all variants
+     * of {@link GuidedFuzzing#run(Class, String, Guidance, PrintStream)}.
+     *
+     * @param g the guidance instance
+     * @throws IllegalStateException if a guidance has already been set
+     */
+    public static synchronized void setGuidance(DiffGuidance g) {
+        if (guidance != null) {
+            throw new IllegalStateException("Cannot set more than one guidance simultaneously");
+        }
+        guidance = g;
+    }
+
+    /**
+     * Returns the currently registered Guidance instance.
+     *
+     * @return the currently registered Guidance instance
+     */
+    public static DiffGuidance getCurrentGuidance() {
+        return guidance;
+    }
+
+    /**
+     * Unsets the current global fuzzing guidance.
+     *
+     * This allows running multiple fuzzing sessions in the same
+     * JVM instance sequentially. This method should be invoked
+     * from the same thread that last invoked {@link #setGuidance(DiffGuidance)}.
+     * This method removes any tracers associated with the
+     * current thread, so that the entry point can be detected again.
+     * This property is ensured by {@link GuidedFuzzing#run(Class, String, Guidance, PrintStream)}.
+     *
+     */
+    public static synchronized void unsetGuidance() {
+        guidance = null;
+        TraceLogger.get().remove();
+    }
+
+
+    /**
+     * Runs the guided fuzzing loop, using the system class loader to load
+     * test-application classes.
+     *
+     * <p>The test class must be annotated with <code>@RunWith(JQF.class)</code>
+     * and the test method must be annotated with <code>@Fuzz</code>.</p>
+     *
+     * <p>Once this method is invoked, the guided fuzzing loop runs continuously
+     * until the guidance instance decides to stop by returning <code>false</code>
+     * for {@link Guidance#hasInput()}. Until the fuzzing stops, this method
+     * cannot be invoked again (i.e. at most one guided fuzzing can be running
+     * at any time in a single JVM instance).</p>
+     *
+     * @param testClassName the test class containing the test method
+     * @param testMethod    the test method to execute in the fuzzing loop
+     * @param guidance      the fuzzing guidance
+     * @param out           an output stream to log Junit messages
+     * @throws ClassNotFoundException if testClassName cannot be loaded
+     * @throws IllegalStateException if a guided fuzzing run is currently executing
+     * @return the Junit-style test result
+     */
+    public synchronized static Result run(String testClassName, String testMethod,
+                                          DiffGuidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
+
+        // Run with the system class loader
+        return run(testClassName, testMethod, ClassLoader.getSystemClassLoader(), guidance, out);
+    }
+
+    /**
+     * Runs the guided fuzzing loop, using a provided classloader to load
+     * test-application classes.
+     *
+     * <p>The test class must be annotated with <code>@RunWith(JQF.class)</code>
+     * and the test method must be annotated with <code>@Fuzz</code>.</p>
+     *
+     * <p>Once this method is invoked, the guided fuzzing loop runs continuously
+     * until the guidance instance decides to stop by returning <code>false</code>
+     * for {@link Guidance#hasInput()}. Until the fuzzing stops, this method
+     * cannot be invoked again (i.e. at most one guided fuzzing can be running
+     * at any time in a single JVM instance).</p>
+     *
+     * @param testClassName the test class containing the test method
+     * @param testMethod    the test method to execute in the fuzzing loop
+     * @param loader        the classloader to load the test class with
+     * @param guidance      the fuzzing guidance
+     * @param out           an output stream to log Junit messages
+     * @throws ClassNotFoundException if testClassName cannot be loaded
+     * @throws IllegalStateException if a guided fuzzing run is currently executing
+     * @return the Junit-style test result
+     */
+    public synchronized static Result run(String testClassName, String testMethod,
+                                          ClassLoader loader,
+                                          DiffGuidance guidance, PrintStream out) throws ClassNotFoundException, IllegalStateException {
+        Class<?> testClass =
+                java.lang.Class.forName(testClassName, true, loader);
+
+        return run(testClass, testMethod, guidance, out);
+    }
+
+
+    /**
+     * Runs the guided fuzzing loop for a resolved class.
+     *
+     * <p>The test class must be annotated with <code>@RunWith(JQF.class)</code>
+     * and the test method must be annotated with <code>@Fuzz</code>.</p>
+     *
+     * <p>Once this method is invoked, the guided fuzzing loop runs continuously
+     * until the guidance instance decides to stop by returning <code>false</code>
+     * for {@link Guidance#hasInput()}. Until the fuzzing stops, this method
+     * cannot be invoked again (i.e. at most one guided fuzzing can be running
+     * at any time in a single JVM instance).</p>
+     *
+     * @param testClass     the test class containing the test method
+     * @param testMethod    the test method to execute in the fuzzing loop
+     * @param guidance      the fuzzing guidance
+     * @param out           an output stream to log Junit messages
+     * @throws IllegalStateException if a guided fuzzing run is currently executing
+     * @return the Junit-style test result
+     */
+    public synchronized static Result run(Class<?> testClass, String testMethod,
+                                          DiffGuidance guidance, PrintStream out) throws IllegalStateException {
+
+        // Ensure that the class uses the right test runner
+        RunWith annotation = testClass.getAnnotation(RunWith.class);
+        if (annotation == null || !(annotation.value().equals(Mu2.class))) {
+            throw new IllegalArgumentException(testClass.getName() + " is not annotated with @RunWith(Mu2.class)");
+        }
+
+        try {
+            // Set the static guidance instance
+            setGuidance(guidance);
+
+            // Register callback
+            SingleSnoop.setCallbackGenerator(guidance::generateCallBack);
+
+            // Create a JUnit Request
+            Request testRequest = Request.method(testClass, testMethod);
+
+            // Instantiate a runner (may return an error)
+            Runner testRunner = testRequest.getRunner();
+
+            // Start tracing for the test method
+            SingleSnoop.startSnooping(testClass.getName() + "#" + testMethod);
+
+            // Run the test
+            JUnitCore junit = new JUnitCore();
+            if (out != null) {
+                junit.addListener(new TextListener(out));
+            }
+
+            return junit.run(testRunner);
+
+        } finally {
+            // Make sure to de-register the guidance before returning
+            unsetGuidance();
+        }
+    }
+}

@@ -31,6 +31,13 @@ cd ..
 
 This installs `jqf-fuzz` and `jqf-instrument`, but does not compile the maven plugin, which itself depends on `mu2`. 
 
+### Step 1.5: Install `mu2` with no integration tests
+```
+git clone https://github.com/cmu-pasta/mu2 && cd mu2
+mvn install -DskipTests
+cd ..
+```
+
 ### Step 2 (optional): Install `sort-benchmarks` for testing
 
 ```
@@ -39,11 +46,11 @@ mvn install
 cd ..
 ```
 
-### Step 3: Install `mu2` with full integration tests
+### Step 3: Reinstall `mu2` with full integration tests
 
 Install mu2 with:
 ```
-git clone https://github.com/cmu-pasta/mu2 && cd mu2
+cd mu2
 mvn install
 cd ..
 ```
@@ -105,6 +112,61 @@ You can use the `-Dincludes` flags to select which code will be mutated.
 
 ```sh
 mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix1,prefix2
+```
+
+## Differential Fuzzing
+
+A similar pair of goals exists for a differential testing framework. 
+To use this, instrument your tests with `@Diff` and `@Compare` annotations instead of `@Test` and use the `DiffGoal` and `MutateDiffGoal` as described below.
+
+### Annotations
+
+In the differential testing framework, each test is a pair of functions, one annotated with `@Diff` and the other with `@Compare`.
+
+The function annotated with `@Diff` should **not** be `static` and should return an object (neither void nor a primitive, though boxed primitives work).
+The result of this diff function will be compared with other results using the comparison function (annotated with `@Compare`). 
+
+The comparison function should be `static`, take two arguments of the same type as the return type of any associated diff functions, and return a `Boolean` 
+(`Boolean.TRUE` if the two inputs are equivalent, `Boolean.FALSE` otherwise).
+
+Multiple functions with these annotations can be included in a single test class, so, to uniquely match the diff function with a comparison function, 
+pass the name of the comparison function as an argument to `@Diff` as `cmp` (see below for example). If no argument is passed to `cmp`, `Objects.equals()` 
+will be used as a default.
+
+Each diff function is associated with up to one comparison function, but arbitrarily many diff functions may use a comparison function.
+
+Example of a differential test for a function `populateList(List<Integer>)` when the comparison only cares about the size of the populated list:
+
+```java
+@Diff(cmp = "compare")
+public List<Integer> testPopulate(List<Integer> input) {
+    return populateList(input);
+}
+
+@Compare
+public static Boolean compare(List<Integer> list1, List<Integer> list2) {
+    return list1.size() == list2.size();
+}
+```
+
+### Diff Goal
+
+For running differential fuzzing. Currently defaults to mutation-guided fuzzing.
+
+Example: 
+
+```sh
+mvn mu2:diff -Dclass=package.class -Dmethod=method -Dincludes=prefix
+```
+
+### MutateDiff Goal
+
+For repro on mutation guidance with diff-based tests.
+
+Example: 
+
+```sh
+mvn mu2:mutatediff -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=path/to/corpus
 ```
 
 ## Implementation
