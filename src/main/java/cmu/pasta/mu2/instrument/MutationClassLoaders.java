@@ -34,7 +34,17 @@ public class MutationClassLoaders {
     this.optLevel = optLevel;
     String[] mutableStarts = mutableClasses.split(",");
     dependencyStarts = (dependencyClasses).split(",");
-    this.parentClassLoader = new URLClassLoader(paths, parent);
+    this.parentClassLoader = new URLClassLoader(paths, parent) {
+      @Override
+      public Class<?> findClass(String name) throws ClassNotFoundException {
+        for (String s : MutationClassLoaders.dependencyStarts) {
+          if (name.startsWith(s)) {
+            throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
+          }
+        }
+        return super.findClass(name);
+      }
+    };
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableStarts,
         parentClassLoader, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
