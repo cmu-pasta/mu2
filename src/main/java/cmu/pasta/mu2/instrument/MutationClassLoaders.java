@@ -27,17 +27,19 @@ public class MutationClassLoaders {
    * @param paths             The class path
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
+   * @param dependencyClasses Comma-separated list of prefixes of mutable classes
+   *                          as well as classes depending on mutable classes -
+   *                          if empty, assumes all classes are mutable or dependent on mutable classes
    */
   public MutationClassLoaders(URL[] paths, String mutableClasses, String dependencyClasses, OptLevel optLevel,
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
-    String[] mutableStarts = mutableClasses.split(",");
-    dependencyStarts = (dependencyClasses).split(",");
+    dependencyStarts = dependencyClasses.split(",");
     this.parentClassLoader = new URLClassLoader(paths, parent) {
       @Override
       public Class<?> findClass(String name) throws ClassNotFoundException {
-        for (String s : MutationClassLoaders.dependencyStarts) {
+        for (String s : dependencyStarts) {
           if (name.startsWith(s)) {
             throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
           }
@@ -45,7 +47,7 @@ public class MutationClassLoaders {
         return super.findClass(name);
       }
     };
-    this.cartographyClassLoader = new CartographyClassLoader(paths, mutableStarts,
+    this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),
         parentClassLoader, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
   }
