@@ -18,6 +18,8 @@
     </license>
   </licenses>
 
+  <packaging>maven-plugin</packaging>
+
   <dependencies>
     <!-- TODO: Depend on release version of JQF once Mu2 is deployed -->
     <dependency>
@@ -29,6 +31,22 @@
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
       <version>2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>3.5.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.5.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>3.5.3</version>
     </dependency>
   </dependencies>
 
