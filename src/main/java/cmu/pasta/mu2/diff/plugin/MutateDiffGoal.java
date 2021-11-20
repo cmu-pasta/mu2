@@ -66,6 +66,9 @@ public class MutateDiffGoal extends AbstractMojo {
     @Parameter(property = "includes")
     String includes;
 
+    @Parameter(property="depIncludes")
+    private String depIncludes;
+
     /**
      * Allows user to set optimization level for mutation-guided fuzzing.
      */
@@ -86,6 +89,10 @@ public class MutateDiffGoal extends AbstractMojo {
             throw new MojoExecutionException("Invalid Mutation OptLevel!");
         }
 
+        if(depIncludes == null) {
+            depIncludes = "";
+        }
+
         try {
             // Get project-specific classpath and output directory
             List<String> classpathElements = project.getTestClasspathElements();
@@ -93,7 +100,7 @@ public class MutateDiffGoal extends AbstractMojo {
             IOUtils.createDirectory(resultsDir);
 
             // Create mu2 classloaders from the test classpath
-            MutationClassLoaders mcls = new MutationClassLoaders(classPath, includes, ol);
+            MutationClassLoaders mcls = new MutationClassLoaders(classPath, includes, depIncludes, ol);
             CartographyClassLoader ccl = mcls.getCartographyClassLoader();
 
             // Run initial test to compute mutants dynamically

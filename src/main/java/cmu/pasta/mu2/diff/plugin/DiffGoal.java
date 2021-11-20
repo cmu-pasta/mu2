@@ -75,6 +75,9 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="includes")
     private String includes;
 
+    @Parameter(property="depIncludes")
+    private String depIncludes;
+
     /**
      * The duration of time for which to run fuzzing.
      *
@@ -173,6 +176,10 @@ public class DiffGoal extends AbstractMojo {
             outputDirectory = "fuzz-results" + File.separator + testClassName + File.separator + testMethod;
         }
 
+        if(depIncludes == null) {
+            depIncludes = "";
+        }
+
         OptLevel ol;
         try {
             ol = OptLevel.valueOf(optLevel.toUpperCase());
@@ -193,7 +200,7 @@ public class DiffGoal extends AbstractMojo {
             if (includes == null) {
                 throw new MojoExecutionException("Mutation-based fuzzing requires `-Dincludes`");
             }
-            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, ol, baseClassLoader);
+            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, depIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
             guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
