@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.ValidityDifferenceException;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
@@ -210,10 +211,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       if(cclResult != mutantResult && mutantResult != Result.FAILURE) {
         // failed via difference in validity
         deadMutants.add(mutationInstance.id);
-        exceptions.add(AssumptionViolatedException.class.getName());
+        exceptions.add(ValidityDifferenceException.class.getName());
 
         ((MutationCoverage) runCoverage).kill(mutationInstance);
-        fails.add(new AssumptionViolatedException("ccl found invalid, mutant succeeded"));
+        fails.add(new ValidityDifferenceException("ccl found invalid, mutant succeeded"));
       }
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
