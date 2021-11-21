@@ -49,7 +49,7 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
         DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
         dtr.run();
-        results.add(dtr.getResult());
+        results.add(dtr.getOutput());
         if(!comparing) return;
         Object o = compare.invoke(null, cmpTo.get(results.size() - 1), results.get(results.size() - 1));
         if (!Boolean.TRUE.equals(o)) {

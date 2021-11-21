@@ -150,9 +150,23 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     long startTime = System.currentTimeMillis();
 
-    DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-    dtr.run(); // loaded by CartographyClassLoader
-    Object cclResult = dtr.getResult();
+    DiffTrialRunner dtr;
+    Object cclOutput = null;
+    Result cclResult;
+    try {
+      dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
+      dtr.run(); // loaded by CartographyClassLoader
+      cclOutput = dtr.getOutput();
+    } catch (InstrumentationException e) {
+      throw new GuidanceException(e);
+    } catch (GuidanceException e) {
+      throw e;
+    } catch (AssumptionViolatedException e) {
+      // ignored
+    } catch (Throwable e) {
+
+    }
+
 
     long trialTime = System.currentTimeMillis() - startTime;
 
@@ -179,7 +193,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
                 method.getMethod().getParameterTypes())),
             args);
         dtr.run();
-        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclResult, dtr.getResult()))) {
+        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclOutput, dtr.getOutput()))) {
           throw new DiffException("diff!");
         }
       } catch (InstrumentationException e) {

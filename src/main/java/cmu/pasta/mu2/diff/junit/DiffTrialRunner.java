@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DiffTrialRunner extends TrialRunner {
-    private Object result;
+    private Object output;
 
     public DiffTrialRunner(Class<?> testClass, FrameworkMethod method, Object[] args) throws InitializationError {
         super(testClass, method, args);
@@ -31,12 +31,12 @@ public class DiffTrialRunner extends TrialRunner {
             Object test) {
         return new Statement() {
             @Override public void evaluate() throws Throwable {
-                result = frameworkMethod.invokeExplosively(test, args);
+                output = frameworkMethod.invokeExplosively(test, args);
             }
         };
     }
 
-    public Object getResult() {
-        return result;
+    public Object getOutput() {
+        return output;
     }
 }
