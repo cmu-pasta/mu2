@@ -152,21 +152,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     DiffTrialRunner dtr;
     Object cclOutput = null;
-    Result cclResult;
+    Result cclResult = Result.SUCCESS;
     try {
       dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
       dtr.run(); // loaded by CartographyClassLoader
       cclOutput = dtr.getOutput();
-    } catch (InstrumentationException e) {
-      throw new GuidanceException(e);
-    } catch (GuidanceException e) {
-      throw e;
     } catch (AssumptionViolatedException e) {
-      // ignored
-    } catch (Throwable e) {
-
+      cclResult = Result.INVALID;
     }
-
 
     long trialTime = System.currentTimeMillis() - startTime;
 
@@ -184,6 +177,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       }
 
       run += 1;
+      Result mutantResult = Result.SUCCESS;
       try {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
@@ -201,7 +195,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       } catch (GuidanceException e) {
         throw e;
       } catch (AssumptionViolatedException e) {
-        // ignored
+        mutantResult = Result.INVALID;
       } catch (Throwable e) {
         if (!isExceptionExpected(e.getClass(), expectedExceptions)) {
           // failed
@@ -210,7 +204,16 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
           ((MutationCoverage) runCoverage).kill(mutationInstance);
           fails.add(e);
+          mutantResult = Result.FAILURE;
         }
+      }
+      if(cclResult != mutantResult && mutantResult != Result.FAILURE) {
+        // failed via difference in validity
+        deadMutants.add(mutationInstance.id);
+        exceptions.add(AssumptionViolatedException.class.getName());
+
+        ((MutationCoverage) runCoverage).kill(mutationInstance);
+        fails.add(new AssumptionViolatedException("ccl found invalid, mutant succeeded"));
       }
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
