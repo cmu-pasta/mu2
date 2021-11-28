@@ -21,25 +21,25 @@ public class MutationClassLoaders {
   private final CartographyClassLoader cartographyClassLoader;
   private final Map<MutationInstance, MutationClassLoader> mutationClassLoaderMap;
 
-  public static String[] dependencyStarts;
+  public static String[] targetStarts;
 
   /**
    * @param paths             The class path
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
-   * @param dependencyClasses Comma-separated list of prefixes of mutable classes
+   * @param targetClasses Comma-separated list of prefixes of mutable classes
    *                          as well as classes depending on mutable classes -
    *                          if empty, assumes all classes are mutable or dependent on mutable classes
    */
-  public MutationClassLoaders(URL[] paths, String mutableClasses, String dependencyClasses, OptLevel optLevel,
+  public MutationClassLoaders(URL[] paths, String mutableClasses, String targetClasses, OptLevel optLevel,
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
-    dependencyStarts = dependencyClasses.split(",");
+    targetStarts = targetClasses.split(",");
     this.parentClassLoader = new URLClassLoader(paths, parent) {
       @Override
       public Class<?> findClass(String name) throws ClassNotFoundException {
-        for (String s : dependencyStarts) {
+        for (String s : targetStarts) {
           if (name.startsWith(s)) {
             throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
           }
@@ -57,9 +57,9 @@ public class MutationClassLoaders {
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
    */
-  public MutationClassLoaders(String[] paths, String mutableClasses, String dependencyClasses, OptLevel optLevel)
+  public MutationClassLoaders(String[] paths, String mutableClasses, String targetClasses, OptLevel optLevel)
       throws IOException {
-    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, dependencyClasses, optLevel,
+    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, targetClasses, optLevel,
             MutationClassLoaders.class.getClassLoader());
   }
 
