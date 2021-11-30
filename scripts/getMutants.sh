@@ -4,9 +4,14 @@
 #example usage:
 #  ./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
 
+fuzz() {
+    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
+    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
+    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpMu2/exp_$4 -Dengine=mutation -DrandomSeed=$4 -Dtrials=$5
+    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpMu2/exp_$4 -Dengine=mutation -DrandomSeed=$4 -Dtrials=$5
+}
+
 getResults() {
-    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest/exp_$4 -Dengine=zest -Dtrials=$5
-    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpMu2/exp_$4 -Dengine=mutation -Dtrials=$5
 
     # Debug purposes - dump args to look at actual files
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus -DdumpArgsDir=target/tmpZest/exp_$4/args_corpus/
@@ -17,6 +22,7 @@ getResults() {
 
     cat results/zest-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/zest-filter-$4.txt
     cat results/mutate-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/mutate-filter-$4.txt
+
 }
 
 CURDIR=$(pwd)
@@ -26,11 +32,16 @@ mkdir results
 
 for i in $(seq 1 1 $4)
 do
-    getResults $1 $2 $3 $i $5
+    fuzz $1 $2 $3 $i $5
 done
 
-cd $CURDIR
-python venn.py --filters_dir $6/filters --num_experiments $4 --output_img venn.png
+for i in $(seq 1 1 $4)
+do
+    getResults $1 $2 $3 $i
+done
+
+# cd $CURDIR
+python3 venn.py --filters_dir $6/filters --num_experiments $4 --output_img venn.png
 
 #comment the below lines to not remove the created files
 # rm -r filters
