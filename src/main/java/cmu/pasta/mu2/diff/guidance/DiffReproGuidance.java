@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
@@ -23,7 +24,7 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         comparing = false;
         results = new ArrayList<>();
         try {
-            compare = Object.class.getMethod("equals", Object.class);
+            compare = Objects.class.getMethod("equals", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
