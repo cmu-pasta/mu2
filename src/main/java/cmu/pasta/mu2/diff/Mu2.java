@@ -3,6 +3,7 @@ package cmu.pasta.mu2.diff;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.guidance.DiffNoGuidance;
 import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
+import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.JQF;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.junit.quickcheck.FuzzStatement;
@@ -74,7 +75,7 @@ public class Mu2 extends JQF {
 
     @Override
     public Statement methodBlock(FrameworkMethod method) {
-        if (method.getAnnotation(Diff.class) == null) {
+        if (method.getAnnotation(Diff.class) == null && method.getAnnotation(Fuzz.class) == null) {
             return super.methodBlock(method);
         }
 
@@ -85,7 +86,7 @@ public class Mu2 extends JQF {
             guidance = new DiffNoGuidance(GuidedFuzzing.DEFAULT_MAX_TRIALS, System.err);
         }
 
-        if(!method.getAnnotation(Diff.class).cmp().equals("")) {
+        if(method.getAnnotation(Diff.class) != null && !method.getAnnotation(Diff.class).cmp().equals("")) {
             guidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
         }
 
