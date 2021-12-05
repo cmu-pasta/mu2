@@ -114,6 +114,15 @@ You can use the `-Dincludes` flags to select which code will be mutated.
 mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix1,prefix2
 ```
 
+Additionally, setting the `-DtargetIncludes` flag to a comma-separated list that includes every mutated class 
+as well as all classes that depend on a mutable class anywhere in their dependency trees improves efficiency by 
+loading classes not in the list with a separate intermediate ClassLoader.
+
+Example using a test of Scala's chess library:
+```sh
+mvn jqf:fuzz -Dclass=edu.berkeley.cs.jqf.examples.chess.FENTest -Dmethod=testWithGenerator -Dincludes=chess.format.Forsyth,chess.Situation -DtargetIncludes=edu.berkeley.cs.jqf.examples.chess,chess -Dengine=mutation
+```
+
 ## Differential Fuzzing
 
 A similar pair of goals exists for a differential testing framework. 
