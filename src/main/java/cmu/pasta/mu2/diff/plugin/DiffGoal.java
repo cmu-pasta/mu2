@@ -4,7 +4,6 @@ import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import cmu.pasta.mu2.fuzz.MutationGuidance;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
-import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -74,6 +73,9 @@ public class DiffGoal extends AbstractMojo {
      */
     @Parameter(property="includes")
     private String includes;
+
+    @Parameter(property="targetIncludes")
+    private String targetIncludes;
 
     /**
      * The duration of time for which to run fuzzing.
@@ -173,6 +175,10 @@ public class DiffGoal extends AbstractMojo {
             outputDirectory = "fuzz-results" + File.separator + testClassName + File.separator + testMethod;
         }
 
+        if(targetIncludes == null) {
+            targetIncludes = "";
+        }
+
         OptLevel ol;
         try {
             ol = OptLevel.valueOf(optLevel.toUpperCase());
@@ -193,7 +199,7 @@ public class DiffGoal extends AbstractMojo {
             if (includes == null) {
                 throw new MojoExecutionException("Mutation-based fuzzing requires `-Dincludes`");
             }
-            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, ol, baseClassLoader);
+            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
             guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {

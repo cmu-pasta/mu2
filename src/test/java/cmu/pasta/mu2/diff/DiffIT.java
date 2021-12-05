@@ -72,7 +72,7 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "sort,diff", OptLevel.NONE);
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
@@ -91,7 +91,7 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "sort,diff", OptLevel.NONE);
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
@@ -110,7 +110,7 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "sort,diff", OptLevel.NONE);
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
@@ -129,7 +129,7 @@ public class DiffIT extends AbstractMutationTest {
         Random rnd = new Random(42);
 
         // Create guidance
-        MutationClassLoaders mcls = initClassLoaders(targetInst, OptLevel.NONE);
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "sort,diff", OptLevel.NONE);
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
