@@ -174,9 +174,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
             mutationClassLoaders.getMutationClassLoader(mutationInstance));
+        List<Class<?>> paramTypes = new ArrayList<>();
+        for(Class<?> clz : method.getMethod().getParameterTypes()) {
+          paramTypes.add(Class.forName(clz.getName(), true, mutationClassLoaders.getMutationClassLoader(mutationInstance)));
+        }
+        System.out.println(paramTypes);
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
-                method.getMethod().getParameterTypes())),
+                paramTypes.toArray(new Class<?>[]{}))),
             args);
         dtr.run();
         if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclResult, dtr.getResult()))) {
@@ -191,6 +196,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       } catch (Throwable e) {
         if (!isExceptionExpected(e.getClass(), expectedExceptions)) {
           // failed
+          e.printStackTrace();
           deadMutants.add(mutationInstance.id);
           exceptions.add(e.getClass().getName());
 
