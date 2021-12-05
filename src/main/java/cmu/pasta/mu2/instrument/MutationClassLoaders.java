@@ -4,6 +4,7 @@ import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,18 +21,34 @@ public class MutationClassLoaders {
   private final CartographyClassLoader cartographyClassLoader;
   private final Map<MutationInstance, MutationClassLoader> mutationClassLoaderMap;
 
+  public static String[] targetStarts;
+
   /**
    * @param paths             The class path
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
+   * @param targetClasses Comma-separated list of prefixes of mutable classes
+   *                          as well as classes depending on mutable classes -
+   *                          if empty, assumes all classes are mutable or dependent on mutable classes
    */
-  public MutationClassLoaders(URL[] paths, String mutableClasses, OptLevel optLevel,
+  public MutationClassLoaders(URL[] paths, String mutableClasses, String targetClasses, OptLevel optLevel,
       ClassLoader parent) {
     this.paths = paths;
     this.optLevel = optLevel;
-    this.parentClassLoader = parent;
+    targetStarts = targetClasses.split(",");
+    this.parentClassLoader = new URLClassLoader(paths, parent) {
+      @Override
+      public Class<?> findClass(String name) throws ClassNotFoundException {
+        for (String s : targetStarts) {
+          if (name.startsWith(s)) {
+            throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
+          }
+        }
+        return super.findClass(name);
+      }
+    };
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),
-        parent, optLevel);
+        parentClassLoader, optLevel);
     this.mutationClassLoaderMap = new HashMap<>();
   }
 
@@ -40,10 +57,10 @@ public class MutationClassLoaders {
    * @param mutableClasses    Comma-separated list of prefixes of classes to instrument
    * @param optLevel          The optimization level
    */
-  public MutationClassLoaders(String[] paths, String mutableClasses, OptLevel optLevel)
+  public MutationClassLoaders(String[] paths, String mutableClasses, String targetClasses, OptLevel optLevel)
       throws IOException {
-    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, optLevel,
-        MutationClassLoaders.class.getClassLoader());
+    this(InstrumentingClassLoader.stringsToUrls(paths), mutableClasses, targetClasses, optLevel,
+            MutationClassLoaders.class.getClassLoader());
   }
 
   /**

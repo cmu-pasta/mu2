@@ -31,7 +31,7 @@ public class MutationTestingIT extends AbstractMutationTest {
     MutationSnoop.setMutantCallback(m -> seenMutants.add(m));
 
     // Create the JUnit test runner
-    MutationClassLoaders mcls = initClassLoaders(targetInst, opt);
+    MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", opt);
     runTest(testClassName, testMethod, mcls.getCartographyClassLoader());
 
     // Retrieve dynamically collected mutation instances

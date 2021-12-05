@@ -33,9 +33,9 @@ public class AbstractMutationTest {
    * @return the classloaders
    * @throws IOException if classpath is malformed
    */
-  protected MutationClassLoaders initClassLoaders(String mutableClasses, OptLevel opt)
+  protected MutationClassLoaders initClassLoaders(String mutableClasses, String targetClasses, OptLevel opt)
       throws IOException {
-    return new MutationClassLoaders(instrumentablesClassPath, mutableClasses, opt);
+    return new MutationClassLoaders(instrumentablesClassPath, mutableClasses, targetClasses, opt);
   }
 
 }
