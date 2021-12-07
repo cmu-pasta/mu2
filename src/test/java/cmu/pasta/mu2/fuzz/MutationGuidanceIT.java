@@ -68,7 +68,7 @@ public class MutationGuidanceIT extends AbstractMutationTest {
   @Test
   public void fuzzTimSortO1() throws Exception {
     // Set up test params
-    String testClassName = "sort.TimSortTest";
+    String testClassName = "sort.XTimSortTest";
     String testMethod = "fuzzTimSort";
     String targetInst = "sort.TimSort";
     long trials = 100;
