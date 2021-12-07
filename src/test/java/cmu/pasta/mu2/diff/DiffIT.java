@@ -1,10 +1,10 @@
 package cmu.pasta.mu2.diff;
 
-import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import cmu.pasta.mu2.fuzz.MutationGuidance;
 import cmu.pasta.mu2.instrument.AbstractMutationTest;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
+import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,7 +76,7 @@ public class DiffIT extends AbstractMutationTest {
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
-        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         Assert.assertEquals(9, mu2.corpusCount());
     }
@@ -95,7 +95,7 @@ public class DiffIT extends AbstractMutationTest {
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
-        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         Assert.assertEquals(8, mu2.corpusCount());
     }
@@ -114,7 +114,7 @@ public class DiffIT extends AbstractMutationTest {
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
-        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         Assert.assertEquals(36, mu2.corpusCount());
     }
@@ -133,7 +133,7 @@ public class DiffIT extends AbstractMutationTest {
         ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
         // Fuzz
-        DiffedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         Assert.assertEquals(36, mu2.corpusCount());
     }
