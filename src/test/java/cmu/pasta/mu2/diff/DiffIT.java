@@ -137,4 +137,24 @@ public class DiffIT extends AbstractMutationTest {
 
         Assert.assertEquals(36, mu2.corpusCount());
     }
+
+    @Test
+    public void fuzzTimSort() throws Exception {
+        // Set up test params
+        String testClassName = "diff.DiffTest";
+        String testMethod = "fuzzTimSort";
+        String targetInst = "sort.TimSort";
+        long trials = 100;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "sort,diff", OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(36, mu2.corpusCount());
+    }
+
 }
