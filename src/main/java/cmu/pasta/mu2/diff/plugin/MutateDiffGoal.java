@@ -2,11 +2,11 @@ package cmu.pasta.mu2.diff.plugin;
 
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
-import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
+import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.util.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.AbstractMojoExecutionException;
@@ -158,7 +158,7 @@ public class MutateDiffGoal extends AbstractMojo {
             repro = new DiffReproGuidance(input, null);
         }
         repro.setStopOnFailure(true);
-        Result toReturn = DiffedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
+        Result toReturn = GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
         reproResults = repro.getResults();
         return toReturn;
     }

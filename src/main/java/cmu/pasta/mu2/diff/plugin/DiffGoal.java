@@ -1,10 +1,10 @@
 package cmu.pasta.mu2.diff.plugin;
 
-import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import cmu.pasta.mu2.fuzz.MutationGuidance;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
+import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -211,7 +211,7 @@ public class DiffGoal extends AbstractMojo {
         }
 
         try {
-            result = DiffedFuzzing.run(testClassName, testMethod, loader, guidance, out);
+            result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException("Could not load test class", e);
         } catch (IllegalArgumentException e) {
