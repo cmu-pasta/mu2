@@ -2,8 +2,8 @@ package cmu.pasta.mu2.diff;
 
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.guidance.DiffNoGuidance;
-import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.JQF;
+import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.junit.quickcheck.FuzzStatement;
 import org.junit.runners.model.FrameworkMethod;
@@ -79,17 +79,22 @@ public class Mu2 extends JQF {
         }
 
         // Get currently set fuzzing guidance
-        DiffGuidance guidance = DiffedFuzzing.getCurrentGuidance();
+        Guidance guidance = GuidedFuzzing.getCurrentGuidance();
+        DiffGuidance diffGuidance;
+
 
         if(guidance == null) {
             guidance = new DiffNoGuidance(GuidedFuzzing.DEFAULT_MAX_TRIALS, System.err);
         }
 
+        assert (guidance instanceof DiffGuidance);
+        diffGuidance = (DiffGuidance) guidance;
+
         if(!method.getAnnotation(Diff.class).cmp().equals("")) {
-            guidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
+            diffGuidance.setCompare(cmpNames.get(method.getAnnotation(Diff.class).cmp()).getMethod());
         }
 
-        FuzzStatement fs = new FuzzStatement(method, getTestClass(), generatorRepository, guidance);
+        FuzzStatement fs = new FuzzStatement(method, getTestClass(), generatorRepository, diffGuidance);
         return fs;
     }
 }

@@ -12,7 +12,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
-import cmu.pasta.mu2.diff.junit.DiffedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
@@ -189,7 +188,7 @@ public class ReproDiffGoal extends AbstractMojo {
 
         try {
             guidance = new DiffReproGuidance(inputFile, null);
-            result = DiffedFuzzing.run(testClassName, testMethod, loader, guidance, out);
+            result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException("Could not load test class", e);
         } catch (IllegalArgumentException e) {
