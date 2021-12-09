@@ -174,7 +174,7 @@ public class MutateDiffGoal extends AbstractMojo {
             repro = new DiffMutationReproGuidance(input, null, cclResults);
         }
         repro.setStopOnFailure(true);
-        Result toReturn = DiffedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
+        Result toReturn = GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
         reproResults = repro.getResults();
         return toReturn;
     }
