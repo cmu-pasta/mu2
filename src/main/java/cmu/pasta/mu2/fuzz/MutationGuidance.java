@@ -160,12 +160,13 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<Throwable> fails = new ArrayList<>();
     List<Class<?>> expectedExceptions = Arrays.asList(method.getMethod().getExceptionTypes());
 
-    //System.out.println("original args: " + Arrays.toString(args));
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(out);
     for(Object arg : args) {
       oos.writeObject(arg);
     }
+    oos.writeObject(cclResult);
+    byte[] argBytes = out.toByteArray();
 
     int run = 1;
     for (MutationInstance mutationInstance : getMutationInstances()) {
@@ -186,9 +187,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         for(Class<?> clz : method.getMethod().getParameterTypes()) {
           paramTypes.add(Class.forName(clz.getName(), true, mcl));
         }
-        System.out.println("parameters: " + paramTypes);
         List<Object> argsList = new ArrayList<>();
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())) {
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(argBytes)) {
           @Override
           public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
             try {
@@ -203,8 +203,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         for(Object arg : args) {
           argsList.add(ois.readObject());
         }
-        System.out.println("old args: " + Arrays.toString(args));
-        System.out.println("new args: " + argsList);
+        Object nCclResult = ois.readObject();
         ois.close();
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
@@ -212,7 +211,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
                 argsList.toArray());
         dtr.run();
         //TODO now cclResult and dtr.getResult have different classes; need to read/write cclResult too
-        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclResult, dtr.getResult()))) {
+        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, nCclResult, dtr.getResult()))) {
           throw new DiffException("diff!");
         }
       } catch (InstrumentationException e) {
@@ -224,7 +223,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       } catch (Throwable e) {
         if (!isExceptionExpected(e.getClass(), expectedExceptions)) {
           // failed
-          e.printStackTrace();
           deadMutants.add(mutationInstance.id);
           exceptions.add(e.getClass().getName());
 
