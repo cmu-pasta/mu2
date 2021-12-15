@@ -15,6 +15,7 @@ public class DiffTrialRunner extends TrialRunner {
 
     public DiffTrialRunner(Class<?> testClass, FrameworkMethod method, Object[] args) throws InitializationError {
         super(testClass, method, args);
+        output = null;
     }
 
     @Override protected List<FrameworkMethod> computeTestMethods() {

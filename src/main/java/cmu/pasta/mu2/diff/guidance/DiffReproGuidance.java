@@ -1,8 +1,11 @@
 package cmu.pasta.mu2.diff.guidance;
 
 import cmu.pasta.mu2.diff.DiffException;
+import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
+import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
+import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -15,14 +18,15 @@ import java.util.Objects;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
-    private List<Object> cmpTo, results;
+    private List<Outcome> cmpTo;
+    public static final List<Outcome> recentOutcomes = new ArrayList<>();
     private boolean comparing;
 
     public DiffReproGuidance(File inputFile, File traceDir) throws IOException {
         super(inputFile, traceDir);
         cmpTo = null;
         comparing = false;
-        results = new ArrayList<>();
+        recentOutcomes.clear();
         try {
             compare = Objects.class.getMethod("equals", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
@@ -30,10 +34,9 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
     }
 
-    public DiffReproGuidance(File inputFile, File traceDir, List<Object> cT) throws IOException {
+    public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes) throws IOException {
         this(inputFile, traceDir);
-        results = new ArrayList<>();
-        cmpTo = cT;
+        cmpTo = cmpRes;
         comparing = true;
     }
 
@@ -42,19 +45,27 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         compare = m;
     }
 
-    public List<Object> getResults() {
-        return results;
-    }
-
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
         DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-        dtr.run();
-        results.add(dtr.getOutput());
-        if(!comparing) return;
-        Object o = compare.invoke(null, cmpTo.get(results.size() - 1), results.get(results.size() - 1));
-        if (!Boolean.TRUE.equals(o)) {
-            throw new DiffException("diff!");
+        Outcome out;
+        try {
+            dtr.run();
+            out = new Outcome(dtr.getOutput(), null);
+        } catch(InstrumentationException e) {
+            throw new GuidanceException(e);
+        } catch (GuidanceException e) {
+            throw e;
+        } catch(Throwable e) {
+            out = new Outcome(null, e);
+        }
+        recentOutcomes.add(out);
+        if(!comparing) {
+            if(out.thrown != null) throw out.thrown;
+            return;
+        }
+        if(!Outcome.same(cmpTo.get(recentOutcomes.size() - 1), out, compare)) {
+            throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), recentOutcomes.get(recentOutcomes.size() - 1));
         }
     }
 }
