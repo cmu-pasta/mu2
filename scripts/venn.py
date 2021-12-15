@@ -44,6 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("--filters_dir", required=True, type=str)
     parser.add_argument("--num_experiments", required=True, type=int)
     parser.add_argument("--output_img", required=True, type=str)
+    parser.add_argument("--target_name", required=False, type=str)
 
     args = parser.parse_args()
     zest_killed = []
@@ -65,14 +66,24 @@ if __name__ == "__main__":
         mutate_unique_count.append(mutate_unique)
         both_found.append(both)
 
+
+    zest_stats = stats.describe(zest_killed)
+    mu2_stats = stats.describe(mutate_killed)
+
     print("---------------------------------------------------\n\n")
     print("Zest Killed Counts: ")
     print(zest_killed)
     print("Mu2 Killed Counts: ")
     print(mutate_killed)
     print("Zest Mutant Killed Summary: ")
+    print("Experiments: %d" % zest_stats.nobs)
+    print("Mean: %f" % zest_stats.mean)
+    print("Stddev: %f" % np.sqrt(zest_stats.variance))
     print(stats.describe(zest_killed))
     print("Mu2 Mutant Killed Summary: ")
+    print("Experiments: %d" % mu2_stats.nobs)
+    print("Mean: %f" % mu2_stats.mean)
+    print("Stddev: %f" % np.sqrt(mu2_stats.variance))
     print(stats.describe(mutate_killed))
     print("Zest Unique Mutant Killed Summary: ")
     print(stats.describe(zest_unique_count))
@@ -85,5 +96,7 @@ if __name__ == "__main__":
 
 
     fig = venn2(subsets = (math.floor((np.mean(zest_unique_count)) * 100) / 100.0, math.floor((np.mean(mutate_unique_count)) * 100) / 100.0, math.floor((np.mean(both_found)) * 100) / 100.0), set_labels = ["Zest           ", "           Mu2"])
+    if (args.target_name):
+        plt.title(args.target_name)
     plt.savefig(args.output_img)
 
