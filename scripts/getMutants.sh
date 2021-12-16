@@ -17,8 +17,8 @@ getResults() {
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus -DdumpArgsDir=target/tmpZest/exp_$4/args_corpus/
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpMu2/exp_$4/corpus -DdumpArgsDir=target/tmpMu2/exp_$4/args_corpus/
 
-    mvn jqf:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus > results/zest-results-$4.txt
-    mvn jqf:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpMu2/exp_$4/corpus > results/mutate-results-$4.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus > results/zest-results-$4.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpMu2/exp_$4/corpus > results/mutate-results-$4.txt
 
     cat results/zest-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/zest-filter-$4.txt
     cat results/mutate-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/mutate-filter-$4.txt
