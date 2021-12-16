@@ -34,7 +34,7 @@ import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToU
  *
  * @author Bella Laybourn
  */
-@Mojo(name="mutatediff",
+@Mojo(name="mutate",
         requiresDependencyResolution= ResolutionScope.TEST)
 public class MutateDiffGoal extends AbstractMojo {
     @Parameter(defaultValue="${project}", required=true, readonly=true)

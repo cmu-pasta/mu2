@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.ValidityDifferenceException;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
@@ -196,9 +197,19 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       } catch (Throwable e) {
         mclOutcome = new Outcome(null, e);
       }
-      if(compare != null && !Outcome.same(cclOutcome, mclOutcome, compare)) {
+      // MCL outcome and CCL outcome should be the same (either returned same value or threw same exception)
+      // If this isn't the case, the mutant is killed.
+      // This catches validity differences because an invalid input throws an AssumptionViolatedException,
+      // which will be compared as the thrown value.
+      if(!Outcome.same(cclOutcome, mclOutcome, compare)) {
         deadMutants.add(mutationInstance.id);
-        Throwable t = cclOutcome.thrown != mclOutcome.thrown ? mclOutcome.thrown : new DiffException(cclOutcome, mclOutcome);
+        Throwable t;
+        if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
+          // CCL succeeded, MCL threw an exception
+          t = mclOutcome.thrown;
+        } else {
+          t = new DiffException(cclOutcome, mclOutcome);
+        }
         exceptions.add(t.getClass().getName());
         ((MutationCoverage) runCoverage).kill(mutationInstance);
         fails.add(t);
