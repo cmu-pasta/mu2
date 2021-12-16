@@ -270,3 +270,15 @@ Usage:
 ```
 python scripts/plot_mutant_data.py <plot_data_file> <output_image_file> 
 ```
+
+### Experiments and Venn Diagram
+Usage:
+```
+./getMutants.sh <testClass> <testMethod> <includesClass> <experiments> <trials> <baseDirectory>
+
+./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
+```
+Venn diagram script alone:
+```
+python scripts/venn.py --filters_dir <filters_dir> --num_experiments <num_experiments> --output_img <output_img_name>
+```
