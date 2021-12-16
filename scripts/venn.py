@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import os
+import math
 
 def get_killed_mutants(file_name):
     with open(file_name, "r") as f:
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     print(stats.ttest_ind(zest_killed, mutate_killed))
 
 
-    fig = venn2(subsets = (np.mean(zest_unique_count), np.mean(mutate_unique_count), np.mean(both_found)), set_labels = ["Zest           ", "           Mu2"])
+    fig = venn2(subsets = (math.floor((np.mean(zest_unique_count)) * 100) / 100.0, math.floor((np.mean(mutate_unique_count)) * 100) / 100.0, math.floor((np.mean(both_found)) * 100) / 100.0), set_labels = ["Zest           ", "           Mu2"])
     if (args.target_name):
         plt.title(args.target_name)
     plt.savefig(args.output_img)
