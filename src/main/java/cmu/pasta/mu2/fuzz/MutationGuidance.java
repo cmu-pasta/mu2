@@ -210,9 +210,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
                 paramTypes.toArray(new Class<?>[]{}))),
                 argsList.toArray());
         dtr.run();
-        //TODO now cclResult and dtr.getResult have different classes; need to read/write cclResult too
-        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, nCclResult, dtr.getResult()))) {
-          throw new DiffException("diff!");
+        if(compare != null) {
+          Method ncmp = Class.forName(compare.getDeclaringClass().getName(), true, mcl).getMethod(compare.getName(), compare.getParameterTypes());
+          if(!Boolean.TRUE.equals(ncmp.invoke(null, nCclResult, dtr.getResult()))) {
+            throw new DiffException(nCclResult + " vs " + dtr.getResult());
+          }
         }
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);
