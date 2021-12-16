@@ -1,7 +1,6 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.ValidityDifferenceException;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
