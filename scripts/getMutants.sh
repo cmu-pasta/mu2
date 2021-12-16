@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the the directory at $6.
+#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the current directory.
 #example usage:
 #  ./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
 
