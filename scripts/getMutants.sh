@@ -40,7 +40,7 @@ do
     getResults $1 $2 $3 $i
 done
 
-# cd $CURDIR
+cd $CURDIR
 python3 venn.py --filters_dir $6/filters --num_experiments $4 --output_img venn.png
 
 #comment the below lines to not remove the created files
