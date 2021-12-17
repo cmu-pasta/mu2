@@ -150,8 +150,10 @@ public class DiffGoal extends AbstractMojo {
     /**
      * Allows user to set optimization level for mutation-guided fuzzing.
      * Does nothing if mutation engine is not used.
+     *
+     * <p> If not provided, defaults to {@code EXECUTION}.
      */
-    @Parameter(property="optLevel", defaultValue = "NONE")
+    @Parameter(property="optLevel", defaultValue = "EXECUTION")
     private String optLevel;
 
     @Override
