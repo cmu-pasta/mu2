@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.diff.plugin;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
@@ -33,7 +34,7 @@ import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToU
  *
  * @author Bella Laybourn
  */
-@Mojo(name="mutatediff",
+@Mojo(name="mutate",
         requiresDependencyResolution= ResolutionScope.TEST)
 public class MutateDiffGoal extends AbstractMojo {
     @Parameter(defaultValue="${project}", required=true, readonly=true)
@@ -75,9 +76,6 @@ public class MutateDiffGoal extends AbstractMojo {
     @Parameter(property="optLevel", defaultValue = "none")
     private String optLevel;
 
-    List<Object> reproResults;
-    int ind = 0;
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
@@ -106,8 +104,8 @@ public class MutateDiffGoal extends AbstractMojo {
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
             Result initialResults = runRepro(ccl, null, false);
-            List<Object> cclResults = reproResults;
-            System.out.println("cclResults: " + cclResults);
+            List<Outcome> cclOutcomes = new ArrayList<>(DiffReproGuidance.recentOutcomes);
+            System.out.println("cclOutcomes: " + cclOutcomes);
             if (!initialResults.wasSuccessful()) {
                 throw new MojoFailureException("Initial test run fails",
                         initialResults.getFailures().get(0).getException());
@@ -123,7 +121,7 @@ public class MutateDiffGoal extends AbstractMojo {
             for (MutationInstance mutationInstance : mutationInstances) {
                 log.info("Running Mutant " + mutationInstance.toString());
                 MutationClassLoader mcl = mcls.getMutationClassLoader(mutationInstance);
-                Result res = runRepro(mcl, cclResults, true);
+                Result res = runRepro(mcl, cclOutcomes, true);
                 if (!res.wasSuccessful()) {
                     killedMutants.add(mutationInstance);
                 }
@@ -150,7 +148,7 @@ public class MutateDiffGoal extends AbstractMojo {
     }
 
     // Executes a fresh repro with a given classloader
-    private Result runRepro(ClassLoader classLoader, List<Object> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
+    private Result runRepro(ClassLoader classLoader, List<Outcome> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
         DiffReproGuidance repro;
         if(useCR) {
             repro = new DiffReproGuidance(input, null, cclReturn);
@@ -158,8 +156,6 @@ public class MutateDiffGoal extends AbstractMojo {
             repro = new DiffReproGuidance(input, null);
         }
         repro.setStopOnFailure(true);
-        Result toReturn = GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
-        reproResults = repro.getResults();
-        return toReturn;
+        return GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
     }
 }

@@ -2,6 +2,7 @@ package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
+import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
@@ -11,7 +12,6 @@ import cmu.pasta.mu2.util.ArraySet;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
-import edu.berkeley.cs.jqf.fuzz.junit.TrialRunner;
 import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import java.io.File;
@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import org.junit.AssumptionViolatedException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -150,14 +149,23 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     long startTime = System.currentTimeMillis();
 
-    DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-    dtr.run(); // loaded by CartographyClassLoader
-    Object cclResult = dtr.getResult();
+    DiffTrialRunner dtr;
+    Outcome cclOutcome;
+    try {
+      dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
+      dtr.run(); // loaded by CartographyClassLoader
+      cclOutcome = new Outcome(dtr.getOutput(), null);
+    } catch(InstrumentationException e) {
+      throw new GuidanceException(e);
+    } catch (GuidanceException e) {
+      throw e;
+    } catch(Throwable t) {
+      cclOutcome = new Outcome(null, t);
+    }
 
     long trialTime = System.currentTimeMillis() - startTime;
 
     List<Throwable> fails = new ArrayList<>();
-    List<Class<?>> expectedExceptions = Arrays.asList(method.getMethod().getExceptionTypes());
 
     int run = 1;
     for (MutationInstance mutationInstance : getMutationInstances()) {
@@ -170,6 +178,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       }
 
       run += 1;
+      Outcome mclOutcome;
       try {
         mutationInstance.resetTimer();
         Class<?> clazz = Class.forName(testClass.getName(), true,
@@ -179,28 +188,36 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
                 method.getMethod().getParameterTypes())),
             args);
         dtr.run();
-        if(compare != null && !Boolean.TRUE.equals(compare.invoke(null, cclResult, dtr.getResult()))) {
-          throw new DiffException("diff!");
-        }
+        mclOutcome = new Outcome(dtr.getOutput(), null);
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);
       } catch (GuidanceException e) {
         throw e;
-      } catch (AssumptionViolatedException e) {
-        // ignored
       } catch (Throwable e) {
-        if (!isExceptionExpected(e.getClass(), expectedExceptions)) {
-          // failed
-          deadMutants.add(mutationInstance.id);
-          exceptions.add(e.getClass().getName());
-
-          ((MutationCoverage) runCoverage).kill(mutationInstance);
-          fails.add(e);
+        mclOutcome = new Outcome(null, e);
+      }
+      // MCL outcome and CCL outcome should be the same (either returned same value or threw same exception)
+      // If this isn't the case, the mutant is killed.
+      // This catches validity differences because an invalid input throws an AssumptionViolatedException,
+      // which will be compared as the thrown value.
+      if(!Outcome.same(cclOutcome, mclOutcome, compare)) {
+        deadMutants.add(mutationInstance.id);
+        Throwable t;
+        if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
+          // CCL succeeded, MCL threw an exception
+          t = mclOutcome.thrown;
+        } else {
+          t = new DiffException(cclOutcome, mclOutcome);
         }
+        exceptions.add(t.getClass().getName());
+        ((MutationCoverage) runCoverage).kill(mutationInstance);
+        fails.add(t);
       }
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
     }
+
+    if(cclOutcome.thrown != null) throw cclOutcome.thrown;
 
     long completeTime = System.currentTimeMillis() - startTime;
 
@@ -208,16 +225,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     mappingTime += trialTime;
     testingTime += completeTime;
     numRuns += run;
-  }
-
-  private boolean isExceptionExpected(Class<? extends Throwable> e,
-      List<Class<?>> expectedExceptions) {
-    for (Class<?> expectedException : expectedExceptions) {
-      if (expectedException.isAssignableFrom(e)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override
