@@ -198,6 +198,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         paramTypes.add(Class.forName(clz.getName(), true, mcl));
       }
       List<Object> argsList = new ArrayList<>();
+      //TODO put serialization logic in different method (readability)
       ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(argBytes)) {
         @Override
         public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
@@ -212,6 +213,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       for(Object arg : args) {
         argsList.add(ois.readObject());
       }
+      //TODO serialize MCL output instead
       Outcome nCclOutcome = new Outcome(ois.readObject(), (Throwable) ois.readObject());
       ois.close();
       Method ncmp = Class.forName(compare.getDeclaringClass().getName(), true, mcl).getMethod(compare.getName(), compare.getParameterTypes());
