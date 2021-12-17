@@ -12,7 +12,7 @@ fuzzZest() {
 
 fuzzMu2() {
     echo mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$7
-    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$7
+    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$7 -DoptLevel=EXECUTION
 }
 
 getResults() {
