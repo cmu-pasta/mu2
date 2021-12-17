@@ -27,7 +27,7 @@ import org.apache.maven.project.MavenProject;
 import org.junit.runner.Result;
 
 /** version of repro for diffuzzing*/
-@Mojo(name="reprodiff",
+@Mojo(name="repro",
         requiresDependencyResolution=ResolutionScope.TEST)
 public class ReproDiffGoal extends AbstractMojo {
 

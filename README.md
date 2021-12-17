@@ -97,7 +97,7 @@ mvn jqf:fuzz -Dclass=package.class -Dmethod=method -Dengine=mutation -Dtrials=10
 
 ### Mutate Goal (aka Mu2 Repro)
 
-For reproducing results from mutation-guided fuzzing. Run using `jqf:mutate` with the `-Dclass` and `-Dmethod` flags. 
+For reproducing results from mutation-guided fuzzing. Run using `mu2:mutate` with the `-Dclass` and `-Dmethod` flags. 
 You can set an explicit corpus by providing the `-Dcorpus` flag.
 
 Example: 
@@ -168,14 +168,24 @@ Example:
 mvn mu2:diff -Dclass=package.class -Dmethod=method -Dincludes=prefix
 ```
 
-### MutateDiff Goal
+### Mutate Goal
 
 For repro on mutation guidance with diff-based tests.
 
 Example: 
 
 ```sh
-mvn mu2:mutatediff -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=path/to/corpus
+mvn mu2:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=path/to/corpus
+```
+
+### Repro Goal
+
+For repro on other guidances with diff-based tests.
+
+Example: 
+
+```sh
+mvn mu2:repro -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=path/to/corpus
 ```
 
 ## Implementation
@@ -259,4 +269,16 @@ outputs an image plotting found mutants, killed mutants, and optionally seen/inf
 Usage:
 ```
 python scripts/plot_mutant_data.py <plot_data_file> <output_image_file> 
+```
+
+### Experiments and Venn Diagram
+Usage:
+```
+./getMutants.sh <testClass> <testMethod> <includesClass> <experiments> <trials> <baseDirectory>
+
+./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
+```
+Venn diagram script alone:
+```
+python scripts/venn.py --filters_dir <filters_dir> --num_experiments <num_experiments> --output_img <output_img_name>
 ```
