@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the current directory.
+#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the output directory.
 #example usage:
 #  ./getMutants.sh diff.DiffTest fuzzTimSort testTimSort sort.TimSort diff.DiffTest,sort \
 #     3 1000 ../../sort-benchmarks timsort
@@ -56,7 +56,7 @@ do
 done
 
 cd $CURDIR
-python3 venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $TARGETNAME-venn.png
+python3 venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png
 
 #comment the below lines to not remove the created files
 # rm -r filters
