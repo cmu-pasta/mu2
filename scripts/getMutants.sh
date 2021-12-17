@@ -18,11 +18,11 @@ fuzzMu2() {
 getResults() {
 
     # Debug purposes - dump args to look at actual files
-    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
-    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
+    # mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
+    # mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
 
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus > $7-results/zest-results-$6.txt
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus > $7-results/mutate-results-$6.txt
+    # mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus > $7-results/zest-results-$6.txt
+    # mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus > $7-results/mutate-results-$6.txt
 
     cat $7-results/zest-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
     cat $7-results/mutate-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
@@ -43,12 +43,13 @@ CURDIR=$(pwd)
 cd $DIR
 mkdir $TARGETNAME-filters
 mkdir $TARGETNAME-results
+mkdir $TARGETNAME-mutant-plots
 
-for i in $(seq 1 1 $REPS)
-do
-    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TRIALS
-    fuzzMu2 $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TRIALS
-done
+# for i in $(seq 1 1 $REPS)
+# do
+#     fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TRIALS
+#     fuzzMu2 $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TRIALS
+# done
 
 for i in $(seq 1 1 $6)
 do
@@ -56,7 +57,13 @@ do
 done
 
 cd $CURDIR
-python3 venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png
+python venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png
+
+for i in $(seq 1 1 $6)
+do
+    python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
+done
+
 
 #comment the below lines to not remove the created files
 # rm -r filters
