@@ -172,7 +172,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     for (Object arg : args) {
       oos.writeObject(arg);
     }
-    oos.writeObject(cclOutcome);
+    oos.writeObject(cclOutcome.output);
+    oos.writeObject(cclOutcome.thrown);
     byte[] argBytes = out.toByteArray();
     oos.close();
 
@@ -211,7 +212,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       for(Object arg : args) {
         argsList.add(ois.readObject());
       }
-      Outcome nCclOutcome = (Outcome) ois.readObject();
+      Outcome nCclOutcome = new Outcome(ois.readObject(), (Throwable) ois.readObject());
       ois.close();
       Method ncmp = Class.forName(compare.getDeclaringClass().getName(), true, mcl).getMethod(compare.getName(), compare.getParameterTypes());
 
