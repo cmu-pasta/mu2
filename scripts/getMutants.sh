@@ -45,15 +45,25 @@ mkdir $TARGETNAME-filters
 mkdir $TARGETNAME-results
 mkdir $TARGETNAME-mutant-plots
 
+N=1
 for i in $(seq 1 1 $REPS)
 do
-    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TRIALS
-    fuzzMu2 $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TRIALS
+    ((j=j%N)); ((j++==0)) && wait
+    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TRIALS &
 done
 
+N=1
+for i in $(seq 1 1 $REPS)
+do
+    ((j=j%N)); ((j++==0)) && wait
+    fuzzMu2 $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TRIALS &
+done
+
+N=1
 for i in $(seq 1 1 $6)
 do
-    getResults $CLASS $FUZZMETHOD $DIFFMETHOD $INCLUDES $TARGETINCLUDES $i $TARGETNAME
+    ((j=i%N)); ((j++==0)) && wait
+    getResults $CLASS $FUZZMETHOD $DIFFMETHOD $INCLUDES $TARGETINCLUDES $i $TARGETNAME &
 done
 
 cd $CURDIR
