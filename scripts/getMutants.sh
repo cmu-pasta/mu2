@@ -45,7 +45,7 @@ mkdir $TARGETNAME-filters
 mkdir $TARGETNAME-results
 mkdir $TARGETNAME-mutant-plots
 
-N=10
+N=1
 for i in $(seq 1 1 $REPS)
 do
     ((j=j%N)); ((j++==0)) && wait
@@ -53,7 +53,7 @@ do
 done
 wait
 
-N=4
+N=1
 for i in $(seq 1 1 $REPS)
 do
     ((j=j%N)); ((j++==0)) && wait
@@ -61,7 +61,7 @@ do
 done
 wait
 
-N=3
+N=1
 for i in $(seq 1 1 $6)
 do
     ((j=i%N)); ((j++==0)) && wait
