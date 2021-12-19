@@ -2,6 +2,7 @@ package cmu.pasta.mu2.diff.guidance;
 
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.diff.Serializer;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
@@ -62,12 +63,15 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         } catch(Throwable e) {
             out = new Outcome(null, e);
         }
+        //TODO may not want serialization for all diff repros
         recentOutcomes.add(out);
-        if(!comparing) {
-            if(out.thrown != null) throw out.thrown;
+        if (!comparing) {
+            if (out.thrown != null) throw out.thrown;
             return;
         }
-        if(!Outcome.same(cmpTo.get(recentOutcomes.size() - 1), out, compare)) {
+        Object[] cmpArr = new Object[]{cmpTo.get(recentOutcomes.size() - 1).output};
+        Outcome cmpSerial = new Outcome(Serializer.deserialize(Serializer.serialize(cmpArr), compare.getDeclaringClass().getClassLoader(), cmpArr).get(0), cmpTo.get(recentOutcomes.size() - 1).thrown);
+        if (!Outcome.same(cmpSerial, recentOutcomes.get(recentOutcomes.size() - 1), compare)) {
             throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), recentOutcomes.get(recentOutcomes.size() - 1));
         }
     }

@@ -3,6 +3,7 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.diff.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
@@ -167,7 +168,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     long trialTime = System.currentTimeMillis() - startTime;
 
     List<Throwable> fails = new ArrayList<>();
-    byte[] argBytes = serialize(args);
+    byte[] argBytes = Serializer.serialize(args);
 
     int run = 1;
     for (MutationInstance mutationInstance : getMutationInstances()) {
@@ -189,7 +190,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       for(Class<?> clz : method.getMethod().getParameterTypes()) {
         paramTypes.add(Class.forName(clz.getName(), true, mcl));
       }
-      List<Object> argsList = deserialize(argBytes, mcl, args);
+      List<Object> argsList = Serializer.deserialize(argBytes, mcl, args);
       try {
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
@@ -199,7 +200,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
         else {
           Object[] outArr = new Object[]{dtr.getOutput()};
-          mclOutcome = new Outcome(deserialize(serialize(outArr),
+          mclOutcome = new Outcome(Serializer.deserialize(Serializer.serialize(outArr),
                   mutationClassLoaders.getCartographyClassLoader(), outArr).get(0), null);
         }
       } catch (InstrumentationException e) {
@@ -214,22 +215,18 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       // If this isn't the case, the mutant is killed.
       // This catches validity differences because an invalid input throws an AssumptionViolatedException,
       // which will be compared as the thrown value.
-      try {
-        if (!Outcome.same(cclOutcome, mclOutcome, compare)) {
-          deadMutants.add(mutationInstance.id);
-          Throwable t;
-          if (cclOutcome.thrown == null && mclOutcome.thrown != null) {
-            // CCL succeeded, MCL threw an exception
-            t = mclOutcome.thrown;
-          } else {
-            t = new DiffException(cclOutcome, mclOutcome);
-          }
-          exceptions.add(t.getClass().getName());
-          ((MutationCoverage) runCoverage).kill(mutationInstance);
-          fails.add(t);
+      if (!Outcome.same(cclOutcome, mclOutcome, compare)) {
+        deadMutants.add(mutationInstance.id);
+        Throwable t;
+        if (cclOutcome.thrown == null && mclOutcome.thrown != null) {
+          // CCL succeeded, MCL threw an exception
+          t = mclOutcome.thrown;
+        } else {
+          t = new DiffException(cclOutcome, mclOutcome);
         }
-      } catch (Throwable e) {
-        e.printStackTrace();
+        exceptions.add(t.getClass().getName());
+        ((MutationCoverage) runCoverage).kill(mutationInstance);
+        fails.add(t);
       }
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
@@ -243,43 +240,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     mappingTime += trialTime;
     testingTime += completeTime;
     numRuns += run;
-  }
-
-  private byte[] serialize(Object[] items) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    try(ObjectOutputStream oos = new ObjectOutputStream(out)){
-      for (Object item : items) {
-        if(item != null) oos.writeObject(item);
-      }
-      return out.toByteArray();
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw e;
-    }
-  }
-
-  private List<Object> deserialize(byte[] bytes, ClassLoader cl, Object[] original) throws ClassNotFoundException, IOException {
-    List<Object> itemList = new ArrayList<>();
-    try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
-      @Override
-      public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
-        try {
-          return Class.forName(osc.getName(), true, cl);
-        } catch (Exception e) {
-          e.printStackTrace();
-          return super.resolveClass(osc);
-        }
-      }
-    }) {
-      for(Object item : original) {
-        if(item != null) itemList.add(ois.readObject());
-        else itemList.add(null);
-      }
-      return itemList;
-    } catch (ClassNotFoundException | IOException e) {
-      e.printStackTrace();
-      throw e;
-    }
   }
 
   @Override
