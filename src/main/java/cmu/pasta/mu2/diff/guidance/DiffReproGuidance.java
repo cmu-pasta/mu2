@@ -17,9 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-//TODO serialization
-// + tests for ensuring mu2:mutate has the same results as mu2:diff and jqf:fuzz
-
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
     private List<Outcome> cmpTo;
