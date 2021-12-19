@@ -1,47 +1,82 @@
 #!/bin/bash
 
-#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the current directory.
+#Leaves a venn diagram of Zest's mutant finding vs. Mu2's mutant finding in the output directory.
 #example usage:
-#  ./getMutants.sh edu.berkeley.cs.jqf.examples.commons.PatriciaTrieTest testPrefixMap org.apache.commons.collections4.trie 3 1000 ../../jqf/examples
+#  ./getMutants.sh diff.DiffTest fuzzTimSort testTimSort sort.TimSort diff.DiffTest,sort \
+#     3 1000 ../../sort-benchmarks timsort
 
-fuzz() {
-    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
-    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
-    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpMu2/exp_$4 -Dengine=mutation -DrandomSeed=$4 -Dtrials=$5
-    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=tmpMu2/exp_$4 -Dengine=mutation -DrandomSeed=$4 -Dtrials=$5
+fuzzZest() {
+    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dout=$3-fuzz-results/tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
+    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dout=$3-fuzz-results/tmpZest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtrials=$5
+}
+
+fuzzMu2() {
+    echo mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$7
+    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$7 -DoptLevel=EXECUTION
 }
 
 getResults() {
 
     # Debug purposes - dump args to look at actual files
-    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus -DdumpArgsDir=target/tmpZest/exp_$4/args_corpus/
-    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpMu2/exp_$4/corpus -DdumpArgsDir=target/tmpMu2/exp_$4/args_corpus/
+    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
+    mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
 
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpZest/exp_$4/corpus > results/zest-results-$4.txt
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dinput=target/tmpMu2/exp_$4/corpus > results/mutate-results-$4.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus > $7-results/zest-results-$6.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus > $7-results/mutate-results-$6.txt
 
-    cat results/zest-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/zest-filter-$4.txt
-    cat results/mutate-results-$4.txt | grep "Running Mutant\|FAILURE" > filters/mutate-filter-$4.txt
+    cat $7-results/zest-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
+    cat $7-results/mutate-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
 
 }
 
+CLASS=$1
+FUZZMETHOD=$2
+DIFFMETHOD=$3
+INCLUDES=$4
+TARGETINCLUDES=$5
+REPS=$6
+TRIALS=$7
+DIR=$8
+TARGETNAME=$9
+
 CURDIR=$(pwd)
-cd $6
-mkdir filters
-mkdir results
+cd $DIR
+mkdir $TARGETNAME-filters
+mkdir $TARGETNAME-results
+mkdir $TARGETNAME-mutant-plots
 
-for i in $(seq 1 1 $4)
+N=1
+for i in $(seq 1 1 $REPS)
 do
-    fuzz $1 $2 $3 $i $5
+    ((j=j%N)); ((j++==0)) && wait
+    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TRIALS &
 done
+wait
 
-for i in $(seq 1 1 $4)
+N=1
+for i in $(seq 1 1 $REPS)
 do
-    getResults $1 $2 $3 $i
+    ((j=j%N)); ((j++==0)) && wait
+    fuzzMu2 $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TRIALS &
 done
+wait
+
+N=1
+for i in $(seq 1 1 $6)
+do
+    ((j=i%N)); ((j++==0)) && wait
+    getResults $CLASS $FUZZMETHOD $DIFFMETHOD $INCLUDES $TARGETINCLUDES $i $TARGETNAME &
+done
+wait
 
 cd $CURDIR
-python3 venn.py --filters_dir $6/filters --num_experiments $4 --output_img venn.png
+python venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png
+
+for i in $(seq 1 1 $6)
+do
+    python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
+done
+
 
 #comment the below lines to not remove the created files
 # rm -r filters
