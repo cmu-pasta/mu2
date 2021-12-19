@@ -167,15 +167,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     long trialTime = System.currentTimeMillis() - startTime;
 
     List<Throwable> fails = new ArrayList<>();
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(out);
-    for (Object arg : args) {
-      oos.writeObject(arg);
-    }
-    oos.writeObject(cclOutcome.output);
-    oos.writeObject(cclOutcome.thrown);
-    byte[] argBytes = out.toByteArray();
-    oos.close();
+    byte[] argBytes = serialize(args);
 
     int run = 1;
     for (MutationInstance mutationInstance : getMutationInstances()) {
@@ -197,34 +189,19 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       for(Class<?> clz : method.getMethod().getParameterTypes()) {
         paramTypes.add(Class.forName(clz.getName(), true, mcl));
       }
-      List<Object> argsList = new ArrayList<>();
-      //TODO put serialization logic in different method (readability)
-      ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(argBytes)) {
-        @Override
-        public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
-          try {
-            return Class.forName(osc.getName(), true, mcl);
-          } catch (Exception e) {
-            e.printStackTrace();
-            return super.resolveClass(osc);
-          }
-        }
-      };
-      for(Object arg : args) {
-        argsList.add(ois.readObject());
-      }
-      //TODO serialize MCL output instead
-      Outcome nCclOutcome = new Outcome(ois.readObject(), (Throwable) ois.readObject());
-      ois.close();
-      Method ncmp = Class.forName(compare.getDeclaringClass().getName(), true, mcl).getMethod(compare.getName(), compare.getParameterTypes());
-
+      List<Object> argsList = deserialize(argBytes, mcl, args);
       try {
         dtr = new DiffTrialRunner(clazz,
             new FrameworkMethod(clazz.getMethod(method.getName(),
                 paramTypes.toArray(new Class<?>[]{}))),
                 argsList.toArray());
         dtr.run();
-        mclOutcome = new Outcome(dtr.getOutput(), null);
+        if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
+        else {
+          Object[] outArr = new Object[]{dtr.getOutput()};
+          mclOutcome = new Outcome(deserialize(serialize(outArr),
+                  mutationClassLoaders.getCartographyClassLoader(), outArr).get(0), null);
+        }
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);
       } catch (GuidanceException e) {
@@ -237,18 +214,22 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       // If this isn't the case, the mutant is killed.
       // This catches validity differences because an invalid input throws an AssumptionViolatedException,
       // which will be compared as the thrown value.
-      if(!Outcome.same(nCclOutcome, mclOutcome, ncmp)) {
-        deadMutants.add(mutationInstance.id);
-        Throwable t;
-        if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
-          // CCL succeeded, MCL threw an exception
-          t = mclOutcome.thrown;
-        } else {
-          t = new DiffException(cclOutcome, mclOutcome);
+      try {
+        if (!Outcome.same(cclOutcome, mclOutcome, compare)) {
+          deadMutants.add(mutationInstance.id);
+          Throwable t;
+          if (cclOutcome.thrown == null && mclOutcome.thrown != null) {
+            // CCL succeeded, MCL threw an exception
+            t = mclOutcome.thrown;
+          } else {
+            t = new DiffException(cclOutcome, mclOutcome);
+          }
+          exceptions.add(t.getClass().getName());
+          ((MutationCoverage) runCoverage).kill(mutationInstance);
+          fails.add(t);
         }
-        exceptions.add(t.getClass().getName());
-        ((MutationCoverage) runCoverage).kill(mutationInstance);
-        fails.add(t);
+      } catch (Throwable e) {
+        e.printStackTrace();
       }
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
@@ -262,6 +243,43 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     mappingTime += trialTime;
     testingTime += completeTime;
     numRuns += run;
+  }
+
+  private byte[] serialize(Object[] items) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try(ObjectOutputStream oos = new ObjectOutputStream(out)){
+      for (Object item : items) {
+        if(item != null) oos.writeObject(item);
+      }
+      return out.toByteArray();
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
+  private List<Object> deserialize(byte[] bytes, ClassLoader cl, Object[] original) throws ClassNotFoundException, IOException {
+    List<Object> itemList = new ArrayList<>();
+    try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
+      @Override
+      public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
+        try {
+          return Class.forName(osc.getName(), true, cl);
+        } catch (Exception e) {
+          e.printStackTrace();
+          return super.resolveClass(osc);
+        }
+      }
+    }) {
+      for(Object item : original) {
+        if(item != null) itemList.add(ois.readObject());
+        else itemList.add(null);
+      }
+      return itemList;
+    } catch (ClassNotFoundException | IOException e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 
   @Override
