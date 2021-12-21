@@ -4,19 +4,16 @@ import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.diff.Serializer;
-import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
-import org.junit.AssumptionViolatedException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +95,7 @@ public class DiffMutateReproGuidance extends DiffReproGuidance {
             }
             recentOutcomes.clear();
         }
+        if(cclOutcomes.get(cclOutcomes.size() - 1).thrown != null) throw cclOutcomes.get(cclOutcomes.size() - 1).thrown;
     }
 
 }
