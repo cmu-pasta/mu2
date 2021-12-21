@@ -148,16 +148,4 @@ public class MutateDiffGoal extends AbstractMojo {
             throw new MojoExecutionException(e.toString(), e);
         }
     }
-
-    // Executes a fresh repro with a given classloader
-    private Result runRepro(ClassLoader classLoader, List<Outcome> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
-        DiffReproGuidance repro;
-        if(useCR) {
-            repro = new DiffReproGuidance(input, null, cclReturn);
-        } else {
-            repro = new DiffReproGuidance(input, null);
-        }
-        repro.setStopOnFailure(true);
-        return GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
-    }
 }
