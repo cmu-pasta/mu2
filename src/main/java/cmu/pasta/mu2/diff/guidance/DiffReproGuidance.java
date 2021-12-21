@@ -19,14 +19,12 @@ import java.util.Objects;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
-    private List<Outcome> cmpTo;
+    protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
-    private boolean comparing;
 
     public DiffReproGuidance(File inputFile, File traceDir) throws IOException {
         super(inputFile, traceDir);
         cmpTo = null;
-        comparing = false;
         recentOutcomes.clear();
         try {
             compare = Objects.class.getMethod("equals", Object.class, Object.class);
@@ -38,7 +36,6 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes) throws IOException {
         this(inputFile, traceDir);
         cmpTo = cmpRes;
-        comparing = true;
     }
 
     @Override
@@ -62,14 +59,16 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
         //TODO may not want serialization for all diff repros
         recentOutcomes.add(out);
-        if (!comparing) {
+        if (cmpTo == null) { // not comparing
             if (out.thrown != null) throw out.thrown;
             return;
         }
         Object[] cmpArr = new Object[]{cmpTo.get(recentOutcomes.size() - 1).output};
         Outcome cmpSerial = new Outcome(Serializer.deserialize(Serializer.serialize(cmpArr), compare.getDeclaringClass().getClassLoader(), cmpArr).get(0), cmpTo.get(recentOutcomes.size() - 1).thrown);
-        if (!Outcome.same(cmpSerial, recentOutcomes.get(recentOutcomes.size() - 1), compare)) {
-            throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), recentOutcomes.get(recentOutcomes.size() - 1));
+        Object[] outArr = new Object[]{out.output};
+        Outcome outSerial = new Outcome(Serializer.deserialize(Serializer.serialize(outArr), compare.getDeclaringClass().getClassLoader(), outArr).get(0), out.thrown);
+        if (!Outcome.same(cmpSerial, outSerial, compare)) {
+            throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), out);
         }
     }
 }

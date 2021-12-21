@@ -2,6 +2,7 @@ package cmu.pasta.mu2.diff.plugin;
 
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.diff.guidance.DiffMutateReproGuidance;
 import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
@@ -103,7 +104,33 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            Result initialResults = runRepro(ccl, null, false);
+            DiffMutateReproGuidance dmrg = new DiffMutateReproGuidance(input, null, mcls);
+            dmrg.setStopOnFailure(true);
+            GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
+            System.out.println("cclOutcomes: " + dmrg.cclOutcomes);
+            List<MutationInstance> mutationInstances = mcls.getMutationInstances();
+            List<MutationInstance> killedMutants = new ArrayList<>();
+            //System.out.println(dmrg.mclOutcomes);
+            for(MutationInstance mi : mcls.getMutationInstances()) {
+                //System.out.println(mi);
+                //System.out.println(dmrg.mclOutcomes.get(mi));
+                //System.out.println(dmrg.mclOutcomes.get(mi).first);
+                System.out.println("Running Mutant " + mi);
+                if(dmrg.mclOutcomes.get(mi).second >= 0) {
+                    killedMutants.add(mi);
+                    for(int c = 1; c < dmrg.mclOutcomes.get(mi).second; c++) {
+                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
+                    }
+                    System.out.println("Input " + dmrg.mclOutcomes.get(mi).second + " ::= FAILURE");
+                    //System.out.println("Killed by input " + dmrg.mclOutcomes.get(mi).second);
+                } else {
+                    for(int c = 0; c < dmrg.mclOutcomes.get(mi).first.size(); c++) {
+                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
+                    }
+                }
+            }
+
+            /*Result initialResults = runRepro(ccl, null, false);
             List<Outcome> cclOutcomes = new ArrayList<>(DiffReproGuidance.recentOutcomes);
             System.out.println("cclOutcomes: " + cclOutcomes);
             if (!initialResults.wasSuccessful()) {
@@ -134,15 +161,15 @@ public class MutateDiffGoal extends AbstractMojo {
                             mi.toString(),
                             killedMutants.contains(mi) ? "Killed" : "Alive");
                 }
-            }
+            }*/
 
             String ls = String.format("Mutants Run: %d, Killed Mutants: %d",
                     mutationInstances.size(),
                     killedMutants.size());
             System.out.println(ls);
-        } catch (AbstractMojoExecutionException e) {
+        } /*catch (AbstractMojoExecutionException e) {
             throw e; // Propagate as is
-        } catch (Exception e) {
+        }*/ catch (Exception e) {
             throw new MojoExecutionException(e.toString(), e);
         }
     }
