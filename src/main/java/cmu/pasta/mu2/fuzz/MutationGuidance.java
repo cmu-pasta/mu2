@@ -17,10 +17,15 @@ import edu.berkeley.cs.jqf.fuzz.guidance.Result;
 import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Objects;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -215,10 +220,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       // If this isn't the case, the mutant is killed.
       // This catches validity differences because an invalid input throws an AssumptionViolatedException,
       // which will be compared as the thrown value.
-      if (!Outcome.same(cclOutcome, mclOutcome, compare)) {
+      if(!Outcome.same(cclOutcome, mclOutcome, compare)) {
         deadMutants.add(mutationInstance.id);
         Throwable t;
-        if (cclOutcome.thrown == null && mclOutcome.thrown != null) {
+        if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
           // CCL succeeded, MCL threw an exception
           t = mclOutcome.thrown;
         } else {
