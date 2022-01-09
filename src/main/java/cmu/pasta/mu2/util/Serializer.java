@@ -1,4 +1,4 @@
-package cmu.pasta.mu2.diff;
+package cmu.pasta.mu2.util;
 
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
@@ -6,13 +6,20 @@ import java.io.ByteArrayInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Serializer {
+    public static Object[] translate(Object[] original, ClassLoader newCL) throws IOException, ClassNotFoundException {
+        return deserialize(serialize(original), newCL, original);
+    }
+
+    public static Object translate(Object original, ClassLoader newCL) throws IOException, ClassNotFoundException {
+        Object[] arr = new Object[]{original};
+        return deserialize(serialize(arr), newCL, arr)[0];
+    }
+
     public static byte[] serialize(Object[] items) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try(ObjectOutputStream oos = new ObjectOutputStream(out)){
+        try(ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(out)) {
             for (Object item : items) {
                 if(item != null) oos.writeObject(item);
             }
@@ -23,8 +30,7 @@ public class Serializer {
         }
     }
 
-    public static List<Object> deserialize(byte[] bytes, ClassLoader cl, Object[] original) throws ClassNotFoundException, IOException {
-        List<Object> itemList = new ArrayList<>();
+    public static Object[] deserialize(byte[] bytes, ClassLoader cl, Object[] original) throws ClassNotFoundException, IOException {
         try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
             @Override
             public Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
@@ -36,11 +42,12 @@ public class Serializer {
                 }
             }
         }) {
-            for(Object item : original) {
-                if(item != null) itemList.add(ois.readObject());
-                else itemList.add(null);
+            Object[] itemArr = new Object[original.length];
+            for(int c = 0; c < original.length; c++) {
+                if(original[c] != null) itemArr[c] = ois.readObject();
+                else original[c] = null;
             }
-            return itemList;
+            return itemArr;
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
             throw e;

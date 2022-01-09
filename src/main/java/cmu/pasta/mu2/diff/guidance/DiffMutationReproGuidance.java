@@ -3,8 +3,8 @@ package cmu.pasta.mu2.diff.guidance;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.Serializer;
-import cmu.pasta.mu2.instrument.MutationClassLoader;
+import cmu.pasta.mu2.fuzz.MutationRunInfo;
+import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
@@ -20,15 +20,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * to avoid the problem of the args having the wrong classloader to begin with
+ * to avoid the problem of the generator type registry not updating for each ClassLoader
  */
-public class DiffMutateReproGuidance extends DiffReproGuidance {
+public class DiffMutationReproGuidance extends DiffReproGuidance {
     public List<Outcome> cclOutcomes;
+
+    /**
+     *  mutation analysis results for each MutationInstance
+     * paired with the index of the outcome that killed the mutant
+     */
     public Map<MutationInstance, Pair<List<Outcome>, Integer>> mclOutcomes;
+
     private final MutationClassLoaders MCLs;
     private int ind;
 
-    public DiffMutateReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls) throws IOException {
+    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls) throws IOException {
         super(inputFile, traceDir);
         cclOutcomes = new ArrayList<>();
         mclOutcomes = new HashMap<>();
@@ -44,29 +50,28 @@ public class DiffMutateReproGuidance extends DiffReproGuidance {
         recentOutcomes.clear();
         ind++;
         cmpTo = null;
+
+        // run CCL
         try {
-            super.run(testClass, method, args); //CCL
+            super.run(testClass, method, args);
         } catch(InstrumentationException e) {
             throw new GuidanceException(e);
         } catch (GuidanceException e) {
             throw e;
         } catch (Throwable e) {}
+
+        // set up info
         cmpTo = new ArrayList<>(recentOutcomes);
         cclOutcomes.add(cmpTo.get(0));
         byte[] argBytes = Serializer.serialize(args);
         recentOutcomes.clear();
+
         for (MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
-            MutationClassLoader mcl = MCLs.getMutationClassLoader(mutationInstance);
-            Class<?> clazz = Class.forName(testClass.getName(), true, mcl);
+            MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+
+            // run with MCL
             try {
-                TestClass tc = new TestClass(clazz);
-                List<Class<?>> paramTypes = new ArrayList<>();
-                for (Class<?> clz : method.getMethod().getParameterTypes()) {
-                    paramTypes.add(Class.forName(clz.getName(), true, mcl));
-                }
-                List<Object> argsList = Serializer.deserialize(argBytes, mcl, args);
-                FrameworkMethod fm = new FrameworkMethod(clazz.getMethod(method.getName(), paramTypes.toArray(new Class<?>[]{})));
-                super.run(tc, fm, argsList.toArray());
+                super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0)
                     mclOutcomes.put(mutationInstance, new Pair<>(mclOutcomes.get(mutationInstance).first, ind));
@@ -83,6 +88,8 @@ public class DiffMutateReproGuidance extends DiffReproGuidance {
             } catch (GuidanceException e) {
                 throw e;
             } catch (Throwable e) {}
+
+            // add to matching MCL list
             if (mclOutcomes.containsKey(mutationInstance))
                 mclOutcomes.get(mutationInstance).first.add(recentOutcomes.get(recentOutcomes.size() - 1));
             else {

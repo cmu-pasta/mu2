@@ -2,11 +2,8 @@ package cmu.pasta.mu2.diff.guidance;
 
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.Serializer;
-import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
-import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
+import cmu.pasta.mu2.util.Serializer;
 import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
-import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -45,28 +42,21 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
 
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-        DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-        Outcome out;
-        try {
-            dtr.run();
-            out = new Outcome(dtr.getOutput(), null);
-        } catch(InstrumentationException e) {
-            throw new GuidanceException(e);
-        } catch (GuidanceException e) {
-            throw e;
-        } catch(Throwable e) {
-            out = new Outcome(null, e);
-        }
-        //TODO may not want serialization for all diff repros
+        Outcome out = getOutcome(testClass.getJavaClass(), method, args);
         recentOutcomes.add(out);
+
         if (cmpTo == null) { // not comparing
             if (out.thrown != null) throw out.thrown;
             return;
         }
-        Object[] cmpArr = new Object[]{cmpTo.get(recentOutcomes.size() - 1).output};
-        Outcome cmpSerial = new Outcome(Serializer.deserialize(Serializer.serialize(cmpArr), compare.getDeclaringClass().getClassLoader(), cmpArr).get(0), cmpTo.get(recentOutcomes.size() - 1).thrown);
-        Object[] outArr = new Object[]{out.output};
-        Outcome outSerial = new Outcome(Serializer.deserialize(Serializer.serialize(outArr), compare.getDeclaringClass().getClassLoader(), outArr).get(0), out.thrown);
+
+        // use serialization to load both outputs with the same ClassLoader
+        //TODO may not want serialization for all diff repros
+        Outcome cmpOut = cmpTo.get(recentOutcomes.size() - 1);
+        ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
+        Outcome cmpSerial = new Outcome(Serializer.translate(cmpOut.output, cmpCL), cmpOut.thrown);
+        Outcome outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
+
         if (!Outcome.same(cmpSerial, outSerial, compare)) {
             throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), out);
         }

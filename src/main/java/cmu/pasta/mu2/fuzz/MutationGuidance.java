@@ -3,10 +3,9 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.Serializer;
+import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
-import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
@@ -115,7 +114,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     }
   }
 
-  // Retreive the latest list of mutation instances
+  /** Retreive the latest list of mutation instances */
   protected List<MutationInstance> getMutationInstances() {
     // The latest list is available in the cartography class loader, which runs the initial test execution
     return mutationClassLoaders.getCartographyClassLoader().getMutationInstances();
@@ -156,26 +155,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     long startTime = System.currentTimeMillis();
 
-    DiffTrialRunner dtr;
-    Outcome cclOutcome;
-    try {
-      dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-      dtr.run(); // loaded by CartographyClassLoader
-      cclOutcome = new Outcome(dtr.getOutput(), null);
-    } catch(InstrumentationException e) {
-      throw new GuidanceException(e);
-    } catch (GuidanceException e) {
-      throw e;
-    } catch(Throwable t) {
-      cclOutcome = new Outcome(null, t);
-    }
+    //run with CCL
+    Outcome cclOutcome = getOutcome(testClass.getJavaClass(), method, args);
 
+    // set up info
     long trialTime = System.currentTimeMillis() - startTime;
-
-    List<Throwable> fails = new ArrayList<>();
     byte[] argBytes = Serializer.serialize(args);
-
     int run = 1;
+
     for (MutationInstance mutationInstance : getMutationInstances()) {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
@@ -185,28 +172,21 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         continue;
       }
 
+      // update info
       run += 1;
-      Outcome mclOutcome;
-
       mutationInstance.resetTimer();
-      MutationClassLoader mcl = mutationClassLoaders.getMutationClassLoader(mutationInstance);
-      Class<?> clazz = Class.forName(testClass.getName(), true, mcl);
-      List<Class<?>> paramTypes = new ArrayList<>();
-      for(Class<?> clz : method.getMethod().getParameterTypes()) {
-        paramTypes.add(Class.forName(clz.getName(), true, mcl));
-      }
-      List<Object> argsList = Serializer.deserialize(argBytes, mcl, args);
+
+      MutationRunInfo mri = new MutationRunInfo(mutationClassLoaders, mutationInstance, testClass, argBytes, args, method);
+
+      // run with MCL
+      Outcome mclOutcome;
       try {
-        dtr = new DiffTrialRunner(clazz,
-            new FrameworkMethod(clazz.getMethod(method.getName(),
-                paramTypes.toArray(new Class<?>[]{}))),
-                argsList.toArray());
+        DiffTrialRunner dtr = new DiffTrialRunner(mri.clazz, mri.method, mri.args);
         dtr.run();
         if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
         else {
-          Object[] outArr = new Object[]{dtr.getOutput()};
-          mclOutcome = new Outcome(Serializer.deserialize(Serializer.serialize(outArr),
-                  mutationClassLoaders.getCartographyClassLoader(), outArr).get(0), null);
+          mclOutcome = new Outcome(Serializer.translate(dtr.getOutput(),
+                  mutationClassLoaders.getCartographyClassLoader()), null);
         }
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);
@@ -231,12 +211,13 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         }
         exceptions.add(t.getClass().getName());
         ((MutationCoverage) runCoverage).kill(mutationInstance);
-        fails.add(t);
       }
+
       // run
       ((MutationCoverage) runCoverage).see(mutationInstance);
     }
 
+    //throw exception if an exception was found by the CCL
     if(cclOutcome.thrown != null) throw cclOutcome.thrown;
 
     long completeTime = System.currentTimeMillis() - startTime;

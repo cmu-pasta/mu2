@@ -1,11 +1,8 @@
 package cmu.pasta.mu2.diff.plugin;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.guidance.DiffMutateReproGuidance;
-import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
+import cmu.pasta.mu2.diff.guidance.DiffMutationReproGuidance;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
-import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
@@ -23,11 +20,8 @@ import org.junit.runner.Result;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToUrls;
 
 /**
  * Repro goal for mu2. Performs mutation testing to calculate
@@ -104,7 +98,7 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            DiffMutateReproGuidance dmrg = new DiffMutateReproGuidance(input, null, mcls);
+            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls);
             dmrg.setStopOnFailure(true);
             Result result = GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
             if (!result.wasSuccessful()) {
