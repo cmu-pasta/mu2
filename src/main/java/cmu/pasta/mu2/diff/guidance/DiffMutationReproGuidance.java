@@ -102,6 +102,9 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
             if (optLevel != OptLevel.NONE  &&
                     !runMutants.contains(mutationInstance.id)) {
+                if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0) {
+                    mclOutcomes.get(mutationInstance).first.add(null);
+                }
                 continue;
             }
 
