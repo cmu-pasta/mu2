@@ -68,7 +68,7 @@ public class MutateDiffGoal extends AbstractMojo {
     /**
      * Allows user to set optimization level for mutation-guided fuzzing.
      */
-    @Parameter(property="optLevel", defaultValue = "none")
+    @Parameter(property="optLevel", defaultValue = "execution")
     private String optLevel;
 
     @Override
@@ -109,6 +109,9 @@ public class MutateDiffGoal extends AbstractMojo {
             List<MutationInstance> mutationInstances = mcls.getMutationInstances();
             List<MutationInstance> killedMutants = new ArrayList<>();
             for(MutationInstance mi : mcls.getMutationInstances()) {
+                if(dmrg.mclOutcomes.get(mi) == null) {
+                    continue;
+                }
                 System.out.println("Running Mutant " + mi);
                 if(dmrg.mclOutcomes.get(mi).second >= 0) {
                     killedMutants.add(mi);
