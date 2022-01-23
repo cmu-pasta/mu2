@@ -69,6 +69,18 @@ public class CartographyClassLoader extends URLClassLoader {
       throw new ClassNotFoundException("I/O exception while loading class.", e);
     }
 
+    // Instrument class to measure both line coverage and mutation coverage
+    //
+    try {
+      byte[] instrumented;
+      instrumented = lineCoverageTransformer
+          .transform(this, internalName, null, null, bytes.clone());
+        if (instrumented != null) {
+            bytes = instrumented;
+        }
+    } catch (IllegalClassFormatException __) {
+    }
+
     // Check whether this class is mutable
     boolean mutable = false;
 
@@ -81,7 +93,7 @@ public class CartographyClassLoader extends URLClassLoader {
 
     // Make cartograph
     if (mutable) {
-      Cartographer c = Cartographer.explore(bytes, this);
+      Cartographer c = Cartographer.explore(bytes.clone(), this);
       for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
           for (MutationInstance mi : opportunities) {
               mutationInstances.add(mi);
@@ -91,17 +103,6 @@ public class CartographyClassLoader extends URLClassLoader {
       bytes = c.toByteArray();
     }
 
-    // Instrument class to measure both line coverage and mutation coverage
-    //
-    try {
-      byte[] instrumented;
-      instrumented = lineCoverageTransformer
-          .transform(this, internalName, null, null, bytes.clone());
-        if (instrumented != null) {
-            bytes = instrumented;
-        }
-    } catch (IllegalClassFormatException __) {
-    }
 
     return defineClass(name, bytes, 0, bytes.length);
   }
