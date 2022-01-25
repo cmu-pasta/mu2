@@ -2,10 +2,8 @@ package cmu.pasta.mu2.diff.guidance;
 
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
-import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
+import cmu.pasta.mu2.util.Serializer;
 import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
-import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -18,14 +16,12 @@ import java.util.Objects;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
-    private List<Outcome> cmpTo;
+    protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
-    private boolean comparing;
 
     public DiffReproGuidance(File inputFile, File traceDir) throws IOException {
         super(inputFile, traceDir);
         cmpTo = null;
-        comparing = false;
         recentOutcomes.clear();
         try {
             compare = Objects.class.getMethod("equals", Object.class, Object.class);
@@ -37,7 +33,6 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes) throws IOException {
         this(inputFile, traceDir);
         cmpTo = cmpRes;
-        comparing = true;
     }
 
     @Override
@@ -47,25 +42,23 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
 
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
-        DiffTrialRunner dtr = new DiffTrialRunner(testClass.getJavaClass(), method, args);
-        Outcome out;
-        try {
-            dtr.run();
-            out = new Outcome(dtr.getOutput(), null);
-        } catch(InstrumentationException e) {
-            throw new GuidanceException(e);
-        } catch (GuidanceException e) {
-            throw e;
-        } catch(Throwable e) {
-            out = new Outcome(null, e);
-        }
+        Outcome out = getOutcome(testClass.getJavaClass(), method, args);
         recentOutcomes.add(out);
-        if(!comparing) {
-            if(out.thrown != null) throw out.thrown;
+
+        if (cmpTo == null) { // not comparing
+            if (out.thrown != null) throw out.thrown;
             return;
         }
-        if(!Outcome.same(cmpTo.get(recentOutcomes.size() - 1), out, compare)) {
-            throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), recentOutcomes.get(recentOutcomes.size() - 1));
+
+        // use serialization to load both outputs with the same ClassLoader
+        //TODO may not want serialization for all diff repros
+        Outcome cmpOut = cmpTo.get(recentOutcomes.size() - 1);
+        ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
+        Outcome cmpSerial = new Outcome(Serializer.translate(cmpOut.output, cmpCL), cmpOut.thrown);
+        Outcome outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
+
+        if (!Outcome.same(cmpSerial, outSerial, compare)) {
+            throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), out);
         }
     }
 }

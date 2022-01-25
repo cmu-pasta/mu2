@@ -1,10 +1,8 @@
 package cmu.pasta.mu2.diff.plugin;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
+import cmu.pasta.mu2.diff.guidance.DiffMutationReproGuidance;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
-import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
@@ -22,11 +20,8 @@ import org.junit.runner.Result;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToUrls;
 
 /**
  * Repro goal for mu2. Performs mutation testing to calculate
@@ -73,7 +68,7 @@ public class MutateDiffGoal extends AbstractMojo {
     /**
      * Allows user to set optimization level for mutation-guided fuzzing.
      */
-    @Parameter(property="optLevel", defaultValue = "none")
+    @Parameter(property="optLevel", defaultValue = "execution")
     private String optLevel;
 
     @Override
@@ -103,27 +98,31 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            Result initialResults = runRepro(ccl, null, false);
-            List<Outcome> cclOutcomes = new ArrayList<>(DiffReproGuidance.recentOutcomes);
-            System.out.println("cclOutcomes: " + cclOutcomes);
-            if (!initialResults.wasSuccessful()) {
-                throw new MojoFailureException("Initial test run fails",
-                        initialResults.getFailures().get(0).getException());
+            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls);
+            dmrg.setStopOnFailure(true);
+            Result result = GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
+            if (!result.wasSuccessful()) {
+                throw new MojoFailureException("Test run failed",
+                        result.getFailures().get(0).getException());
             }
-
-            // Retrieve dynamically collected mutation instances
-            List<MutationInstance> mutationInstances = ccl.getMutationInstances();
-
-            // Track which mutants get killed
+            System.out.println("cclOutcomes: " + dmrg.cclOutcomes);
+            List<MutationInstance> mutationInstances = mcls.getMutationInstances();
             List<MutationInstance> killedMutants = new ArrayList<>();
-
-            // Run a repro on all mutants
-            for (MutationInstance mutationInstance : mutationInstances) {
-                log.info("Running Mutant " + mutationInstance.toString());
-                MutationClassLoader mcl = mcls.getMutationClassLoader(mutationInstance);
-                Result res = runRepro(mcl, cclOutcomes, true);
-                if (!res.wasSuccessful()) {
-                    killedMutants.add(mutationInstance);
+            for(MutationInstance mi : mcls.getMutationInstances()) {
+                if(dmrg.mclOutcomes.get(mi) == null) {
+                    continue;
+                }
+                System.out.println("Running Mutant " + mi);
+                if(dmrg.mclOutcomes.get(mi).second >= 0) {
+                    killedMutants.add(mi);
+                    for(int c = 1; c < dmrg.mclOutcomes.get(mi).second; c++) {
+                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
+                    }
+                    System.out.println("Input " + dmrg.mclOutcomes.get(mi).second + " ::= FAILURE");
+                } else {
+                    for(int c = 0; c < dmrg.mclOutcomes.get(mi).first.size(); c++) {
+                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
+                    }
                 }
             }
 
@@ -145,17 +144,5 @@ public class MutateDiffGoal extends AbstractMojo {
         } catch (Exception e) {
             throw new MojoExecutionException(e.toString(), e);
         }
-    }
-
-    // Executes a fresh repro with a given classloader
-    private Result runRepro(ClassLoader classLoader, List<Outcome> cclReturn, boolean useCR) throws ClassNotFoundException, IOException {
-        DiffReproGuidance repro;
-        if(useCR) {
-            repro = new DiffReproGuidance(input, null, cclReturn);
-        } else {
-            repro = new DiffReproGuidance(input, null);
-        }
-        repro.setStopOnFailure(true);
-        return GuidedFuzzing.run(testClassName, testMethod, classLoader, repro, null);
     }
 }

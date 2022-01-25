@@ -38,7 +38,7 @@ public class Mu2 extends JQF {
     private void validateComparisonMethods(List<Throwable> errors) {
         for(FrameworkMethod method : getTestClass().getAnnotatedMethods(Comparison.class)) {
             if(method.getReturnType() != Boolean.class) {
-                errors.add(new Exception("Method " + method.getName() + " must return boolean"));
+                errors.add(new Exception("Method " + method.getName() + " must return Boolean"));
             }
             Class<?>[] parameters = method.getMethod().getParameterTypes();
             if(parameters.length != 2 || parameters[0] != parameters[1]) {
