@@ -46,7 +46,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   /**
    * The mutants killed so far
    */
-  private ArraySet deadMutants = new ArraySet();
+  protected ArraySet deadMutants = new ArraySet();
 
   /**
    * The number of actual runs of the test

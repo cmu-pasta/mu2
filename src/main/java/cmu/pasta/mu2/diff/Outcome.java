@@ -31,4 +31,18 @@ public class Outcome implements Serializable {
         if(thrown == null) return "threw nothing, output " + output;
         return "threw " + thrown + ", no output";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Outcome outcome = (Outcome) o;
+        return Objects.equals(output, outcome.output) &&
+                Objects.equals(thrown, outcome.thrown);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(output, thrown);
+    }
 }

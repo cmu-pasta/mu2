@@ -62,7 +62,7 @@ public class DiffIT extends AbstractMutationTest {
         }
     }
 
-    @Test
+    //@Test
     public void compareBubbleSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";
@@ -81,7 +81,7 @@ public class DiffIT extends AbstractMutationTest {
         Assert.assertEquals(9, mu2.corpusCount());
     }
 
-    @Test
+    //@Test
     public void noncompareBubbleSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";
@@ -100,7 +100,7 @@ public class DiffIT extends AbstractMutationTest {
         Assert.assertEquals(8, mu2.corpusCount());
     }
 
-    @Test
+    //@Test
     public void compareTimSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";
@@ -119,7 +119,7 @@ public class DiffIT extends AbstractMutationTest {
         Assert.assertEquals(36, mu2.corpusCount());
     }
 
-    @Test
+    //@Test
     public void noncompareTimSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";
@@ -138,7 +138,7 @@ public class DiffIT extends AbstractMutationTest {
         Assert.assertEquals(36, mu2.corpusCount());
     }
 
-    @Test
+    //@Test
     public void fuzzTimSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";

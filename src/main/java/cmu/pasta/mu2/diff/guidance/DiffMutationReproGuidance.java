@@ -11,7 +11,6 @@ import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
-import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -41,7 +40,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     /**
      * The mutants killed so far
      */
-    private ArraySet deadMutants = new ArraySet();
+    protected final ArraySet deadMutants = new ArraySet();
 
     /**
      * Current optimization level
