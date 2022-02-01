@@ -113,16 +113,10 @@ public class MutateDiffGoal extends AbstractMojo {
                     continue;
                 }
                 System.out.println("Running Mutant " + mi);
-                if(dmrg.mclOutcomes.get(mi).second >= 0) {
+                if(dmrg.mclOutcomes.get(mi).contains(edu.berkeley.cs.jqf.fuzz.guidance.Result.FAILURE))
                     killedMutants.add(mi);
-                    for(int c = 1; c < dmrg.mclOutcomes.get(mi).second; c++) {
-                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
-                    }
-                    System.out.println("Input " + dmrg.mclOutcomes.get(mi).second + " ::= FAILURE");
-                } else {
-                    for(int c = 0; c < dmrg.mclOutcomes.get(mi).first.size(); c++) {
-                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
-                    }
+                for(int c = 1; c < dmrg.mclOutcomes.get(mi).size(); c++) {
+                    System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).get(c));
                 }
             }
 

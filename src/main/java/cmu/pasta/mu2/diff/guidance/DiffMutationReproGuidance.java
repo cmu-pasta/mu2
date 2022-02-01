@@ -9,19 +9,17 @@ import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
-import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
+import edu.berkeley.cs.jqf.fuzz.guidance.Result;
+import edu.berkeley.cs.jqf.fuzz.guidance.TimeoutException;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
+import org.junit.AssumptionViolatedException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
@@ -33,7 +31,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      *  mutation analysis results for each MutationInstance
      * paired with the index of the outcome that killed the mutant
      */
-    public Map<MutationInstance, Pair<List<Outcome>, Integer>> mclOutcomes;
+    public Map<MutationInstance, List<Result>> mclOutcomes;
 
     private final MutationClassLoaders MCLs;
     private int ind;
@@ -65,9 +63,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         mclOutcomes = new HashMap<>();
         MCLs = mcls;
         ind = -1;
-        for(MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
-            mclOutcomes.put(mutationInstance, new Pair<>(new ArrayList<>(), -1));
-        }
 
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
@@ -102,9 +97,11 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
             if (optLevel != OptLevel.NONE  &&
                     !runMutants.contains(mutationInstance.id)) {
-                if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0) {
-                    mclOutcomes.get(mutationInstance).first.add(null);
-                }
+                if (mclOutcomes.containsKey(mutationInstance)
+                        && mclOutcomes.get(mutationInstance).get(mclOutcomes.get(mutationInstance).size() - 1) != Result.FAILURE)
+                    mclOutcomes.get(mutationInstance).add(null);
+                else if(!mclOutcomes.containsKey(mutationInstance))
+                    mclOutcomes.put(mutationInstance, new ArrayList<>(Collections.singletonList(null)));
                 continue;
             }
 
@@ -115,15 +112,16 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
                 super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 deadMutants.add(mutationInstance.id);
-                if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0)
-                    mclOutcomes.put(mutationInstance, new Pair<>(mclOutcomes.get(mutationInstance).first, ind));
+                if (mclOutcomes.containsKey(mutationInstance)
+                        && mclOutcomes.get(mutationInstance).get(mclOutcomes.get(mutationInstance).size() - 1) != Result.FAILURE)
+                    mclOutcomes.get(mutationInstance).add(Result.FAILURE);
                 else if(!mclOutcomes.containsKey(mutationInstance)) {
-                    List<Outcome> toAdd = new ArrayList<>();
+                    List<Result> toAdd = new ArrayList<>();
                     for (int c = 0; c < ind; c++) {
                         toAdd.add(null);
                     }
-                    toAdd.add(recentOutcomes.get(recentOutcomes.size() - 1));
-                    mclOutcomes.put(mutationInstance, new Pair<>(toAdd, ind));
+                    toAdd.add(Result.FAILURE);
+                    mclOutcomes.put(mutationInstance, toAdd);
                 }
             } catch(InstrumentationException e) {
                 throw new GuidanceException(e);
@@ -131,16 +129,21 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
                 throw e;
             } catch (Throwable e) {}
 
+            Result result = Result.SUCCESS;
+            Outcome oc = recentOutcomes.get(recentOutcomes.size() - 1);
+            if(oc.thrown instanceof AssumptionViolatedException) result = Result.INVALID;
+            else if(oc.thrown instanceof TimeoutException) result = Result.TIMEOUT;
+
             // add to matching MCL list
             if (mclOutcomes.containsKey(mutationInstance))
-                mclOutcomes.get(mutationInstance).first.add(recentOutcomes.get(recentOutcomes.size() - 1));
+                mclOutcomes.get(mutationInstance).add(result);
             else {
-                List<Outcome> toAdd = new ArrayList<>();
+                List<Result> toAdd = new ArrayList<>();
                 for (int c = 0; c < ind; c++) {
                     toAdd.add(null);
                 }
-                toAdd.add(recentOutcomes.get(recentOutcomes.size() - 1));
-                mclOutcomes.put(mutationInstance, new Pair<>(toAdd, -1));
+                toAdd.add(result);
+                mclOutcomes.put(mutationInstance, toAdd);
             }
             recentOutcomes.clear();
         }
