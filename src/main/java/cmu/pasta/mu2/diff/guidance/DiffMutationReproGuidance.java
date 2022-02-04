@@ -31,7 +31,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      *  mutation analysis results for each MutationInstance
      * paired with the index of the outcome that killed the mutant
      */
-    public Map<MutationInstance, List<Result>> mclOutcomes;
 
     private final MutationClassLoaders MCLs;
     private int ind;
@@ -39,7 +38,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     /**
      * The mutants killed so far
      */
-    private ArraySet deadMutants = new ArraySet();
+    public final ArraySet deadMutants = new ArraySet();
 
     /**
      * Current optimization level
@@ -60,7 +59,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls) throws IOException {
         super(inputFile, traceDir);
         cclOutcomes = new ArrayList<>();
-        mclOutcomes = new HashMap<>();
         MCLs = mcls;
         ind = -1;
 
@@ -85,6 +83,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             throw e;
         } catch (Throwable e) {}
 
+        System.out.println("CCL Outcome for input " + ind + ": " + recentOutcomes.get(0));
+
         // set up info
         cmpTo = new ArrayList<>(recentOutcomes);
         cclOutcomes.add(cmpTo.get(0));
@@ -97,54 +97,24 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
             if (optLevel != OptLevel.NONE  &&
                     !runMutants.contains(mutationInstance.id)) {
-                if (mclOutcomes.containsKey(mutationInstance)
-                        && mclOutcomes.get(mutationInstance).get(mclOutcomes.get(mutationInstance).size() - 1) != Result.FAILURE)
-                    mclOutcomes.get(mutationInstance).add(null);
-                else if(!mclOutcomes.containsKey(mutationInstance))
-                    mclOutcomes.put(mutationInstance, new ArrayList<>(Collections.singletonList(null)));
                 continue;
             }
 
             MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
 
             // run with MCL
+            System.out.println("Running " + mutationInstance);
             try {
                 super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 deadMutants.add(mutationInstance.id);
-                if (mclOutcomes.containsKey(mutationInstance)
-                        && mclOutcomes.get(mutationInstance).get(mclOutcomes.get(mutationInstance).size() - 1) != Result.FAILURE)
-                    mclOutcomes.get(mutationInstance).add(Result.FAILURE);
-                else if(!mclOutcomes.containsKey(mutationInstance)) {
-                    List<Result> toAdd = new ArrayList<>();
-                    for (int c = 0; c < ind; c++) {
-                        toAdd.add(null);
-                    }
-                    toAdd.add(Result.FAILURE);
-                    mclOutcomes.put(mutationInstance, toAdd);
-                }
+                System.out.println("killed by " + e);
             } catch(InstrumentationException e) {
                 throw new GuidanceException(e);
             } catch (GuidanceException e) {
                 throw e;
             } catch (Throwable e) {}
 
-            Result result = Result.SUCCESS;
-            Outcome oc = recentOutcomes.get(recentOutcomes.size() - 1);
-            if(oc.thrown instanceof AssumptionViolatedException) result = Result.INVALID;
-            else if(oc.thrown instanceof TimeoutException) result = Result.TIMEOUT;
-
-            // add to matching MCL list
-            if (mclOutcomes.containsKey(mutationInstance))
-                mclOutcomes.get(mutationInstance).add(result);
-            else {
-                List<Result> toAdd = new ArrayList<>();
-                for (int c = 0; c < ind; c++) {
-                    toAdd.add(null);
-                }
-                toAdd.add(result);
-                mclOutcomes.put(mutationInstance, toAdd);
-            }
             recentOutcomes.clear();
         }
         if(cclOutcomes.get(cclOutcomes.size() - 1).thrown != null) throw cclOutcomes.get(cclOutcomes.size() - 1).thrown;

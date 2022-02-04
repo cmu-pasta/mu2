@@ -109,15 +109,7 @@ public class MutateDiffGoal extends AbstractMojo {
             List<MutationInstance> mutationInstances = mcls.getMutationInstances();
             List<MutationInstance> killedMutants = new ArrayList<>();
             for(MutationInstance mi : mcls.getMutationInstances()) {
-                if(dmrg.mclOutcomes.get(mi) == null) {
-                    continue;
-                }
-                System.out.println("Running Mutant " + mi);
-                if(dmrg.mclOutcomes.get(mi).contains(edu.berkeley.cs.jqf.fuzz.guidance.Result.FAILURE))
-                    killedMutants.add(mi);
-                for(int c = 1; c < dmrg.mclOutcomes.get(mi).size(); c++) {
-                    System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).get(c));
-                }
+                if(dmrg.deadMutants.contains(mi.id)) killedMutants.add(mi);
             }
 
             File mutantReport = new File(resultsDir, "mutant-report.csv");
