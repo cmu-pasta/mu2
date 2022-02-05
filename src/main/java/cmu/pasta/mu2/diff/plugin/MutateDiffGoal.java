@@ -98,7 +98,7 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls);
+            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls, resultsDir);
             dmrg.setStopOnFailure(true);
             Result result = GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
             if (!result.wasSuccessful()) {

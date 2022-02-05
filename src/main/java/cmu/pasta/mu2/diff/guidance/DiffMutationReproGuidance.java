@@ -18,7 +18,9 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -56,11 +58,15 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      */
     private static ArraySet runMutants = new ArraySet();
 
-    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls) throws IOException {
+    private File reportFile;
+
+    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, File resultsDir) throws IOException {
         super(inputFile, traceDir);
         cclOutcomes = new ArrayList<>();
         MCLs = mcls;
         ind = -1;
+
+        reportFile = new File(resultsDir, "dmrg-report.csv");
 
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
@@ -84,6 +90,9 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         } catch (Throwable e) {}
 
         System.out.println("CCL Outcome for input " + ind + ": " + recentOutcomes.get(0));
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+            pw.printf("CCL Outcome for input %d: %s\n", ind, recentOutcomes.get(0).toString());
+        }
 
         // set up info
         cmpTo = new ArrayList<>(recentOutcomes);
@@ -104,11 +113,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
 
             // run with MCL
             System.out.println("Running " + mutationInstance);
+            try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+                pw.printf("Running %s\n", mutationInstance.toString());
+            }
+
             try {
                 super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 deadMutants.add(mutationInstance.id);
                 System.out.println("killed by " + e);
+                try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+                    pw.printf("killed by %s\n", e.toString());
+                }
             } catch(InstrumentationException e) {
                 throw new GuidanceException(e);
             } catch (GuidanceException e) {
