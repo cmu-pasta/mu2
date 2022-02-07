@@ -98,8 +98,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private final List<String> exceptions = new ArrayList<>();
 
+  private final boolean serializing;
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
-      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, boolean serializing)
       throws IOException {
     super(testName, duration, trials, outputDirectory, seedInputDir, rand);
     this.mutationClassLoaders = mutationClassLoaders;
@@ -107,6 +109,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
+    this.serializing = serializing;
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
@@ -160,7 +163,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     // set up info
     long trialTime = System.currentTimeMillis() - startTime;
-    byte[] argBytes = Serializer.serialize(args);
+    byte[] argBytes = null;
+    if(serializing) argBytes = Serializer.serialize(args);
     int run = 1;
 
     for (MutationInstance mutationInstance : getMutationInstances()) {
@@ -176,7 +180,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       run += 1;
       mutationInstance.resetTimer();
 
-      MutationRunInfo mri = new MutationRunInfo(mutationClassLoaders, mutationInstance, testClass, argBytes, args, method);
+      MutationRunInfo mri = new MutationRunInfo(mutationClassLoaders, mutationInstance, testClass, args, method);
+      if(serializing) mri = new MutationRunInfo(mutationClassLoaders, mutationInstance, testClass, argBytes, args, method);
 
       // run with MCL
       Outcome mclOutcome;
@@ -185,8 +190,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         dtr.run();
         if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
         else {
-          mclOutcome = new Outcome(Serializer.translate(dtr.getOutput(),
+          if(serializing)
+            mclOutcome = new Outcome(Serializer.translate(dtr.getOutput(),
                   mutationClassLoaders.getCartographyClassLoader()), null);
+          else mclOutcome = new Outcome(dtr.getOutput(), null);
         }
       } catch (InstrumentationException e) {
         throw new GuidanceException(e);

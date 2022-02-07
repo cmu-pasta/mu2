@@ -18,7 +18,7 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
     protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
-    private boolean serializing;
+    private final boolean serializing;
 
     public DiffReproGuidance(File inputFile, File traceDir, boolean serial) throws IOException {
         super(inputFile, traceDir);
@@ -52,8 +52,7 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
             return;
         }
 
-        // use serialization to load both outputs with the same ClassLoader
-        //TODO may not want serialization for all diff repros
+        // optionally use serialization to load both outputs with the same ClassLoader
         Outcome cmpOut = cmpTo.get(recentOutcomes.size() - 1);
         Outcome cmpSerial = cmpOut, outSerial = out;
         if(serializing) {

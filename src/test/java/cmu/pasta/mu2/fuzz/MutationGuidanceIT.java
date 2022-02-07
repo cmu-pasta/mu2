@@ -39,7 +39,7 @@ public class MutationGuidanceIT extends AbstractMutationTest {
     List<Integer> inputHashes = new ArrayList<>();
 
     ProbedMutationGuidance(MutationClassLoaders mcls, long trials, Random rnd) throws IOException {
-      super(null, mcls,null, trials, resultsDir, null, rnd);
+      super(null, mcls,null, trials, resultsDir, null, rnd, true);
     }
 
     @Override
