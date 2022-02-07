@@ -10,10 +10,7 @@ import cmu.pasta.mu2.util.ArraySet;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
-import edu.berkeley.cs.jqf.fuzz.guidance.Result;
-import edu.berkeley.cs.jqf.fuzz.guidance.TimeoutException;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
-import org.junit.AssumptionViolatedException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -21,7 +18,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
