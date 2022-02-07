@@ -11,8 +11,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.Result;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,13 +76,13 @@ public class DiffFuzzIT extends AbstractMutationTest {
         return mu2.killedMutants();
     }
 
-    public void fuzzRepro(String testClassName, String testMethod, String targetInst, String targetClasses, String corpusSrc, List<Outcome> expectedOut) throws Exception {
+    public void fuzzRepro(String testClassName, String testMethod, String targetInst, String targetClasses, String corpusSrc, Object expectedOut) throws Exception {
         MutationClassLoaders mcls = initClassLoaders(targetInst, targetClasses, OptLevel.EXECUTION);
         DiffReproGuidance drg = new DiffReproGuidance(new File(corpusSrc), null);
 
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), drg, null);
 
-        Assert.assertEquals(DiffReproGuidance.recentOutcomes, expectedOut);
+        Assert.assertEquals(DiffReproGuidance.recentOutcomes.toString(), expectedOut.toString());
     }
 
     public void fuzzMutateRepro(String testClassName, String testMethod, int expectCorpus, String targetClasses, String targetInst, String corpusSrc) throws Exception { //same # mutants
@@ -113,7 +114,7 @@ public class DiffFuzzIT extends AbstractMutationTest {
         String testMethod = "fuzzTimSort";
         String targetInst = "sort.TimSort";
         String targetClasses = "sort";
-        String corpusSrc = "./test-results/TimSort";
+        String corpusSrc = "./test-comparisons/TimSort";
 
         List<Outcome> expectedOut = new ArrayList<>();
         for(int c = 0; c < 22; c++) expectedOut.add(new Outcome(null, null));
@@ -127,7 +128,7 @@ public class DiffFuzzIT extends AbstractMutationTest {
         String testMethod = "fuzzTimSort";
         String targetInst = "sort.TimSort";
         String targetClasses = "sort";
-        String corpusSrc = "./test-results/TimSort";
+        String corpusSrc = "./test-comparisons/TimSort";
 
         fuzzMutateRepro(testClassName, testMethod, 22, targetClasses, targetInst, corpusSrc);
     }
@@ -144,27 +145,33 @@ public class DiffFuzzIT extends AbstractMutationTest {
         fuzzMutate(testClassName, testMethod, targetInst, 20, targetClasses);
     }
 
-    //@Test
+    @Test
     public void diffReproPatriciaTrie() throws Exception {
         String testClassName = "diff.PatriciaTrieTest";
         String testMethod = "testPrefixMap";
         String targetInst = "org.apache.commons.collections4.trie";
         String targetClasses = "org.apache.commons.collections4.trie,diff";
-        String corpusSrc = "./test-results/PatriciaTrie";
+        String corpusSrc = "./test-comparisons/PatriciaTrie";
 
-        List<Outcome> expectedOut = new ArrayList<>();
-        for(int c = 0; c < 20; c++) expectedOut.add(new Outcome(null, null));
+        File resultFile = new File("./test-comparisons/PatriciaTrie-repro.txt");
+        String expectedOut;
+        try(BufferedReader br = new BufferedReader(new FileReader(resultFile))) {
+            expectedOut = br.readLine();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
 
         fuzzRepro(testClassName, testMethod, targetInst, targetClasses, corpusSrc, expectedOut);
     }
 
-    //@Test
+    @Test
     public void diffMutateReproPatriciaTrie() throws Exception {
         String testClassName = "diff.PatriciaTrieTest";
         String testMethod = "testPrefixMap";
         String targetInst = "org.apache.commons.collections4.trie";
         String targetClasses = "org.apache.commons.collections4.trie,diff";
-        String corpusSrc = "./test-results/PatriciaTrie";
+        String corpusSrc = "./test-comparisons/PatriciaTrie";
 
         fuzzMutateRepro(testClassName, testMethod, 20, targetClasses, targetInst, corpusSrc);
     }
