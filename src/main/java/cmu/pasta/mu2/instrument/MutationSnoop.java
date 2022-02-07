@@ -24,7 +24,9 @@ public class MutationSnoop {
    * @throws MutationTimeoutException
    */
   public static void checkTimeout(int id) throws MutationTimeoutException {
-    if (MutationInstance.getInstance(id).incrementTimeoutCounter() > TIMEOUT_TICKS) {
+    long tc = MutationInstance.getInstance(id).incrementTimeoutCounter();
+    //System.out.println("checking Timeout: " + tc);
+    if (tc > TIMEOUT_TICKS) {
       throw new MutationTimeoutException(MutationInstance.getInstance(id).getTimeoutCounter());
     }
   }
