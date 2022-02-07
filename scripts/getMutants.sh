@@ -21,11 +21,11 @@ getResults() {
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
 
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus > $7-results/zest-results-$6.txt
-    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus > $7-results/mutate-results-$6.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DresultsDir=$7-results/zest-results-$6 #> $7-results/zest-results-$6.txt
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DresultsDir=$7-results/mutate-results-$6 #> $7-results/mutate-results-$6.txt
 
-    cat $7-results/zest-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
-    cat $7-results/mutate-results-$6.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
+    cat $7-results/zest-results-$6/dmrg-report.txt | grep "killed by" -B 1 > $7-filters/zest-filter-$6.txt
+    cat $7-results/mutate-results-$6/dmrg-report.txt | grep "killed by" -B 1 > $7-filters/mutate-filter-$6.txt
 
 }
 

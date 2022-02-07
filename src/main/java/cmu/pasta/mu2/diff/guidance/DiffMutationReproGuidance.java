@@ -66,8 +66,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         MCLs = mcls;
         ind = -1;
 
-        reportFile = new File(resultsDir, "dmrg-report.csv");
-
+        reportFile = new File(resultsDir, "dmrg-report.txt");
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
 
@@ -112,18 +111,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
 
             // run with MCL
-            System.out.println("Running " + mutationInstance);
+            System.out.println("Running Mutant " + mutationInstance);
             try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
-                pw.printf("Running %s\n", mutationInstance.toString());
+                pw.printf("Running Mutant %s\n", mutationInstance.toString());
             }
 
             try {
                 super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 deadMutants.add(mutationInstance.id);
-                System.out.println("killed by " + e);
+                System.out.println("killed by input " + ind + ": " + e);
                 try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
-                    pw.printf("killed by %s\n", e.toString());
+                    pw.printf("killed by input %d: %s\n", ind, e.toString());
                 }
             } catch(InstrumentationException e) {
                 throw new GuidanceException(e);

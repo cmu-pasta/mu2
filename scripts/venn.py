@@ -18,7 +18,7 @@ def get_killed_mutants(file_name):
             mutant_name = lines[i][lines[i].index("Mutant"):].strip()
             i += 1
             while i < len(lines) and "Running Mutant" not in lines[i]:
-                if "FAILURE" in lines[i]:
+                if "killed by " in lines[i]:
                     killed = True
                 i += 1
         if killed:
