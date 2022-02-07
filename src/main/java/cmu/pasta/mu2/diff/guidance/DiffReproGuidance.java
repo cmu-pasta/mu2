@@ -18,11 +18,13 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
     protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
+    private boolean serializing;
 
-    public DiffReproGuidance(File inputFile, File traceDir) throws IOException {
+    public DiffReproGuidance(File inputFile, File traceDir, boolean serial) throws IOException {
         super(inputFile, traceDir);
         cmpTo = null;
         recentOutcomes.clear();
+        serializing = serial;
         try {
             compare = Objects.class.getMethod("equals", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
@@ -30,8 +32,8 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
     }
 
-    public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes) throws IOException {
-        this(inputFile, traceDir);
+    public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes, boolean serial) throws IOException {
+        this(inputFile, traceDir, serial);
         cmpTo = cmpRes;
     }
 
@@ -53,9 +55,12 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         // use serialization to load both outputs with the same ClassLoader
         //TODO may not want serialization for all diff repros
         Outcome cmpOut = cmpTo.get(recentOutcomes.size() - 1);
-        ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
-        Outcome cmpSerial = new Outcome(Serializer.translate(cmpOut.output, cmpCL), cmpOut.thrown);
-        Outcome outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
+        Outcome cmpSerial = cmpOut, outSerial = out;
+        if(serializing) {
+            ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
+            cmpSerial = new Outcome(Serializer.translate(cmpOut.output, cmpCL), cmpOut.thrown);
+            outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
+        }
 
         if (!Outcome.same(cmpSerial, outSerial, compare)) {
             throw new DiffException(cmpTo.get(recentOutcomes.size() - 1), out);

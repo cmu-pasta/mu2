@@ -140,6 +140,9 @@ public class ReproDiffGoal extends AbstractMojo {
     @Parameter(property="dumpArgsDir")
     private String dumpArgsDir;
 
+    @Parameter(property="serializing", defaultValue = "true")
+    private boolean serializing;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
@@ -187,7 +190,7 @@ public class ReproDiffGoal extends AbstractMojo {
         }
 
         try {
-            guidance = new DiffReproGuidance(inputFile, null);
+            guidance = new DiffReproGuidance(inputFile, null, serializing);
             result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException("Could not load test class", e);

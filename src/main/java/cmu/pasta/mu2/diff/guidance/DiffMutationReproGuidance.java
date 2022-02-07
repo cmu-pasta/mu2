@@ -11,7 +11,6 @@ import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
-import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -60,7 +59,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     private static ArraySet runMutants = new ArraySet();
 
     public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls) throws IOException {
-        super(inputFile, traceDir);
+        super(inputFile, traceDir, true);
         cclOutcomes = new ArrayList<>();
         mclOutcomes = new HashMap<>();
         MCLs = mcls;
