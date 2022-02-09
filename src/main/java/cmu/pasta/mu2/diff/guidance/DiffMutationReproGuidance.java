@@ -64,7 +64,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         MCLs = mcls;
         ind = -1;
 
-        reportFile = new File(resultsDir, "dmrg-report.txt");
+        reportFile = new File(resultsDir, "mutate-repro-out.txt");
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
 

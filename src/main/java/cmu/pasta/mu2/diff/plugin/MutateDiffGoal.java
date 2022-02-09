@@ -105,7 +105,6 @@ public class MutateDiffGoal extends AbstractMojo {
                 throw new MojoFailureException("Test run failed",
                         result.getFailures().get(0).getException());
             }
-            System.out.println("cclOutcomes: " + dmrg.cclOutcomes);
             List<MutationInstance> mutationInstances = mcls.getMutationInstances();
             List<MutationInstance> killedMutants = new ArrayList<>();
             for(MutationInstance mi : mcls.getMutationInstances()) {
