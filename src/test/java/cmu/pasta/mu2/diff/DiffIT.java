@@ -78,7 +78,7 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(9, mu2.corpusCount());
+        Assert.assertEquals(8, mu2.corpusCount());
     }
 
     @Test

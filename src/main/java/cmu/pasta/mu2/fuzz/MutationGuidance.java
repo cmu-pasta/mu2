@@ -3,6 +3,7 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.instrument.MutationTimeoutException;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
@@ -18,6 +19,7 @@ import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
@@ -25,7 +27,16 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Objects;
 import java.util.Date;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -42,6 +53,18 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    * The classloaders for cartography and individual mutation instances
    */
   private MutationClassLoaders mutationClassLoaders;
+
+
+  /**
+   * Number of threads used to run mutants.
+   */
+  private static int BACKGROUND_THREADS = Integer.getInteger("mu2.BACKGROUND_THREADS", Runtime.getRuntime().availableProcessors());
+
+
+  /**
+   * Timeout for each mutant (DEFAULT: 10 seconds).
+   */
+  private static int TIMEOUT = Integer.getInteger("mu2.TIMEOUT", 10 * 1000);
 
   /**
    * The mutants killed so far
@@ -82,6 +105,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    * Current optimization level
    */
   private final OptLevel optLevel;
+
+  private final ExecutorService executor = Executors.newFixedThreadPool(BACKGROUND_THREADS);
 
   /**
    * The set of mutants to execute for a given trial.
@@ -146,6 +171,86 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     return criteria;
   }
 
+  public Boolean dispatchMutationInstance(MutationInstance instance, TestClass testClass, byte[] argBytes,
+                                          Object[] args, FrameworkMethod method, Outcome cclOutcome)
+          throws ExecutionException, InterruptedException, InvocationTargetException, IllegalAccessException,
+          IOException, ClassNotFoundException, NoSuchMethodException {
+    if (deadMutants.contains(instance.id)) {
+      return false;
+    }
+    if (optLevel != OptLevel.NONE  &&
+            !runMutants.contains(instance.id)) {
+      return false;
+    }
+
+    // update info
+    instance.resetTimer();
+
+    MutationRunInfo mri = null;
+    mri = new MutationRunInfo(mutationClassLoaders, instance, testClass, argBytes, args, method);
+
+    // run with MCL
+    MutationRunInfo finalMri = mri;
+    FutureTask<Outcome> task = new FutureTask<>(() -> {
+      try {
+        DiffTrialRunner dtr = new DiffTrialRunner(finalMri.clazz, finalMri.method, finalMri.args);
+        dtr.run();
+        if (dtr.getOutput() == null) return new Outcome(null, null);
+        else {
+          return new Outcome(Serializer.translate(dtr.getOutput(),
+                  mutationClassLoaders.getCartographyClassLoader()), null);
+        }
+      } catch (InstrumentationException e) {
+        throw new GuidanceException(e);
+      } catch (GuidanceException e) {
+        throw e;
+      } catch (Throwable e) {
+        return new Outcome(null, e);
+      }
+    });
+    Thread thread = new Thread(task);
+    thread.start();
+
+    long start = System.currentTimeMillis();
+    Outcome mclOutcome = null;
+
+    // This is a hack... Maybe use another fixed rate scheduler.
+    while (!task.isDone()) {
+      long timeElapsed = System.currentTimeMillis() - start;
+      if (timeElapsed > TIMEOUT) {
+        thread.stop();
+        mclOutcome = new Outcome(null, new MutationTimeoutException(timeElapsed));
+        break;
+      }
+    }
+
+    if (task.isDone()) {
+      mclOutcome = task.get();
+    }
+
+
+    // MCL outcome and CCL outcome should be the same (either returned same value or threw same exception)
+    // If this isn't the case, the mutant is killed.
+    // This catches validity differences because an invalid input throws an AssumptionViolatedException,
+    // which will be compared as the thrown value.
+    if(!Outcome.same(cclOutcome, mclOutcome, compare)) {
+      deadMutants.add(instance.id);
+      Throwable t;
+      if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
+        // CCL succeeded, MCL threw an exception
+        t = mclOutcome.thrown;
+      } else {
+        t = new DiffException(cclOutcome, mclOutcome);
+      }
+      exceptions.add(t.getClass().getName());
+      ((MutationCoverage) runCoverage).kill(instance);
+    }
+
+    // run
+    ((MutationCoverage) runCoverage).see(instance);
+    return true;
+  }
+
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
@@ -163,59 +268,18 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
-    for (MutationInstance mutationInstance : getMutationInstances()) {
-      if (deadMutants.contains(mutationInstance.id)) {
-        continue;
+    List<Future<Boolean>> results = getMutationInstances()
+            .stream()
+            .map(instance ->
+                    executor.submit(() ->
+                            dispatchMutationInstance(instance, testClass, argBytes, args, method, cclOutcome)))
+            .collect(Collectors.toList());
+    for (Future<Boolean> result : results) {
+      if (result.get()) {
+        run += 1;
       }
-      if (optLevel != OptLevel.NONE  &&
-          !runMutants.contains(mutationInstance.id)) {
-        continue;
-      }
-
-      // update info
-      run += 1;
-      mutationInstance.resetTimer();
-
-      MutationRunInfo mri = new MutationRunInfo(mutationClassLoaders, mutationInstance, testClass, argBytes, args, method);
-
-      // run with MCL
-      Outcome mclOutcome;
-      try {
-        DiffTrialRunner dtr = new DiffTrialRunner(mri.clazz, mri.method, mri.args);
-        dtr.run();
-        if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
-        else {
-          mclOutcome = new Outcome(Serializer.translate(dtr.getOutput(),
-                  mutationClassLoaders.getCartographyClassLoader()), null);
-        }
-      } catch (InstrumentationException e) {
-        throw new GuidanceException(e);
-      } catch (GuidanceException e) {
-        throw e;
-      } catch (Throwable e) {
-        mclOutcome = new Outcome(null, e);
-      }
-
-      // MCL outcome and CCL outcome should be the same (either returned same value or threw same exception)
-      // If this isn't the case, the mutant is killed.
-      // This catches validity differences because an invalid input throws an AssumptionViolatedException,
-      // which will be compared as the thrown value.
-      if(!Outcome.same(cclOutcome, mclOutcome, compare)) {
-        deadMutants.add(mutationInstance.id);
-        Throwable t;
-        if(cclOutcome.thrown == null && mclOutcome.thrown != null) {
-          // CCL succeeded, MCL threw an exception
-          t = mclOutcome.thrown;
-        } else {
-          t = new DiffException(cclOutcome, mclOutcome);
-        }
-        exceptions.add(t.getClass().getName());
-        ((MutationCoverage) runCoverage).kill(mutationInstance);
-      }
-
-      // run
-      ((MutationCoverage) runCoverage).see(mutationInstance);
     }
+
 
     //throw exception if an exception was found by the CCL
     if(cclOutcome.thrown != null) throw cclOutcome.thrown;
