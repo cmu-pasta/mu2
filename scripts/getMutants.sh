@@ -24,8 +24,8 @@ getResults() {
     mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DresultsDir=$7-results/zest-results-$6 #> $7-results/zest-results-$6.txt
     mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DresultsDir=$7-results/mutate-results-$6 #> $7-results/mutate-results-$6.txt
 
-    cat $7-results/zest-results-$6/dmrg-report.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
-    cat $7-results/mutate-results-$6/dmrg-report.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
+    cat $7-results/zest-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
+    cat $7-results/mutate-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
 
 }
 
