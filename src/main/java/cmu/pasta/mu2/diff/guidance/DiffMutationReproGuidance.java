@@ -74,7 +74,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
 
         recentOutcomes.clear();
-        ind++;
+        System.out.println("Running Input " + (++ind));
         cmpTo = null;
 
         // run CCL
