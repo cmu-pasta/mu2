@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import edu.berkeley.cs.jqf.instrument.tracing.SingleSnoop;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -65,6 +66,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    * Timeout for each mutant (DEFAULT: 10 seconds).
    */
   private static int TIMEOUT = Integer.getInteger("mu2.TIMEOUT", 10 * 1000);
+
+  public static boolean RUN_MUTANTS_IN_PARALLEL = Boolean.getBoolean("mu2.PARALLEL");
 
   /**
    * The mutants killed so far
@@ -208,23 +211,30 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         return new Outcome(null, e);
       }
     });
-    Thread thread = new Thread(task);
-    thread.start();
-
-    long start = System.currentTimeMillis();
     Outcome mclOutcome = null;
 
-    // This is a hack... Maybe use another fixed rate scheduler.
-    while (!task.isDone()) {
-      long timeElapsed = System.currentTimeMillis() - start;
-      if (timeElapsed > TIMEOUT) {
-        thread.stop();
-        mclOutcome = new Outcome(null, new MutationTimeoutException(timeElapsed));
-        break;
-      }
-    }
+    if (RUN_MUTANTS_IN_PARALLEL) {
+      Thread thread = new Thread(task);
+      thread.start();
 
-    if (task.isDone()) {
+      long start = System.currentTimeMillis();
+
+      // This is a hack... Maybe use another fixed rate scheduler.
+      while (!task.isDone()) {
+        long timeElapsed = System.currentTimeMillis() - start;
+        if (timeElapsed > TIMEOUT) {
+          thread.stop();
+          mclOutcome = new Outcome(null, new MutationTimeoutException(timeElapsed));
+          break;
+        }
+      }
+
+      if (task.isDone()) {
+        mclOutcome = task.get();
+      }
+      SingleSnoop.REGISTER_THREAD(Thread.currentThread());
+    } else {
+      task.run();
       mclOutcome = task.get();
     }
 
@@ -268,18 +278,25 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
-    List<Future<Boolean>> results = getMutationInstances()
-            .stream()
-            .map(instance ->
-                    executor.submit(() ->
-                            dispatchMutationInstance(instance, testClass, argBytes, args, method, cclOutcome)))
-            .collect(Collectors.toList());
-    for (Future<Boolean> result : results) {
-      if (result.get()) {
-        run += 1;
+    if (RUN_MUTANTS_IN_PARALLEL) {
+      List<Future<Boolean>> results = getMutationInstances()
+              .stream()
+              .map(instance ->
+                      executor.submit(() ->
+                              dispatchMutationInstance(instance, testClass, argBytes, args, method, cclOutcome)))
+              .collect(Collectors.toList());
+      for (Future<Boolean> result : results) {
+        if (result.get()) {
+          run += 1;
+        }
+      }
+    } else {
+      for (MutationInstance instance: getMutationInstances()) {
+        if (dispatchMutationInstance(instance, testClass, argBytes, args, method, cclOutcome)) {
+          run += 1;
+        }
       }
     }
-
 
     //throw exception if an exception was found by the CCL
     if(cclOutcome.thrown != null) throw cclOutcome.thrown;
