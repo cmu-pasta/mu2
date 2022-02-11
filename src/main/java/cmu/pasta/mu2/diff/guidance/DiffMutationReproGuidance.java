@@ -76,6 +76,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         recentOutcomes.clear();
         cmpTo = null;
 
+        ind++;
+
         // run CCL
         try {
             super.run(testClass, method, args);
