@@ -98,32 +98,17 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls);
+            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls, resultsDir);
             dmrg.setStopOnFailure(true);
             Result result = GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
             if (!result.wasSuccessful()) {
                 throw new MojoFailureException("Test run failed",
                         result.getFailures().get(0).getException());
             }
-            System.out.println("cclOutcomes: " + dmrg.cclOutcomes);
             List<MutationInstance> mutationInstances = mcls.getMutationInstances();
             List<MutationInstance> killedMutants = new ArrayList<>();
             for(MutationInstance mi : mcls.getMutationInstances()) {
-                if(dmrg.mclOutcomes.get(mi) == null) {
-                    continue;
-                }
-                System.out.println("Running Mutant " + mi);
-                if(dmrg.mclOutcomes.get(mi).second >= 0) {
-                    killedMutants.add(mi);
-                    for(int c = 1; c < dmrg.mclOutcomes.get(mi).second; c++) {
-                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
-                    }
-                    System.out.println("Input " + dmrg.mclOutcomes.get(mi).second + " ::= FAILURE");
-                } else {
-                    for(int c = 0; c < dmrg.mclOutcomes.get(mi).first.size(); c++) {
-                        System.out.println("Input " + c + " ::= " + dmrg.mclOutcomes.get(mi).first.get(c));
-                    }
-                }
+                if(dmrg.deadMutants.contains(mi.id)) killedMutants.add(mi);
             }
 
             File mutantReport = new File(resultsDir, "mutant-report.csv");
