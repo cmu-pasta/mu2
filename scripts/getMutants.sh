@@ -17,26 +17,33 @@ fuzzMu2() {
     INVALID=${arrSTR[-3]};
     NUM_TRIALS=$((VALID+INVALID))
     echo mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION
-    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION
+    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/tmpMu2/exp_$6 -DrandomSeed=$6 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION
 }
 
 getResults() {
 
+    rm -r target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
+    rm -r target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
     # Debug purposes - dump args to look at actual files
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpZest/exp_$6/args_corpus/
     mvn jqf:repro -Dclass=$1 -Dmethod=$2 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -Djqf.repro.dumpArgsDir=target/$7-fuzz-results/tmpMu2/exp_$6/args_corpus/
 
     rm -r $7-results/zest-results-$6
     rm -r $7-results/mutate-results-$6
+    rm -r $7-results/mutate-results-time-constrained-$6
 
     echo mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DresultsDir=$7-results/zest-results-$6 #> $7-results/zest-results-$6.txt
     mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DresultsDir=$7-results/zest-results-$6 #> $7-results/zest-results-$6.txt
     echo mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DresultsDir=$7-results/mutate-results-$6 #> $7-results/mutate-results-$6.txt
     mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DresultsDir=$7-results/mutate-results-$6 #> $7-results/mutate-results-$6.txt
 
-    cat $7-results/zest-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
-    cat $7-results/mutate-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt
+    python $CURDIR/create_time_constrained_corpus.py --exp_dir target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i
+    echo mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/time_constrained_corpus -DresultsDir=$7-results/mutate-results-time-constrained-$6
+    mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2/exp_$6/time_constrained_corpus -DresultsDir=$7-results/mutate-results-time-constrained-$6
 
+    cat $7-results/zest-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
+    cat $7-results/mutate-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt 
+    cat $7-results/mutate-results-time-constrained-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-time-constrained-$6.txt 
 }
 
 CLASS=$1
@@ -56,7 +63,7 @@ mkdir $TARGETNAME-filters
 mkdir $TARGETNAME-results
 mkdir $TARGETNAME-mutant-plots
 
-N=5
+N=10
 for i in $(seq 1 1 $REPS)
 do
     ((j=j%N)); ((j++==0)) && wait
@@ -81,10 +88,10 @@ wait
 cd $CURDIR
 python venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png --target_name $TARGETNAME
 
-for i in $(seq 1 1 $6)
-do
-    python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
-done
+# for i in $(seq 1 1 $6)
+# do
+#     python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
+# done
 
 
 #comment the below lines to not remove the created files

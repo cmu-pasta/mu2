@@ -11,11 +11,13 @@ def get_killed_mutants(file_name):
         lines = f.readlines()
 
     i = 0
+    seen_mutants = set()
     killed_mutants = set()
     while i < len(lines):
         if "Running Mutant" in lines[i]:
             killed = False
             mutant_name = lines[i][lines[i].index("Mutant"):].strip()
+            seen_mutants.add(mutant_name)
             i += 1
             while i < len(lines) and "Running Mutant" not in lines[i]:
                 if "FAILURE" in lines[i]:
@@ -23,6 +25,7 @@ def get_killed_mutants(file_name):
                 i += 1
         if killed:
             killed_mutants.add(mutant_name)
+    print(len(seen_mutants))
     return killed_mutants
 
 def get_unique(zest_killed, mutate_killed):

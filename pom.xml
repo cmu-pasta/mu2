@@ -97,13 +97,9 @@
               <goal>copy</goal>
             </goals>
             <configuration>
+              <skip>${skipTests}</skip>
               <!-- Get sort benchmarks app and test code -->
               <artifactItems>
-                <artifactItem>
-                  <groupId>cmu.pasta</groupId>
-                  <artifactId>sort-benchmarks</artifactId>
-                  <version>1.0-SNAPSHOT</version>
-                </artifactItem>
                 <artifactItem>
                   <groupId>cmu.pasta</groupId>
                   <artifactId>sort-benchmarks</artifactId>
