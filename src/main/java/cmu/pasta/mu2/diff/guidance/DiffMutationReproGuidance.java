@@ -9,18 +9,17 @@ import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import com.pholser.junit.quickcheck.Pair;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.PrintWriter;
 import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
@@ -32,7 +31,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      *  mutation analysis results for each MutationInstance
      * paired with the index of the outcome that killed the mutant
      */
-    public Map<MutationInstance, Pair<List<Outcome>, Integer>> mclOutcomes;
 
     private final MutationClassLoaders MCLs;
     private int ind;
@@ -40,7 +38,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     /**
      * The mutants killed so far
      */
-    private ArraySet deadMutants = new ArraySet();
+    public final ArraySet deadMutants = new ArraySet();
 
     /**
      * Current optimization level
@@ -60,17 +58,15 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
 
     private boolean serializing;
 
-    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serial) throws IOException {
+    private File reportFile;
+
+    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serial, File resultsDir) throws IOException {
         super(inputFile, traceDir, true);
         cclOutcomes = new ArrayList<>();
-        mclOutcomes = new HashMap<>();
         MCLs = mcls;
         ind = -1;
         serializing = serial;
-        for(MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
-            mclOutcomes.put(mutationInstance, new Pair<>(new ArrayList<>(), -1));
-        }
-
+        reportFile = new File(resultsDir, "mutate-repro-out.txt");
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
 
@@ -80,8 +76,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
 
         recentOutcomes.clear();
-        ind++;
         cmpTo = null;
+        ind++;
 
         // run CCL
         try {
@@ -91,6 +87,11 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         } catch (GuidanceException e) {
             throw e;
         } catch (Throwable e) {}
+
+        System.out.println("CCL Outcome for input " + ind + ": " + recentOutcomes.get(0));
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+            pw.printf("CCL Outcome for input %d: %s\n", ind, recentOutcomes.get(0).toString());
+        }
 
         // set up info
         cmpTo = new ArrayList<>(recentOutcomes);
@@ -105,9 +106,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
             if (optLevel != OptLevel.NONE  &&
                     !runMutants.contains(mutationInstance.id)) {
-                if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0) {
-                    mclOutcomes.get(mutationInstance).first.add(null);
-                }
                 continue;
             }
 
@@ -115,19 +113,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             if(serializing) mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
 
             // run with MCL
+            System.out.println("Running Mutant " + mutationInstance);
+            try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+                pw.printf("Running Mutant %s\n", mutationInstance.toString());
+            }
+
             try {
                 super.run(new TestClass(mri.clazz), mri.method, mri.args);
             } catch (DiffException e) {
                 deadMutants.add(mutationInstance.id);
-                if (mclOutcomes.containsKey(mutationInstance) && mclOutcomes.get(mutationInstance).second < 0)
-                    mclOutcomes.put(mutationInstance, new Pair<>(mclOutcomes.get(mutationInstance).first, ind));
-                else if(!mclOutcomes.containsKey(mutationInstance)) {
-                    List<Outcome> toAdd = new ArrayList<>();
-                    for (int c = 0; c < ind; c++) {
-                        toAdd.add(null);
-                    }
-                    toAdd.add(recentOutcomes.get(recentOutcomes.size() - 1));
-                    mclOutcomes.put(mutationInstance, new Pair<>(toAdd, ind));
+                System.out.println("FAILURE: killed by input " + ind + ": " + e);
+                try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
+                    pw.printf("FAILURE: killed by input %d: %s\n", ind, e.toString());
                 }
             } catch(InstrumentationException e) {
                 throw new GuidanceException(e);
@@ -135,17 +132,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
                 throw e;
             } catch (Throwable e) {}
 
-            // add to matching MCL list
-            if (mclOutcomes.containsKey(mutationInstance))
-                mclOutcomes.get(mutationInstance).first.add(recentOutcomes.get(recentOutcomes.size() - 1));
-            else {
-                List<Outcome> toAdd = new ArrayList<>();
-                for (int c = 0; c < ind; c++) {
-                    toAdd.add(null);
-                }
-                toAdd.add(recentOutcomes.get(recentOutcomes.size() - 1));
-                mclOutcomes.put(mutationInstance, new Pair<>(toAdd, -1));
-            }
             recentOutcomes.clear();
         }
         if(cclOutcomes.get(cclOutcomes.size() - 1).thrown != null) throw cclOutcomes.get(cclOutcomes.size() - 1).thrown;
