@@ -27,14 +27,14 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Objects;
 import java.util.Date;
-import java.util.Timer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import edu.berkeley.cs.jqf.instrument.tracing.SingleSnoop;
@@ -65,7 +65,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   /**
    * Timeout for each mutant (DEFAULT: 10 seconds).
    */
-  private static int TIMEOUT = Integer.getInteger("mu2.TIMEOUT", 10 * 1000);
+  private static int TIMEOUT = Integer.getInteger("mu2.TIMEOUT", 10);
 
   public static boolean RUN_MUTANTS_IN_PARALLEL = Boolean.getBoolean("mu2.PARALLEL");
 
@@ -214,24 +214,22 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     Outcome mclOutcome = null;
 
     if (RUN_MUTANTS_IN_PARALLEL) {
+
       Thread thread = new Thread(task);
       thread.start();
 
-      long start = System.currentTimeMillis();
+      ExecutorService service = Executors.newSingleThreadExecutor();
+      Future<Outcome> outcome = service.submit(() -> task.get());
 
-      // This is a hack... Maybe use another fixed rate scheduler.
-      while (!task.isDone()) {
-        long timeElapsed = System.currentTimeMillis() - start;
-        if (timeElapsed > TIMEOUT) {
-          thread.stop();
-          mclOutcome = new Outcome(null, new MutationTimeoutException(timeElapsed));
-          break;
-        }
+      try {
+        mclOutcome = outcome.get(TIMEOUT, TimeUnit.SECONDS);
+      } catch (TimeoutException e) {
+        thread.stop();
+        mclOutcome = new Outcome(null, new MutationTimeoutException(TIMEOUT));
       }
 
-      if (task.isDone()) {
-        mclOutcome = task.get();
-      }
+      service.shutdownNow();
+
       SingleSnoop.REGISTER_THREAD(Thread.currentThread());
     } else {
       task.run();
