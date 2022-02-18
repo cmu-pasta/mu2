@@ -25,7 +25,7 @@
     <dependency>
       <groupId>edu.berkeley.cs.jqf</groupId>
       <artifactId>jqf-fuzz</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <version>2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
@@ -99,6 +99,7 @@
             <configuration>
               <skip>${skipTests}</skip>
               <!-- Get sort benchmarks app and test code -->
+              <skip>${skipTests}</skip>
               <artifactItems>
                 <artifactItem>
                   <groupId>cmu.pasta</groupId>
