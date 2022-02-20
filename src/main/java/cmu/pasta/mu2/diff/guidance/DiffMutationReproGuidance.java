@@ -56,16 +56,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      */
     private static ArraySet runMutants = new ArraySet();
 
-    private boolean serializing;
+    private boolean serializeIn;
+    private boolean serializeOut;
 
     private File reportFile;
 
-    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serial, File resultsDir) throws IOException {
+    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serialIn, boolean serialOut, File resultsDir) throws IOException {
         super(inputFile, traceDir, true);
         cclOutcomes = new ArrayList<>();
         MCLs = mcls;
         ind = -1;
-        serializing = serial;
+        serializeIn = serialIn;
+        serializeOut = serialOut;
         reportFile = new File(resultsDir, "mutate-repro-out.txt");
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
@@ -97,7 +99,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         cmpTo = new ArrayList<>(recentOutcomes);
         cclOutcomes.add(cmpTo.get(0));
         byte[] argBytes = null;
-        if(serializing) argBytes = Serializer.serialize(args);
+        if(serializeIn) argBytes = Serializer.serialize(args);
         recentOutcomes.clear();
 
         for (MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
@@ -110,7 +112,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
 
             MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, args, method);
-            if(serializing) mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+            if(serializeIn) mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
 
             // run with MCL
             System.out.println("Running Mutant " + mutationInstance);

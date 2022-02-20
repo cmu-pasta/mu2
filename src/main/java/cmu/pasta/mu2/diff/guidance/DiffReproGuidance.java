@@ -18,13 +18,15 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
     private Method compare;
     protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
-    private final boolean serializing;
+    private boolean serializeIn;
+    private boolean serializeOut;
 
-    public DiffReproGuidance(File inputFile, File traceDir, boolean serial) throws IOException {
+    public DiffReproGuidance(File inputFile, File traceDir, boolean serialIn, boolean serialOut) throws IOException {
         super(inputFile, traceDir);
         cmpTo = null;
         recentOutcomes.clear();
-        serializing = serial;
+        serializeIn = serialIn;
+        serializeOut = serialOut;
         try {
             compare = Objects.class.getMethod("equals", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
@@ -32,8 +34,8 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         }
     }
 
-    public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes, boolean serial) throws IOException {
-        this(inputFile, traceDir, serial);
+    public DiffReproGuidance(File inputFile, File traceDir, List<Outcome> cmpRes, boolean serialIn, boolean serialOut) throws IOException {
+        this(inputFile, traceDir, serialIn, serialOut);
         cmpTo = cmpRes;
     }
 
@@ -55,7 +57,7 @@ public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
         // optionally use serialization to load both outputs with the same ClassLoader
         Outcome cmpOut = cmpTo.get(recentOutcomes.size() - 1);
         Outcome cmpSerial = cmpOut, outSerial = out;
-        if(serializing) {
+        if(serializeOut) {
             ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
             cmpSerial = new Outcome(Serializer.translate(cmpOut.output, cmpCL), cmpOut.thrown);
             outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
