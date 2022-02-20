@@ -156,8 +156,8 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="optLevel", defaultValue = "EXECUTION")
     private String optLevel;
 
-    @Parameter(property="serializing", defaultValue = "true")
-    private boolean serializing;
+    @Parameter(property="noSerialization", defaultValue = "false")
+    private boolean notSerializing;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -206,7 +206,7 @@ public class DiffGoal extends AbstractMojo {
             }
             MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, serializing);
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, !notSerializing);
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {

@@ -71,8 +71,8 @@ public class MutateDiffGoal extends AbstractMojo {
     @Parameter(property="optLevel", defaultValue = "execution")
     private String optLevel;
 
-    @Parameter(property="serializing", defaultValue = "true")
-    private boolean serializing;
+    @Parameter(property="noSerialization", defaultValue = "false")
+    private boolean notSerializing;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -101,7 +101,7 @@ public class MutateDiffGoal extends AbstractMojo {
 
             // Run initial test to compute mutants dynamically
             System.out.println("Starting Initial Run:");
-            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls, serializing, resultsDir);
+            DiffMutationReproGuidance dmrg = new DiffMutationReproGuidance(input, null, mcls, !notSerializing, resultsDir);
             dmrg.setStopOnFailure(true);
             Result result = GuidedFuzzing.run(testClassName, testMethod, ccl, dmrg, null);
             if (!result.wasSuccessful()) {
