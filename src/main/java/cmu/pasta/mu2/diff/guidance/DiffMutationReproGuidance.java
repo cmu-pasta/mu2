@@ -62,7 +62,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     private File reportFile;
 
     public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serialIn, boolean serialOut, File resultsDir) throws IOException {
-        super(inputFile, traceDir, true);
+        super(inputFile, traceDir, serialIn, serialOut);
         cclOutcomes = new ArrayList<>();
         MCLs = mcls;
         ind = -1;
