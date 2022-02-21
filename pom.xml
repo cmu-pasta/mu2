@@ -99,6 +99,7 @@
             <configuration>
               <skip>${skipTests}</skip>
               <!-- Get sort benchmarks app and test code -->
+              <skip>${skipTests}</skip>
               <artifactItems>
                 <artifactItem>
                   <groupId>cmu.pasta</groupId>
