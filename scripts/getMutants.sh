@@ -62,6 +62,19 @@ getResults() {
     echo mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2NoSave/exp_$6/time_constrained_corpus -DresultsDir=$7-results/mutate-no-save-results-time-constrained-$6
     mvn mu2:mutate -Dclass=$1 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dinput=target/$7-fuzz-results/tmpMu2NoSave/exp_$6/time_constrained_corpus -DresultsDir=$7-results/mutate-no-save-results-time-constrained-$6
 
+    # Rerun tests to create Jacoco exec file
+    rm target/jacoco.exec
+    echo mvn test -Dtest=$1\#$2 -Drepro=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DskipTests=false
+    mvn test -Dtest=$1\#$2 -Drepro=target/$7-fuzz-results/tmpZest/exp_$6/corpus -DskipTests=false
+    cp target/site/jacoco/jacoco.csv $7-coverage/zest-coverage-$6.csv
+    # java -jar $CURDIR/../lib/jacococli.jar report target/jacoco.exec --classfiles target/dependency/$TARGETJAR --csv $7-coverage/zest-coverage-$6.csv
+
+    rm target/jacoco.exec
+    echo mvn test -Dtest=$1\#$2 -Drepro=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DskipTests=false
+    mvn test -Dtest=$1\#$2 -Drepro=target/$7-fuzz-results/tmpMu2/exp_$6/corpus -DskipTests=false
+    cp target/site/jacoco/jacoco.csv $7-coverage/mutate-coverage-$6.csv
+    # java -jar $CURDIR/../lib/jacococli.jar report target/jacoco.exec --classfiles target/dependency/$TARGETJAR --csv $7-coverage/mutate-coverage-$6.csv
+
     # Create filter files
     cat $7-results/zest-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/zest-filter-$6.txt
     cat $7-results/mutate-results-$6/mutate-repro-out.txt | grep -a "Running Mutant\|FAILURE" > $7-filters/mutate-filter-$6.txt 
@@ -79,13 +92,17 @@ REPS=$6
 TIME=$7
 DIR=$8
 TARGETNAME=$9
-MUPROCS=${10}
+TARGETJAR=${10}
+MUPROCS=${11}
 
 CURDIR=$(pwd)
 cd $DIR
 mkdir $TARGETNAME-filters
 mkdir $TARGETNAME-results
+mkdir $TARGETNAME-coverage
 mkdir $TARGETNAME-mutant-plots
+
+mvn dependency:copy-dependencies
 
 N=10
 for i in $(seq 1 1 $REPS)
@@ -111,10 +128,13 @@ do
 done
 wait
 
-for i in $(seq 1 1 $6)
-do
-    python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
-done
+# cd $CURDIR
+# python venn.py --filters_dir $DIR/$TARGETNAME-filters --num_experiments $REPS --output_img $DIR/$TARGETNAME-venn.png --target_name $TARGETNAME
+
+# for i in $(seq 1 1 $6)
+# do
+#     python plot_mutant_data.py $DIR/target/$TARGETNAME-fuzz-results/tmpMu2/exp_$i/plot_data $DIR/$TARGETNAME-mutant-plots/exp_$i.png
+# done
 
 
 #comment the below lines to not remove the created files
