@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -61,13 +63,23 @@ public class MutationClassLoader extends URLClassLoader {
           String[] interfaces) {
         return new MethodVisitor(Mutator.cvArg,
             cv.visitMethod(access, name, signature, superName, interfaces)) {
+          final Set<Label> visitedLabels = new HashSet<>();
+
+          @Override
+          public void visitLabel(Label label) {
+            visitedLabels.add(label);
+            super.visitLabel(label);
+          }
+
           @Override
           public void visitJumpInsn(int opcode, Label label) {
             // Increment timer and check for time outs at each jump instruction
-            mv.visitLdcInsn(mutationInstance.id);
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                Type.getInternalName(MutationSnoop.class),
-                "checkTimeout", "(I)V", false);
+            if(visitedLabels.contains(label)) {
+              mv.visitLdcInsn(mutationInstance.id);
+              mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                      Type.getInternalName(MutationSnoop.class),
+                      "checkTimeout", "(I)V", false);
+            }
 
             // Increment offset if the mutator matches
             if (findingClass.equals(mutationInstance.className)
