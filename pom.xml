@@ -97,7 +97,6 @@
               <goal>copy</goal>
             </goals>
             <configuration>
-              <skip>${skipTests}</skip>
               <!-- Get sort benchmarks app and test code -->
               <skip>${skipTests}</skip>
               <artifactItems>

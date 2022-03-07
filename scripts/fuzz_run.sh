@@ -22,4 +22,4 @@ elif [ $FUZZ_CONFIG == "mu2nosave" ]; then
 fi
 
 echo tmux new-session -d "bash $FUZZ_SCRIPT $FUZZ_CONFIG $FUZZ_ARGS"
-tmux new-session -d "bash $FUZZ_SCRIPT $FUZZ_CONFIG $FUZZ_ARGS"
+bash $FUZZ_SCRIPT $FUZZ_CONFIG $FUZZ_ARGS

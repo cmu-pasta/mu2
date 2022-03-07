@@ -29,7 +29,7 @@ echo "Compiling sort-benchmarks..."
 
 # Mu2 With Tests
 echo "Compiling Mu2..."
-(cd mu2; git pull; mvn install > /dev/null && echo "Built: Mu2 (with tests)")
+(cd mu2; git pull; mvn install -DskipTests > /dev/null && echo "Built: Mu2 (with tests)")
 
 # fuzz_chocopy
 # TODO: Merge branch vasu/add_diff_chocopy to master
