@@ -9,7 +9,7 @@ sudo apt-get -y install maven
 cd $HOME
 
 # JQF 
-[ -d jqf ] || git clone -b jqf-1.9 https://github.com/rohanpadhye/JQF.git jqf
+[ -d jqf ] || git clone -b vasu/jqf-1.9 https://github.com/rohanpadhye/JQF.git jqf
 echo "Installing JQF..."
 (cd jqf; mvn install > /dev/null && echo "Built: JQF")
 (cd jqf/examples; mvn install jar:test-jar > /dev/null && 
