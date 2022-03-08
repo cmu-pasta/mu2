@@ -108,6 +108,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
 
             MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+            mutationInstance.resetTimer();
 
             // run with MCL
             System.out.println("Running Mutant " + mutationInstance);
