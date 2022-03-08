@@ -7,12 +7,13 @@ def read_plot_data(input_plot_data):
 
 
 def plot_mutants(df, output_file):
+    df['total_time'] = df['total_time'] / 3600000.0
     plt.plot(df['total_time'], df['found_muts'], label="Found Mutants")
     plt.plot(df['total_time'], df['seen_muts'], label="Seen Mutants")
     plt.plot(df['total_time'], df['dead_muts'], label="Killed Mutants")
     plt.plot(df['total_time'], df['run_muts'], label="Run Mutants (moving average)")
     plt.title("Mutant Plots")
-    plt.xlabel("Total Time (ms)")
+    plt.xlabel("Total Time (hours)")
     plt.ylabel("Number of Mutants")
     plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.02), fancybox=True)
     plt.savefig(output_file, bbox_inches='tight')

@@ -13,7 +13,7 @@ fuzzMu2() {
     INVALID=${arrSTR[12]};
     NUM_TRIALS=$((VALID+INVALID))
     echo mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/$1/exp_$6 -DrandomSeed=$6 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION -Dmu2.PARALLEL=true
-    mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION -Dmu2.PARALLEL=true
+    mvn mu2:diff -Dclass=$1 -Dmethod=$2 -Dincludes=$3 -DtargetIncludes=$4 -Dout=$5-fuzz-results/$1/exp_$6 -DrandomSeed=$6 -Dtrials=$NUM_TRIALS -DoptLevel=EXECUTION -Dmu2.PARALLEL=true
 }
 
 if [ $# -lt 9 ]; then

@@ -15,6 +15,9 @@ if [ $FUZZ_CONFIG == "zest" ]; then
 elif [ $FUZZ_CONFIG == "mu2" ]; then
     (cd $HOME/jqf; git checkout vasu/jqf-1.9; git pull; mvn install > /dev/null && echo "Built: JQF master for Mu2")
     FUZZ_SCRIPT="scripts/runMu2.sh"
+elif [ $FUZZ_CONFIG == "mu2time" ]; then
+    (cd $HOME/jqf; git checkout vasu/jqf-1.9; git pull; mvn install > /dev/null && echo "Built: JQF master for Mu2")
+    FUZZ_SCRIPT="scripts/runMu2Time.sh"
 elif [ $FUZZ_CONFIG == "mu2nosave" ]; then
     (cd $HOME/jqf; git checkout vasu/jqf-1.9-mu2nosave; git pull; mvn install > /dev/null && echo "Built: JQF for Mu2 no save")
     FUZZ_SCRIPT="scripts/runMu2.sh"
