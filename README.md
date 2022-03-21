@@ -4,34 +4,19 @@ Documentation for running and understanding the implementation of mutation-guide
 
 <!-- For project writeup, see [this document](https://saphirasnow.github.io/17-355/Bella_Laybourn_17355_Project.pdf). -->
 
-For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
+For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
 ## Build + Test + Install
 
-This repository works together with the [`mu2` branch of JQF](https://github.com/rohanpadhye/JQF/tree/mu2) and the [`sort-benchmarks`](https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
+This repository works together with the [`sort-benchmarks`] repository (https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
 
 ```
-jqf-fuzz --> jqf-instrument
 sort-benchmarks --> jqf-fuzz (for API only)
 mu2 --> jqf-fuzz
 mu2 --> sort-benchmarks (for testing only)
-jqf-maven-plugin --> jqf-fuzz
-jqf-maven-plugin --> mu2 (to be able to run MutationGuidance)
 ```
 
-Due to build inter-dependencies between Mu2 and JQF, the current process to bootstrap the build for the first time is as follows.
-
-### Step 1: Install JQF from `mu2` branch but disable the `maven-plugin`
-
-```
-git clone https://github.com/rohanpadhye/JQF --branch mu2 && cd JQF
-mvn install -pl '!maven-plugin'
-cd ..
-```
-
-This installs `jqf-fuzz` and `jqf-instrument`, but does not compile the maven plugin, which itself depends on `mu2`. 
-
-### Step 1.5: Install `mu2` with no integration tests
+### Step 1: Install `mu2` with no integration tests
 ```
 git clone https://github.com/cmu-pasta/mu2 && cd mu2
 mvn install -DskipTests
@@ -55,20 +40,7 @@ mvn install
 cd ..
 ```
 
-This step depends on step 1 (because `mu2` depends on `jqf-fuzz` to compile) as well as step 2 (because the integration tests depend on `sort-benchmarks`). If you don't install the `sort-benchmarks`, you can install `mu2` via `mvn install -DskipTests`. This is not recommended.
-
-### Step 4: Install JQF with `maven-plugin`
-
-Now mu2 can be used as a dependency of JQF (see next section).
-```
-cd JQF
-mvn install -pl 'maven-plugin'
-cd ..
-```
-
-This step builds the `maven-plugin` from JQF's `mu2` branch, which allows you to run `mvn jqf:fuzz -Dengine=mutation`.
-
-(TODO: Improve the build process to untangle the bootsrap dependencies)
+If you don't install the `sort-benchmarks`, you can install `mu2` via `mvn install -DskipTests`. This is not recommended.
 
 ### Development
 
@@ -81,52 +53,9 @@ mvn verify
 
 Coverage reports should be available in `target/site/jacoco-integration-test-coverage-report/index.html`.
 
-## External Usage
+## Differential Mutation Testing Fuzzing
 
-Once everything is installed, you can use JQF/mu2 to fuzz target applications as follows.
-
-### Mutation-Guided Fuzzing
-
-Runs like Zest, just add flag `-Dengine=mutation` on `jqf:fuzz` terminal commands. You can also use the flag `-DrandomSeed` to set the fuzzing seed to an explicit value and `-Dtrials` to set a limit on the number of trials to be run. Adding these two together gives you an entirely deterministic run (assuming the test you're running is deterministic).
-
-Example: 
-
-```sh
-mvn jqf:fuzz -Dclass=package.class -Dmethod=method -Dengine=mutation -Dtrials=1000 -Dincludes=prefix
-```
-
-### Mutate Goal (aka Mu2 Repro)
-
-For reproducing results from mutation-guided fuzzing. Run using `mu2:mutate` with the `-Dclass` and `-Dmethod` flags. 
-You can set an explicit corpus by providing the `-Dcorpus` flag.
-
-Example: 
-
-```sh
-mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=/path/to/corpus
-```
-
-### Selecting Instrumentable Classes
-
-You can use the `-Dincludes` flags to select which code will be mutated. 
-
-```sh
-mvn jqf:mutate -Dclass=package.class -Dmethod=method -Dincludes=prefix1,prefix2
-```
-
-Additionally, setting the `-DtargetIncludes` flag to a comma-separated list that includes every mutated class 
-as well as all classes that depend on a mutable class anywhere in their dependency trees improves efficiency by 
-loading classes not in the list with a separate intermediate ClassLoader.
-
-Example using a test of Scala's chess library:
-```sh
-mvn jqf:fuzz -Dclass=edu.berkeley.cs.jqf.examples.chess.FENTest -Dmethod=testWithGenerator -Dincludes=chess.format.Forsyth,chess.Situation -DtargetIncludes=edu.berkeley.cs.jqf.examples.chess,chess -Dengine=mutation
-```
-
-## Differential Fuzzing
-
-A similar pair of goals exists for a differential testing framework. 
-To use this, instrument your tests with `@Diff` and `@Compare` annotations instead of `@Test` and use the `DiffGoal` and `MutateDiffGoal` as described below.
+To use the differential fuzzing goal `mu2:diff`, instrument your tests with `@Diff` and `@Compare` annotations instead of `@Test` and use the `DiffGoal` and `MutateDiffGoal` as described below.
 
 ### Annotations
 
@@ -186,6 +115,23 @@ Example:
 
 ```sh
 mvn mu2:repro -Dclass=package.class -Dmethod=method -Dincludes=prefix -Dinput=path/to/corpus
+```
+
+### Selecting Instrumentable Classes
+
+You can use the `-Dincludes` flags to select which code will be mutated. 
+
+```sh
+mvn mu2:diff -Dclass=package.class -Dmethod=method -Dincludes=prefix1,prefix2
+```
+
+Additionally, setting the `-DtargetIncludes` flag to a comma-separated list that includes every mutated class 
+as well as all classes that depend on a mutable class anywhere in their dependency trees improves efficiency by 
+loading classes not in the list with a separate intermediate ClassLoader.
+
+Example using a test of Scala's chess library:
+```sh
+mvn mu2:diff -Dclass=edu.berkeley.cs.jqf.examples.chess.FENTest -Dmethod=testWithGenerator -Dincludes=chess.format.Forsyth,chess.Situation -DtargetIncludes=edu.berkeley.cs.jqf.examples.chess,chess
 ```
 
 ## Implementation
