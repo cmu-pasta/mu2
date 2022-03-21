@@ -8,7 +8,7 @@ For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.c
 
 ## Build + Test + Install
 
-This repository works together with the [`sort-benchmarks`] repository (https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
+This repository works together with the [`sort-benchmarks` repository ](https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
 
 ```
 sort-benchmarks --> jqf-fuzz (for API only)
