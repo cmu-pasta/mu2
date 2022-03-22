@@ -18,6 +18,13 @@ public class MutationRunInfo {
     public FrameworkMethod method;
     public Object[] args;
 
+    public MutationRunInfo(MutationClassLoaders MCLs, MutationInstance mutationInstance, TestClass testClass, Object[] a, FrameworkMethod fm) throws ClassNotFoundException {
+        MutationClassLoader mcl = MCLs.getMutationClassLoader(mutationInstance);
+        clazz = Class.forName(testClass.getName(), true, mcl);
+        method = fm;
+        args = a;
+    }
+
     public MutationRunInfo(MutationClassLoaders MCLs, MutationInstance mutationInstance, TestClass testClass, byte[] argBytes, Object[] oArgs, FrameworkMethod fm) throws ClassNotFoundException, NoSuchMethodException, IOException {
         // load class with MCL
         MutationClassLoader mcl = MCLs.getMutationClassLoader(mutationInstance);

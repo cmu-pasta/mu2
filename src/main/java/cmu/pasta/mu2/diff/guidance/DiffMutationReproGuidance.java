@@ -56,14 +56,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      */
     private static ArraySet runMutants = new ArraySet();
 
+    private boolean serializeIn;
+    private boolean serializeOut;
+
     private File reportFile;
 
-    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, File resultsDir) throws IOException {
-        super(inputFile, traceDir);
+    public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, boolean serialIn, boolean serialOut, File resultsDir) throws IOException {
+        super(inputFile, traceDir, serialIn, serialOut);
         cclOutcomes = new ArrayList<>();
         MCLs = mcls;
         ind = -1;
-
+        serializeIn = serialIn;
+        serializeOut = serialOut;
         reportFile = new File(resultsDir, "mutate-repro-out.txt");
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
@@ -75,7 +79,6 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
 
         recentOutcomes.clear();
         cmpTo = null;
-
         ind++;
 
         // run CCL
@@ -95,7 +98,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         // set up info
         cmpTo = new ArrayList<>(recentOutcomes);
         cclOutcomes.add(cmpTo.get(0));
-        byte[] argBytes = Serializer.serialize(args);
+        byte[] argBytes = null;
+        if(serializeIn) argBytes = Serializer.serialize(args);
         recentOutcomes.clear();
 
         for (MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
@@ -107,7 +111,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
                 continue;
             }
 
-            MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+            MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, args, method);
+            if(serializeIn) mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
 
             // run with MCL
             System.out.println("Running Mutant " + mutationInstance);
