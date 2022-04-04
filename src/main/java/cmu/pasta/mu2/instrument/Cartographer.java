@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.mutators.IntBinaryOperatorMutator;
 import cmu.pasta.mu2.mutators.Mutator;
 import cmu.pasta.mu2.mutators.Operators;
 import janala.instrument.SafeClassWriter;
@@ -113,6 +114,16 @@ public class Cartographer extends ClassVisitor {
         }
       }
 
+      private void dupObjectAndInsert(Type operandType, int numArgs) {
+        if (operandType.getSize() == 1) {
+          if (numArgs == 2) {
+            super.visitInsn(Opcodes.DUP_X2);
+          } else if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP_X1);
+          }
+        }
+      }
+
       /**
        * Logs that a mutator can be used at the current location in the tree.
        *
@@ -133,9 +144,18 @@ public class Cartographer extends ClassVisitor {
         }
         if (optLevel == OptLevel.INFECTION) {
           dup(mut.getOperandType(), mut.getNumArgs());
+          super.visitLdcInsn(mut.hashCode());
           super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(Operators.class),
-                  mut.getOriginalOperatorName(),
+                  Type.getInternalName(mut.getClass()),
+                  "getMutator",
+                  "(I)L"+Type.getInternalName(mut.getClass())+";",
+                  false);
+          //TODO: Only works for category 1 type
+          dupObjectAndInsert(mut.getOperandType(), mut.getNumArgs());
+          super.visitInsn(Opcodes.POP);
+          super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                  Type.getInternalName(mut.getClass()),
+                  "runOriginal",
                   mut.getMethodDescriptor(),
                   false);
           super.visitLdcInsn(mi.id);
@@ -145,9 +165,17 @@ public class Cartographer extends ClassVisitor {
                   mut.getLogMethodDescriptor(),
                   false);
           dup(mut.getOperandType(), mut.getNumArgs());
+          super.visitLdcInsn(mut.hashCode());
           super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(Operators.class),
-                  mut.getMutatedOperatorName(),
+                  Type.getInternalName(mut.getClass()),
+                  "getMutator",
+                  "(I)L"+Type.getInternalName(mut.getClass())+";",
+                  false);
+          dupObjectAndInsert(mut.getOperandType(), mut.getNumArgs());
+          super.visitInsn(Opcodes.POP);
+          super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                  Type.getInternalName(mut.getClass()),
+                  "runMutated",
                   mut.getMethodDescriptor(),
                   false);
           super.visitLdcInsn(mi.id);

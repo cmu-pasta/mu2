@@ -38,6 +38,7 @@ public class MutationTestingIT extends AbstractMutationTest {
       if (!mutantValueMap.containsKey(m)) {
         mutantValueMap.put(m, value);
       } else if (mutantValueMap.containsKey(m) && !mutantValueMap.get(m).equals(value)) {
+        mutantValueMap.remove(m);
         infectedMutants.add(m);
       }
     };
@@ -46,7 +47,11 @@ public class MutationTestingIT extends AbstractMutationTest {
 
     // Create the JUnit test runner
     MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", opt);
-    runTest(testClassName, testMethod, mcls.getCartographyClassLoader());
+    Result r2 = runTest(testClassName, testMethod, mcls.getCartographyClassLoader());
+
+    if (!r2.wasSuccessful()) {
+      r2.getFailures().get(0).getException().printStackTrace();
+    }
 
     // Retrieve dynamically collected mutation instances
     List<MutationInstance> mutants = mcls.getMutationInstances();
@@ -80,19 +85,19 @@ public class MutationTestingIT extends AbstractMutationTest {
   @Test
   public void mutateTimSortNoOpt() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-        "sort.TimSort",  OptLevel.NONE, 143, 143, 9);
+        "sort.TimSort",  OptLevel.NONE, 261, 261, 12);
   }
 
 
   @Test
   public void mutateTimSortO1() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-        "sort.TimSort",  OptLevel.EXECUTION, 143,  12,9);
+        "sort.TimSort",  OptLevel.EXECUTION, 261,  23,12);
   }
 
   @Test
   public void mutateTimSortInfection() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-            "sort.TimSort",  OptLevel.INFECTION, 143,  10,9);
+            "sort.TimSort",  OptLevel.INFECTION, 261,  14,12);
   }
 }

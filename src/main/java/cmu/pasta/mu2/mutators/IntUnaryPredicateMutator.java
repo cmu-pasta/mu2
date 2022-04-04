@@ -33,7 +33,11 @@ public class IntUnaryPredicateMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(I)B";
+        return "(I)Z";
+    }
+
+    public static IntUnaryPredicateMutator getMutator(int id) {
+        return (IntUnaryPredicateMutator) Mutator.allMutatorsMap.get(id);
     }
 
     public boolean runOriginal(int arg) {

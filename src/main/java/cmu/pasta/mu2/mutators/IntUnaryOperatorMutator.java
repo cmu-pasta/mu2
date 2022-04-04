@@ -36,6 +36,10 @@ public class IntUnaryOperatorMutator extends Mutator {
         return "(I)I";
     }
 
+    public static IntUnaryOperatorMutator getMutator(int id) {
+        return (IntUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+    }
+
     public int runOriginal(int arg) {
         return originalFunction.applyAsInt(arg);
     }

@@ -49,23 +49,15 @@ public class MutationSnoop {
     callback.accept(MutationInstance.getInstance(id));
   }
 
-  public static void logValue(Integer value, int id) {
+  public static void logValue(int value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 
-  public static void logValue(Double value, int id) {
+  public static void logValue(long value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 
-  public static void logValue(Float value, int id) {
-    infectionCallback.accept(MutationInstance.getInstance(id), value);
-  }
-
-  public static void logValue(Long value, int id) {
-    infectionCallback.accept(MutationInstance.getInstance(id), value);
-  }
-
-  public static void logValue(Boolean value, int id) {
+  public static void logValue(boolean value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 

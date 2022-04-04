@@ -54,7 +54,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use if ldcInsn
    */
-  InstructionCall(int op, Object arg) {
+  public InstructionCall(int op, Object arg) {
     if (op == Opcodes.LDC) {
       type = CallType.LDC_INSN;
       opcode = op;
