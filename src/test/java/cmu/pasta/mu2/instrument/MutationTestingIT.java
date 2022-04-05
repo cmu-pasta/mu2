@@ -85,19 +85,19 @@ public class MutationTestingIT extends AbstractMutationTest {
   @Test
   public void mutateTimSortNoOpt() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-        "sort.TimSort",  OptLevel.NONE, 261, 261, 12);
+        "sort.TimSort",  OptLevel.NONE, 414, 414, 20);
   }
 
 
   @Test
   public void mutateTimSortO1() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-        "sort.TimSort",  OptLevel.EXECUTION, 261,  23,12);
+        "sort.TimSort",  OptLevel.EXECUTION, 414,  39,20);
   }
 
   @Test
   public void mutateTimSortInfection() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
-            "sort.TimSort",  OptLevel.INFECTION, 261,  14,12);
+            "sort.TimSort",  OptLevel.INFECTION, 414,  30,20);
   }
 }

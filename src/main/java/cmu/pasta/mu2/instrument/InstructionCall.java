@@ -42,7 +42,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use if methodInsn
    */
-  InstructionCall(int op, String ow, String n, String d, boolean i) {
+  public InstructionCall(int op, String ow, String n, String d, boolean i) {
     type = CallType.METHOD_INSN;
     opcode = op;
     owner = ow;

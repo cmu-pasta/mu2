@@ -36,6 +36,10 @@ public class DoubleUnaryOperatorMutator extends Mutator {
         return "(D)D";
     }
 
+    public static DoubleUnaryOperatorMutator getMutator(int id) {
+        return (DoubleUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+    }
+
     public double runOriginal(double arg) {
         return originalFunction.applyAsDouble(arg);
     }

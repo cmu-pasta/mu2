@@ -36,6 +36,10 @@ public class LongUnaryOperatorMutator extends Mutator {
         return "(L)L";
     }
 
+    public static LongUnaryOperatorMutator getMutator(int id) {
+        return (LongUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+    }
+
     public long runOriginal(long arg) {
         return originalFunction.applyAsLong(arg);
     }

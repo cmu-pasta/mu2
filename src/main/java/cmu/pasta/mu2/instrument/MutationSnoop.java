@@ -53,7 +53,7 @@ public class MutationSnoop {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 
-  public static void logValue(long value, int id) {
+  public static void logValue(float value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 

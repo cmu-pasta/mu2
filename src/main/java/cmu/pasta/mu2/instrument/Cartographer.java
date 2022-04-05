@@ -116,10 +116,16 @@ public class Cartographer extends ClassVisitor {
 
       private void dupObjectAndInsert(Type operandType, int numArgs) {
         if (operandType.getSize() == 1) {
-          if (numArgs == 2) {
-            super.visitInsn(Opcodes.DUP_X2);
-          } else if (numArgs == 1) {
+          if (numArgs == 1) {
             super.visitInsn(Opcodes.DUP_X1);
+          } else if (numArgs == 2) {
+            super.visitInsn(Opcodes.DUP_X2);
+          }
+        } else {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP_X2);
+          } else if (numArgs == 2) {
+            //TODO: 2 args with category 2 type
           }
         }
       }
@@ -150,7 +156,6 @@ public class Cartographer extends ClassVisitor {
                   "getMutator",
                   "(I)L"+Type.getInternalName(mut.getClass())+";",
                   false);
-          //TODO: Only works for category 1 type
           dupObjectAndInsert(mut.getOperandType(), mut.getNumArgs());
           super.visitInsn(Opcodes.POP);
           super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
