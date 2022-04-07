@@ -8,8 +8,8 @@ public class FloatUnaryOperatorMutator extends Mutator {
     private FloatUnaryOperator originalFunction;
     private FloatUnaryOperator mutatorFunction;
 
-    FloatUnaryOperatorMutator(FloatUnaryOperator originalFunction, FloatUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    FloatUnaryOperatorMutator(String name, boolean useInfection, FloatUnaryOperator originalFunction, FloatUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -35,7 +35,7 @@ public class FloatUnaryOperatorMutator extends Mutator {
     }
 
     public static FloatUnaryOperatorMutator getMutator(int id) {
-        return (FloatUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+        return (FloatUnaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public float runOriginal(float arg) {

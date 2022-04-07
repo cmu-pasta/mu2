@@ -71,7 +71,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
         runMutants.reset();
-        MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
+        MutationSnoop.setMutantExecutionCallback(m -> runMutants.add(m.id));
 
         recentOutcomes.clear();
         cmpTo = null;

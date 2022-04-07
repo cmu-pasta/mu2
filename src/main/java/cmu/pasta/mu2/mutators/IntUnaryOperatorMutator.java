@@ -10,8 +10,8 @@ public class IntUnaryOperatorMutator extends Mutator {
     private IntUnaryOperator originalFunction;
     private IntUnaryOperator mutatorFunction;
 
-    IntUnaryOperatorMutator(IntUnaryOperator originalFunction, IntUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    IntUnaryOperatorMutator(String name, boolean useInfection, IntUnaryOperator originalFunction, IntUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -37,7 +37,7 @@ public class IntUnaryOperatorMutator extends Mutator {
     }
 
     public static IntUnaryOperatorMutator getMutator(int id) {
-        return (IntUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+        return (IntUnaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public int runOriginal(int arg) {

@@ -57,7 +57,19 @@ public class MutationSnoop {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 
+  public static void logValue(double value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(long value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
   public static void logValue(boolean value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Object value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
 
@@ -68,7 +80,7 @@ public class MutationSnoop {
    * @param cb The new callback
    */
 
-  public static void setMutantCallback(Consumer<MutationInstance> cb) {
+  public static void setMutantExecutionCallback(Consumer<MutationInstance> cb) {
     callback = cb;
   }
 

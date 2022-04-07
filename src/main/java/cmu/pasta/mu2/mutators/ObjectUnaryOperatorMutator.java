@@ -10,8 +10,8 @@ public class ObjectUnaryOperatorMutator extends Mutator {
     private UnaryOperator<Object> originalFunction;
     private UnaryOperator<Object> mutatorFunction;
 
-    ObjectUnaryOperatorMutator(UnaryOperator<Object> originalFunction, UnaryOperator<Object> mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    ObjectUnaryOperatorMutator(String name, boolean useInfection, UnaryOperator<Object> originalFunction, UnaryOperator<Object> mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -33,11 +33,11 @@ public class ObjectUnaryOperatorMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(Ljava/lang/Object)Ljava/lang/Object;";
+        return "(Ljava/lang/Object;)Ljava/lang/Object;";
     }
 
-    public static IntUnaryOperatorMutator getMutator(int id) {
-        return (IntUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+    public static ObjectUnaryOperatorMutator getMutator(int id) {
+        return (ObjectUnaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public Object runOriginal(Object arg) {

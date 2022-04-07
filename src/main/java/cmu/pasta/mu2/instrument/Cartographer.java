@@ -105,29 +105,43 @@ public class Cartographer extends ClassVisitor {
     return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
       private void dup(Type operandType, int numArgs) {
-        for (int i = 0; i < numArgs; i++) {
-          if (operandType.getSize() == 2) {
-            super.visitInsn(Opcodes.DUP2);
-          } else {
+        if (operandType.getSize() == 1) {
+          if (numArgs == 1) {
             super.visitInsn(Opcodes.DUP);
+          } else if (numArgs == 2) {
+            super.visitInsn(Opcodes.DUP2);
+          }
+        } else if (operandType.getSize() == 2) {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP2);
+          } else if (numArgs == 2) {
+            //TODO
           }
         }
       }
 
-      private void dupObjectAndInsert(Type operandType, int numArgs) {
+      private void insertMutatorObject(Mutator mut, int numArgs) {
+        Class mutatorClass = mut.getClass();
+        Type operandType = mut.getOperandType();
+        super.visitLdcInsn(mut.hashCode());
+        super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(mutatorClass),
+                "getMutator",
+                "(I)L"+Type.getInternalName(mutatorClass)+";",
+                false);
+        if (numArgs == 0) {
+          return;
+        }
         if (operandType.getSize() == 1) {
           if (numArgs == 1) {
             super.visitInsn(Opcodes.DUP_X1);
           } else if (numArgs == 2) {
             super.visitInsn(Opcodes.DUP_X2);
           }
-        } else {
-          if (numArgs == 1) {
-            super.visitInsn(Opcodes.DUP_X2);
-          } else if (numArgs == 2) {
-            //TODO: 2 args with category 2 type
-          }
+        } else if (operandType.getSize() == 2 && numArgs == 1) {
+          super.visitInsn(Opcodes.DUP_X2);
         }
+        super.visitInsn(Opcodes.POP);
       }
 
       /**
@@ -140,26 +154,64 @@ public class Cartographer extends ClassVisitor {
         MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum, fileName);
         ops.add(mi);
 
-        if (optLevel == OptLevel.EXECUTION) {
+        if (optLevel == OptLevel.EXECUTION || (optLevel == OptLevel.INFECTION && !mut.isUseInfection())) {
           super.visitLdcInsn(mi.id);
           super.visitMethodInsn(Opcodes.INVOKESTATIC,
               Type.getInternalName(MutationSnoop.class),
               "logMutant",
               "(I)V",
               false);
+          return;
         }
         if (optLevel == OptLevel.INFECTION) {
-          dup(mut.getOperandType(), mut.getNumArgs());
-          super.visitLdcInsn(mut.hashCode());
-          super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(mut.getClass()),
-                  "getMutator",
-                  "(I)L"+Type.getInternalName(mut.getClass())+";",
-                  false);
-          dupObjectAndInsert(mut.getOperandType(), mut.getNumArgs());
-          super.visitInsn(Opcodes.POP);
+          Class mutatorClass = mut.getClass();
+          Type operandType = mut.getOperandType();
+          int numArgs = mut.getNumArgs();
+          if (operandType.getSize() == 2 && numArgs == 2) {
+            insertMutatorObject(mut, 1);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "readSecondArg",
+                    String.format("(%s)V", operandType.getDescriptor()),
+                    false);
+            dup(operandType, 1);
+            insertMutatorObject(mut, 1);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "runOriginal",
+                    mut.getMethodDescriptor(),
+                    false);
+            super.visitLdcInsn(mi.id);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    Type.getInternalName(MutationSnoop.class),
+                    "logValue",
+                    mut.getLogMethodDescriptor(),
+                    false);
+            dup(operandType, 1);
+            insertMutatorObject(mut, 1);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "runMutated",
+                    mut.getMethodDescriptor(),
+                    false);
+            super.visitLdcInsn(mi.id);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    Type.getInternalName(MutationSnoop.class),
+                    "logValue",
+                    mut.getLogMethodDescriptor(),
+                    false);
+            insertMutatorObject(mut, 0);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "writeSecondArg",
+                    String.format("()%s", operandType.getDescriptor()),
+                    false);
+            return;
+          }
+          dup(operandType, numArgs);
+          insertMutatorObject(mut, numArgs);
           super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                  Type.getInternalName(mut.getClass()),
+                  Type.getInternalName(mutatorClass),
                   "runOriginal",
                   mut.getMethodDescriptor(),
                   false);
@@ -169,17 +221,10 @@ public class Cartographer extends ClassVisitor {
                   "logValue",
                   mut.getLogMethodDescriptor(),
                   false);
-          dup(mut.getOperandType(), mut.getNumArgs());
-          super.visitLdcInsn(mut.hashCode());
-          super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(mut.getClass()),
-                  "getMutator",
-                  "(I)L"+Type.getInternalName(mut.getClass())+";",
-                  false);
-          dupObjectAndInsert(mut.getOperandType(), mut.getNumArgs());
-          super.visitInsn(Opcodes.POP);
+          dup(operandType, numArgs);
+          insertMutatorObject(mut, numArgs);
           super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                  Type.getInternalName(mut.getClass()),
+                  Type.getInternalName(mutatorClass),
                   "runMutated",
                   mut.getMethodDescriptor(),
                   false);

@@ -3,14 +3,14 @@ package cmu.pasta.mu2.mutators;
 import cmu.pasta.mu2.instrument.InstructionCall;
 import org.objectweb.asm.Type;
 
-import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 
-public class IntUnaryPredicateMutator extends Mutator {
+public class ObjectUnaryPredicateMutator extends Mutator {
 
-    private IntPredicate originalFunction;
-    private IntPredicate mutatorFunction;
+    private Predicate<Object> originalFunction;
+    private Predicate<Object> mutatorFunction;
 
-    IntUnaryPredicateMutator(String name, boolean useInfection, IntPredicate originalFunction, IntPredicate mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+    ObjectUnaryPredicateMutator(String name, boolean useInfection, Predicate<Object> originalFunction, Predicate<Object> mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
         super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
@@ -18,7 +18,7 @@ public class IntUnaryPredicateMutator extends Mutator {
 
     @Override
     public Type getOperandType() {
-        return Type.INT_TYPE;
+        return Type.getObjectType("java/lang/Object");
     }
 
     @Override
@@ -33,18 +33,14 @@ public class IntUnaryPredicateMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(I)Z";
+        return "(Ljava/lang/Object;)Z";
     }
 
-    public static IntUnaryPredicateMutator getMutator(int id) {
-        return (IntUnaryPredicateMutator) Mutator.allMutators.get(id);
-    }
-
-    public boolean runOriginal(int arg) {
+    public boolean runOriginal(Object arg) {
         return originalFunction.test(arg);
     }
 
-    public boolean runMutated(int arg) {
+    public boolean runMutated(Object arg) {
         return mutatorFunction.test(arg);
     }
 }

@@ -7,13 +7,13 @@ import java.util.function.IntBinaryOperator;
 
 public class IntBinaryOperatorMutator extends Mutator {
 
-    private IntBinaryOperator originalOperator;
-    private IntBinaryOperator mutatedOperator;
+    private IntBinaryOperator originalFunction;
+    private IntBinaryOperator mutatedFunction;
 
-    public IntBinaryOperatorMutator(IntBinaryOperator originalOperator, IntBinaryOperator mutatedOperator, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
-        this.originalOperator = originalOperator;
-        this.mutatedOperator = mutatedOperator;
+    public IntBinaryOperatorMutator(String name, boolean useInfection, IntBinaryOperator originalFunction, IntBinaryOperator mutatedFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
+        this.originalFunction = originalFunction;
+        this.mutatedFunction = mutatedFunction;
     }
 
     @Override
@@ -37,14 +37,14 @@ public class IntBinaryOperatorMutator extends Mutator {
     }
 
     public static IntBinaryOperatorMutator getMutator(int id) {
-        return (IntBinaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+        return (IntBinaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public int runOriginal(int arg1, int arg2) {
-        return originalOperator.applyAsInt(arg1, arg2);
+        return originalFunction.applyAsInt(arg1, arg2);
     }
 
     public int runMutated(int arg1, int arg2) {
-        return mutatedOperator.applyAsInt(arg1, arg2);
+        return mutatedFunction.applyAsInt(arg1, arg2);
     }
 }

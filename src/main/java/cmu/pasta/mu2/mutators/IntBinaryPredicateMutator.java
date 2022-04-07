@@ -8,8 +8,8 @@ public class IntBinaryPredicateMutator extends Mutator {
     private IntBinaryPredicate originalOperator;
     private IntBinaryPredicate mutatedOperator;
 
-    public IntBinaryPredicateMutator(IntBinaryPredicate originalOperator, IntBinaryPredicate mutatedOperator, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    public IntBinaryPredicateMutator(String name, boolean useInfection, IntBinaryPredicate originalOperator, IntBinaryPredicate mutatedOperator, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalOperator = originalOperator;
         this.mutatedOperator = mutatedOperator;
     }
@@ -35,7 +35,7 @@ public class IntBinaryPredicateMutator extends Mutator {
     }
 
     public static IntBinaryPredicateMutator getMutator(int id) {
-        return (IntBinaryPredicateMutator) Mutator.allMutatorsMap.get(id);
+        return (IntBinaryPredicateMutator) Mutator.allMutators.get(id);
     }
 
     public boolean runOriginal(int arg1, int arg2) {

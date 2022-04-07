@@ -10,8 +10,8 @@ public class LongUnaryOperatorMutator extends Mutator {
     private LongUnaryOperator originalFunction;
     private LongUnaryOperator mutatorFunction;
 
-    LongUnaryOperatorMutator(LongUnaryOperator originalFunction, LongUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    LongUnaryOperatorMutator(String name, boolean useInfection, LongUnaryOperator originalFunction, LongUnaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -33,11 +33,11 @@ public class LongUnaryOperatorMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(L)L";
+        return "(J)J";
     }
 
     public static LongUnaryOperatorMutator getMutator(int id) {
-        return (LongUnaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+        return (LongUnaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public long runOriginal(long arg) {

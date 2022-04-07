@@ -10,9 +10,10 @@ public class DoubleBinaryOperatorMutator extends Mutator {
 
     private DoubleBinaryOperator originalFunction;
     private DoubleBinaryOperator mutatorFunction;
+    private double secondArg;
 
-    DoubleBinaryOperatorMutator(DoubleBinaryOperator originalFunction, DoubleBinaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    DoubleBinaryOperatorMutator(String name, boolean useInfection, DoubleBinaryOperator originalFunction, DoubleBinaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -34,14 +35,26 @@ public class DoubleBinaryOperatorMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(DD)D";
+        return "(D)D";
     }
 
-    public double runOriginal(double arg1, double arg2) {
-        return originalFunction.applyAsDouble(arg1, arg2);
+    public static DoubleBinaryOperatorMutator getMutator(int id) {
+        return (DoubleBinaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
-    public double runMutated(double arg1, double arg2) {
-        return mutatorFunction.applyAsDouble(arg1, arg2);
+    public void readSecondArg(double arg) {
+        this.secondArg = arg;
+    }
+
+    public double writeSecondArg() {
+        return secondArg;
+    }
+
+    public double runOriginal(double arg1) {
+        return originalFunction.applyAsDouble(arg1, this.secondArg);
+    }
+
+    public double runMutated(double arg1) {
+        return mutatorFunction.applyAsDouble(arg1, this.secondArg);
     }
 }

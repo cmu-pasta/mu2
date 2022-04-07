@@ -10,6 +10,7 @@ import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
+import cmu.pasta.mu2.util.ArrayMap;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
@@ -20,12 +21,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Objects;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -92,7 +91,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    *
    * This set must be reset/cleared before execution of every new input.
    */
-  private static ArraySet runMutants = new ArraySet();
+  private static ArraySet mutantsToRun = new ArraySet();
+  private static ArrayMap mutantValueMap = new ArrayMap();
 
   private Method compare;
 
@@ -149,8 +149,24 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
-    runMutants.reset();
-    MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
+    mutantsToRun.reset();
+    mutantValueMap.reset();
+    MutationSnoop.setMutantExecutionCallback(m -> mutantsToRun.add(m.id));
+    BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
+      if (!mutantValueMap.contains(m.id)) {
+        mutantValueMap.put(m.id, value);
+      } else {
+        if (mutantValueMap.get(m.id) == null) {
+          if (value != null) {
+            mutantsToRun.add(m.id);
+          }
+        } else if (!mutantValueMap.get(m.id).equals(value)) {
+          mutantsToRun.add(m.id);
+        }
+        mutantValueMap.remove(m.id);
+      }
+    };
+    MutationSnoop.setMutantInfectionCallback(infectionCallback);
     exceptions.clear();
 
     long startTime = System.currentTimeMillis();
@@ -168,7 +184,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         continue;
       }
       if (optLevel != OptLevel.NONE  &&
-          !runMutants.contains(mutationInstance.id)) {
+          !mutantsToRun.contains(mutationInstance.id)) {
         continue;
       }
 

@@ -9,9 +9,10 @@ public class LongBinaryOperatorMutator extends Mutator {
 
     private LongBinaryOperator originalFunction;
     private LongBinaryOperator mutatorFunction;
+    private long secondArg;
 
-    LongBinaryOperatorMutator(LongBinaryOperator originalFunction, LongBinaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    LongBinaryOperatorMutator(String name, boolean useInfection, LongBinaryOperator originalFunction, LongBinaryOperator mutatorFunction, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalFunction = originalFunction;
         this.mutatorFunction = mutatorFunction;
     }
@@ -33,14 +34,26 @@ public class LongBinaryOperatorMutator extends Mutator {
 
     @Override
     public String getMethodDescriptor() {
-        return "(LL)L";
+        return "(J)J";
     }
 
-    public long runOriginal(long arg1, long arg2) {
-        return originalFunction.applyAsLong(arg1, arg2);
+    public static LongBinaryOperatorMutator getMutator(int id) {
+        return (LongBinaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
-    public long runMutated(long arg1, long arg2) {
-        return mutatorFunction.applyAsLong(arg1, arg2);
+    public void readSecondArg(long arg) {
+        this.secondArg = arg;
+    }
+
+    public long writeSecondArg() {
+        return secondArg;
+    }
+
+    public long runOriginal(long arg) {
+        return originalFunction.applyAsLong(arg, this.secondArg);
+    }
+
+    public long runMutated(long arg) {
+        return mutatorFunction.applyAsLong(arg, this.secondArg);
     }
 }

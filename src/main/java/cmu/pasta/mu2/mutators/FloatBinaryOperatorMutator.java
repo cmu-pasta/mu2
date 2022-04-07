@@ -8,8 +8,8 @@ public class FloatBinaryOperatorMutator extends Mutator {
     private FloatBinaryOperator originalOperator;
     private FloatBinaryOperator mutatedOperator;
 
-    public FloatBinaryOperatorMutator(FloatBinaryOperator originalOperator, FloatBinaryOperator mutatedOperator, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(toReplace, returnType, replaceWith);
+    public FloatBinaryOperatorMutator(String name, boolean useInfection, FloatBinaryOperator originalOperator, FloatBinaryOperator mutatedOperator, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, useInfection, toReplace, returnType, replaceWith);
         this.originalOperator = originalOperator;
         this.mutatedOperator = mutatedOperator;
     }
@@ -35,7 +35,7 @@ public class FloatBinaryOperatorMutator extends Mutator {
     }
 
     public static FloatBinaryOperatorMutator getMutator(int id) {
-        return (FloatBinaryOperatorMutator) Mutator.allMutatorsMap.get(id);
+        return (FloatBinaryOperatorMutator) Mutator.allMutators.get(id);
     }
 
     public float runOriginal(float arg1, float arg2) {
