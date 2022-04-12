@@ -138,7 +138,7 @@ public class DiffIT extends AbstractMutationTest {
         Assert.assertEquals(36, mu2.corpusCount());
     }
 
-    @Test
+    //@Test
     public void fuzzTimSort() throws Exception {
         // Set up test params
         String testClassName = "diff.DiffTest";

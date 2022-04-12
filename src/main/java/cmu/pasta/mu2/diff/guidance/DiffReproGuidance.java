@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class DiffReproGuidance extends ReproGuidance implements DiffGuidance {
-    private Method compare;
+    protected Method compare;
     protected List<Outcome> cmpTo;
     public static final List<Outcome> recentOutcomes = new ArrayList<>();
 

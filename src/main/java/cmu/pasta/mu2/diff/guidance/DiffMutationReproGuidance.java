@@ -3,8 +3,10 @@ package cmu.pasta.mu2.diff.guidance;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.fuzz.MutationRunInfo;
 import cmu.pasta.mu2.instrument.MutationSnoop;
+import cmu.pasta.mu2.instrument.MutationTimeoutException;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import cmu.pasta.mu2.util.Serializer;
@@ -18,8 +20,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
@@ -58,9 +63,22 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
 
     private File reportFile;
 
+    /**
+     * Timeout for each mutant (DEFAULT: 10 seconds).
+     */
+    private static int TIMEOUT = Integer.getInteger("mu2.TIMEOUT", 10);
+
+    public static boolean RUN_MUTANTS_IN_PARALLEL = Boolean.getBoolean("mu2.PARALLEL");
+
+    /**
+     * Number of threads used to run mutants.
+     */
+    private static int BACKGROUND_THREADS = Integer.getInteger("mu2.BACKGROUND_THREADS", Runtime.getRuntime().availableProcessors());
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(BACKGROUND_THREADS);
+
     public DiffMutationReproGuidance(File inputFile, File traceDir, MutationClassLoaders mcls, File resultsDir) throws IOException {
         super(inputFile, traceDir);
-        cclOutcomes = new ArrayList<>();
         MCLs = mcls;
         ind = -1;
 
@@ -68,71 +86,116 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         this.optLevel = MCLs.getCartographyClassLoader().getOptLevel();
     }
 
+    public Outcome dispatchMutationInstance(MutationInstance mutationInstance, TestClass testClass, byte[] argBytes,
+                                            Object[] args, FrameworkMethod method)
+            throws IOException, ClassNotFoundException, NoSuchMethodException, ExecutionException, InterruptedException {
+        if (deadMutants.contains(mutationInstance.id)) {
+            return null;
+        }
+        if (optLevel != OptLevel.NONE  &&
+                !runMutants.contains(mutationInstance.id)) {
+            return null;
+        }
+
+        MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+        mutationInstance.resetTimer();
+
+        // run with MCL
+        FutureTask<Outcome> task = new FutureTask<>(() -> {
+            try {
+                return getOutcome((new TestClass(mri.clazz)).getJavaClass(), mri.method, mri.args);
+            } catch(InstrumentationException e) {
+                throw new GuidanceException(e);
+            }
+        });
+        Outcome mclOutcome = null;
+
+        if (RUN_MUTANTS_IN_PARALLEL) {
+
+            Thread thread = new Thread(task);
+            thread.start();
+
+            ExecutorService service = Executors.newSingleThreadExecutor();
+            Future<Outcome> outcome = service.submit(() -> task.get());
+
+            try {
+                mclOutcome = outcome.get(TIMEOUT, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                thread.stop();
+                mclOutcome = new Outcome(null, new MutationTimeoutException(TIMEOUT));
+            }
+
+            service.shutdownNow();
+        } else {
+            task.run();
+            mclOutcome = task.get();
+        }
+
+        return mclOutcome;
+    }
+
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
         runMutants.reset();
         MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
-
-        recentOutcomes.clear();
-        cmpTo = null;
-
         ind++;
+        Outcome cclOut;
 
         // run CCL
         try {
-            super.run(testClass, method, args);
+            cclOut = getOutcome(testClass.getJavaClass(), method, args);
         } catch(InstrumentationException e) {
             throw new GuidanceException(e);
-        } catch (GuidanceException e) {
-            throw e;
-        } catch (Throwable e) {}
+        }
 
-        System.out.println("CCL Outcome for input " + ind + ": " + recentOutcomes.get(0));
+        System.out.println("CCL Outcome for input " + ind + ": " + cclOut);
         try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
-            pw.printf("CCL Outcome for input %d: %s\n", ind, recentOutcomes.get(0).toString());
+            pw.printf("CCL Outcome for input %d: %s\n", ind, cclOut.toString());
         }
 
         // set up info
-        cmpTo = new ArrayList<>(recentOutcomes);
-        cclOutcomes.add(cmpTo.get(0));
         byte[] argBytes = Serializer.serialize(args);
-        recentOutcomes.clear();
+        List<Outcome> results = new ArrayList<>();
 
-        for (MutationInstance mutationInstance : MCLs.getCartographyClassLoader().getMutationInstances()) {
-            if (deadMutants.contains(mutationInstance.id)) {
-                continue;
+        if (RUN_MUTANTS_IN_PARALLEL) {
+            List<Future<Outcome>> futures = MCLs.getCartographyClassLoader().getMutationInstances()
+                    .stream()
+                    .map(instance ->
+                            executor.submit(() ->
+                                    dispatchMutationInstance(instance, testClass, argBytes, args, method)))
+                    .collect(Collectors.toList());
+            // Use for loop to capture exceptions.
+            for (Future<Outcome> future : futures) {
+                results.add(future.get());
             }
-            if (optLevel != OptLevel.NONE  &&
-                    !runMutants.contains(mutationInstance.id)) {
-                continue;
+        } else {
+            for (MutationInstance instance: MCLs.getCartographyClassLoader().getMutationInstances()) {
+                results.add(dispatchMutationInstance(instance, testClass, argBytes, args, method));
             }
+        }
 
-            MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
-            mutationInstance.resetTimer();
+        ClassLoader cmpCL = compare.getDeclaringClass().getClassLoader();
+        Outcome cmpSerial = new Outcome(Serializer.translate(cclOut.output, cmpCL), cclOut.thrown);
 
-            // run with MCL
-            System.out.println("Running Mutant " + mutationInstance);
+        for(int c = 0; c < results.size(); c++) {
+            Outcome out = results.get(c);
+            System.out.println("Running Mutant " + MCLs.getCartographyClassLoader().getMutationInstances().get(c));
             try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
-                pw.printf("Running Mutant %s\n", mutationInstance.toString());
+                pw.printf("Running Mutant %s\n", MCLs.getCartographyClassLoader().getMutationInstances().get(c).toString());
             }
-
-            try {
-                super.run(new TestClass(mri.clazz), mri.method, mri.args);
-            } catch (DiffException e) {
-                deadMutants.add(mutationInstance.id);
+            if(out == null) continue;
+            Outcome outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
+            if (!Outcome.same(cmpSerial, outSerial, compare)) {
+                Throwable e = new DiffException(cclOut, out);
+                deadMutants.add(MCLs.getCartographyClassLoader().getMutationInstances().get(c).id);
                 System.out.println("FAILURE: killed by input " + ind + ": " + e);
                 try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
                     pw.printf("FAILURE: killed by input %d: %s\n", ind, e.toString());
                 }
-            } catch(InstrumentationException e) {
-                throw new GuidanceException(e);
-            } catch (GuidanceException e) {
-                throw e;
-            } catch (Throwable e) {}
-
-            recentOutcomes.clear();
+            }
         }
-        if(cclOutcomes.get(cclOutcomes.size() - 1).thrown != null) throw cclOutcomes.get(cclOutcomes.size() - 1).thrown;
+
+        if(cclOut.thrown != null) throw cclOut.thrown;
     }
 
 }
