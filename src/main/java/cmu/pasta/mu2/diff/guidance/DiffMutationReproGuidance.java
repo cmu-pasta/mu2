@@ -179,11 +179,11 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
 
         for(int c = 0; c < results.size(); c++) {
             Outcome out = results.get(c);
+            if(out == null) continue;
             System.out.println("Running Mutant " + MCLs.getCartographyClassLoader().getMutationInstances().get(c));
             try (PrintWriter pw = new PrintWriter(new FileOutputStream(reportFile, true))) {
                 pw.printf("Running Mutant %s\n", MCLs.getCartographyClassLoader().getMutationInstances().get(c).toString());
             }
-            if(out == null) continue;
             Outcome outSerial = new Outcome(Serializer.translate(out.output, cmpCL), out.thrown);
             if (!Outcome.same(cmpSerial, outSerial, compare)) {
                 Throwable e = new DiffException(cclOut, out);

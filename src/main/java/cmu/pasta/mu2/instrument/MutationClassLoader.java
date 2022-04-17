@@ -32,6 +32,8 @@ public class MutationClassLoader extends URLClassLoader {
    */
   private final MutationInstance mutationInstance;
 
+  public static boolean RUN_MUTANTS_IN_PARALLEL = Boolean.getBoolean("mu2.PARALLEL");
+
   public MutationClassLoader(MutationInstance mutationInstance, URL[] paths, ClassLoader parent) {
     super(paths, parent);
     this.mutationInstance = mutationInstance;
@@ -69,14 +71,14 @@ public class MutationClassLoader extends URLClassLoader {
 
             @Override
             public void visitLabel(Label label) {
-              visitedLabels.add(label);
+              if(!RUN_MUTANTS_IN_PARALLEL) visitedLabels.add(label);
               super.visitLabel(label);
             }
 
             @Override
             public void visitJumpInsn(int opcode, Label label) {
               // Increment timer and check for time outs at each jump instruction
-              if (visitedLabels.contains(label)) {
+              if (visitedLabels.contains(label) && !RUN_MUTANTS_IN_PARALLEL) {
                 mv.visitLdcInsn(mutationInstance.id);
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC,
                         Type.getInternalName(MutationSnoop.class),
