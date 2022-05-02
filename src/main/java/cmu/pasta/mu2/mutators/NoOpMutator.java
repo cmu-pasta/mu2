@@ -7,8 +7,8 @@ import java.util.function.IntBinaryOperator;
 
 public class NoOpMutator extends Mutator {
 
-    public NoOpMutator(String name, boolean useInfection, int toReplace, String returnType, InstructionCall... replaceWith) {
-        super(name, useInfection, toReplace, returnType, replaceWith);
+    public NoOpMutator(String name, int toReplace, String returnType, InstructionCall... replaceWith) {
+        super(name, false, toReplace, returnType, replaceWith);
     }
 
     @Override

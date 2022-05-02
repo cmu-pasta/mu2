@@ -3,7 +3,6 @@ package cmu.pasta.mu2.instrument;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.mutators.IntBinaryOperatorMutator;
 import cmu.pasta.mu2.mutators.Mutator;
-import cmu.pasta.mu2.mutators.Operators;
 import janala.instrument.SafeClassWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,11 +114,17 @@ public class Cartographer extends ClassVisitor {
           if (numArgs == 1) {
             super.visitInsn(Opcodes.DUP2);
           } else if (numArgs == 2) {
-            //TODO
+            throw new AssertionError("Cannot duplicate 2 arguments of size 2!");
           }
         }
       }
 
+      /**
+       * Inserts mutator object into the stack below numArgs operands. Cannot be used
+       * for category 2 types with 2 operands.
+       * @param mut Mutator object
+       * @param numArgs Number of operands for mutator
+       */
       private void insertMutatorObject(Mutator mut, int numArgs) {
         Class mutatorClass = mut.getClass();
         Type operandType = mut.getOperandType();
@@ -139,9 +144,47 @@ public class Cartographer extends ClassVisitor {
             super.visitInsn(Opcodes.DUP_X2);
           }
         } else if (operandType.getSize() == 2 && numArgs == 1) {
-          super.visitInsn(Opcodes.DUP_X2);
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP_X2);
+          } else {
+            throw new AssertionError("Cannot insert object below 2 arguments of size 2!");
+          }
         }
         super.visitInsn(Opcodes.POP);
+      }
+
+      /**
+       * Instruments infection logic to invoke and log original and mutated function output values.
+       * Stack:
+       *    ..., args ->
+       *    ..., args, mut, duplicatedArgs ->
+       *    ..., args, id, originalResult ->
+       *    ..., args, mut, duplicatedArgs ->
+       *    ..., args, id, mutatedResult ->
+       *    ..., args
+       * @param mut The mutator to be logged
+       * @param mutationId The id of the mutation instance
+       * @param operandType The operand type of the mutator
+       * @param numArgs The number of operands of the mutator
+       */
+      private void logInfectionValue(Mutator mut, int mutationId, Type operandType, int numArgs, boolean runMutated) {
+        String funcName = "runOriginal";
+        if (runMutated) {
+          funcName = "runMutated";
+        }
+        dup(operandType, numArgs);
+        insertMutatorObject(mut, numArgs);
+        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                Type.getInternalName(mut.getClass()),
+                funcName,
+                mut.getMethodDescriptor(),
+                false);
+        super.visitLdcInsn(mutationId);
+        super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(MutationSnoop.class),
+                "logValue",
+                mut.getLogMethodDescriptor(),
+                false);
       }
 
       /**
@@ -163,10 +206,14 @@ public class Cartographer extends ClassVisitor {
               false);
           return;
         }
+
         if (optLevel == OptLevel.INFECTION) {
           Class mutatorClass = mut.getClass();
           Type operandType = mut.getOperandType();
           int numArgs = mut.getNumArgs();
+
+          // Special handling for double/long binary mutators due to JVM stack limitation. Reads the second operand of
+          // the original instruction and stores it in the mutator object to invoke original and mutated functions.
           if (operandType.getSize() == 2 && numArgs == 2) {
             insertMutatorObject(mut, 1);
             super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
@@ -174,66 +221,18 @@ public class Cartographer extends ClassVisitor {
                     "readSecondArg",
                     String.format("(%s)V", operandType.getDescriptor()),
                     false);
-            dup(operandType, 1);
-            insertMutatorObject(mut, 1);
-            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    Type.getInternalName(mutatorClass),
-                    "runOriginal",
-                    mut.getMethodDescriptor(),
-                    false);
-            super.visitLdcInsn(mi.id);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    Type.getInternalName(MutationSnoop.class),
-                    "logValue",
-                    mut.getLogMethodDescriptor(),
-                    false);
-            dup(operandType, 1);
-            insertMutatorObject(mut, 1);
-            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    Type.getInternalName(mutatorClass),
-                    "runMutated",
-                    mut.getMethodDescriptor(),
-                    false);
-            super.visitLdcInsn(mi.id);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    Type.getInternalName(MutationSnoop.class),
-                    "logValue",
-                    mut.getLogMethodDescriptor(),
-                    false);
+            logInfectionValue(mut, mi.id, operandType, 1, false);
+            logInfectionValue(mut, mi.id, operandType, 1, true);
             insertMutatorObject(mut, 0);
             super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                     Type.getInternalName(mutatorClass),
                     "writeSecondArg",
                     String.format("()%s", operandType.getDescriptor()),
                     false);
-            return;
+          } else {
+            logInfectionValue(mut, mi.id, operandType, numArgs, false);
+            logInfectionValue(mut, mi.id, operandType, numArgs, true);
           }
-          dup(operandType, numArgs);
-          insertMutatorObject(mut, numArgs);
-          super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                  Type.getInternalName(mutatorClass),
-                  "runOriginal",
-                  mut.getMethodDescriptor(),
-                  false);
-          super.visitLdcInsn(mi.id);
-          super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(MutationSnoop.class),
-                  "logValue",
-                  mut.getLogMethodDescriptor(),
-                  false);
-          dup(operandType, numArgs);
-          insertMutatorObject(mut, numArgs);
-          super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                  Type.getInternalName(mutatorClass),
-                  "runMutated",
-                  mut.getMethodDescriptor(),
-                  false);
-          super.visitLdcInsn(mi.id);
-          super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                  Type.getInternalName(MutationSnoop.class),
-                  "logValue",
-                  mut.getLogMethodDescriptor(),
-                  false);
         }
       }
 

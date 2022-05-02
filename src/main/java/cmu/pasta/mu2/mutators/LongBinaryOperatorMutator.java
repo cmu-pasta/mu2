@@ -50,10 +50,10 @@ public class LongBinaryOperatorMutator extends Mutator {
     }
 
     public long runOriginal(long arg) {
-        return originalFunction.applyAsLong(arg, this.secondArg);
+        return originalFunction.applyAsLong(arg, secondArg);
     }
 
     public long runMutated(long arg) {
-        return mutatorFunction.applyAsLong(arg, this.secondArg);
+        return mutatorFunction.applyAsLong(arg, secondArg);
     }
 }

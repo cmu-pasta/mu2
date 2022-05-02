@@ -10,7 +10,6 @@ import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
-import cmu.pasta.mu2.util.ArrayMap;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
@@ -250,7 +249,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     long intervalTime = now.getTime() - lastRefreshTime.getTime();
     long totalTime = now.getTime() - startTime.getTime();
 
-    if (intervalTime < STATS_REFRESH_TIME_PERIOD) {
+    if (intervalTime < STATS_REFRESH_TIME_PERIOD && !force) {
       return;
     }
 

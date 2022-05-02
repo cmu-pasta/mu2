@@ -4,7 +4,6 @@ import cmu.pasta.mu2.instrument.InstructionCall;
 import org.objectweb.asm.Type;
 
 import java.util.function.DoubleBinaryOperator;
-import java.util.function.DoubleBinaryOperator;
 
 public class DoubleBinaryOperatorMutator extends Mutator {
 
@@ -51,10 +50,10 @@ public class DoubleBinaryOperatorMutator extends Mutator {
     }
 
     public double runOriginal(double arg1) {
-        return originalFunction.applyAsDouble(arg1, this.secondArg);
+        return originalFunction.applyAsDouble(arg1, secondArg);
     }
 
     public double runMutated(double arg1) {
-        return mutatorFunction.applyAsDouble(arg1, this.secondArg);
+        return mutatorFunction.applyAsDouble(arg1, secondArg);
     }
 }
