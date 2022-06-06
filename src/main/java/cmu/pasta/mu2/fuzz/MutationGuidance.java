@@ -315,10 +315,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     }
 
     String plotData = String.format(
-        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d",
+        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %d, %d, %.2f, %d, %d",
         TimeUnit.MILLISECONDS.toSeconds(now.getTime()), cyclesCompleted, currentParentInputIdx,
         numSavedInputs, 0, 0, nonZeroFraction, uniqueFailures.size(), 0, 0, intervalTrialsPerSec,
-        numValid, numTrials - numValid, nonZeroValidFraction,
+        numValid, numTrials - numValid, nonZeroValidFraction, nonZeroCount, nonZeroValidCount,
         totalFound, deadMutants.size(), ((MutationCoverage) totalCoverage).numSeenMutants(),
         recentRun.get(), testingTime, mappingTime);
     appendLineToFile(statsFile, plotData);
