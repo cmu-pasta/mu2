@@ -76,17 +76,18 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
         runMutants.reset();
         MutationSnoop.setMutantExecutionCallback(m -> runMutants.add(m.id));
         BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
-            if (!mutantValueMap.contains(m.id)) {
-                mutantValueMap.put(m.id, value);
+            if (!infectedValueStored) {
+                infectedValue = value;
+                infectedValueStored = true;
             } else {
-                if (mutantValueMap.get(m.id) == null) {
+                if (infectedValue == null) {
                     if (value != null) {
                         runMutants.add(m.id);
                     }
-                } else if (!mutantValueMap.get(m.id).equals(value)) {
+                } else if (!infectedValue.equals(value)) {
                     runMutants.add(m.id);
                 }
-                mutantValueMap.remove(m.id);
+                infectedValueStored = false;
             }
         };
         MutationSnoop.setMutantInfectionCallback(infectionCallback);

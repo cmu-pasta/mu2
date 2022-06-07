@@ -91,7 +91,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    * This set must be reset/cleared before execution of every new input.
    */
   private static ArraySet mutantsToRun = new ArraySet();
-  private static ArrayMap mutantValueMap = new ArrayMap();
+  private static Object infectedValue;
+  private static boolean infectedValueStored;
 
   private Method compare;
 
@@ -149,20 +150,20 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
     mutantsToRun.reset();
-    mutantValueMap.reset();
     MutationSnoop.setMutantExecutionCallback(m -> mutantsToRun.add(m.id));
     BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
-      if (!mutantValueMap.contains(m.id)) {
-        mutantValueMap.put(m.id, value);
+      if (!infectedValueStored) {
+        infectedValue = value;
+        infectedValueStored = true;
       } else {
-        if (mutantValueMap.get(m.id) == null) {
+        if (infectedValue == null) {
           if (value != null) {
             mutantsToRun.add(m.id);
           }
-        } else if (!mutantValueMap.get(m.id).equals(value)) {
+        } else if (!infectedValue.equals(value)) {
           mutantsToRun.add(m.id);
         }
-        mutantValueMap.remove(m.id);
+        infectedValueStored = false;
       }
     };
     MutationSnoop.setMutantInfectionCallback(infectionCallback);
