@@ -28,16 +28,17 @@ def print_summary_data(df):
 
     time = df['total_time'] .iloc[-1]
     ms = time % 1000
-    total_s = (time - ms)//1000
-    s = total_s  % 60
-    total_m = (total_s - s)//60
+    total_s = time // 1000
+    s = total_s % 60
+    total_m = total_s // 60
     m = total_m % 60
-    h = (total_m - m)//60
-    print(f"Total Time For Campaign (H:M:S:mS): {h}:{m}:{s}:{ms}")
+    h = total_m // 60
+    print(f"Total Time For Campaign (H:M:S:ms): {h}:{m}:{s}:{ms}")
 
     total_trials = df['valid_inputs'].iloc[-1] + df['invalid_inputs'].iloc[-1]
     map_time = df['map_time'].iloc[-1]
     print(f"Average mapping time per trial (mS): {map_time/total_trials}")
+    print(f"Average total time per trial (mS): {time/total_trials}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -48,6 +49,3 @@ if __name__ == "__main__":
     df = read_plot_data(args.input_plot_data)
     plot_mutants(df, args.output_file)
     print_summary_data(df)
-
-
-
