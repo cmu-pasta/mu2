@@ -96,9 +96,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private Method compare;
 
-  private final List<String> exceptions = new ArrayList<>();
-  private final List<String> killedMutants = new ArrayList<>();
-  private final List<String> exceptionsAndMutants = new ArrayList<>();
+  private final List<String> mutantExceptionList = new ArrayList<>();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
@@ -140,7 +138,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
-      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptionsAndMutants.toString()));
+      criteria.add(String.format("+%d mutants %s", newKilledMutants, mutantExceptionList.toString()));
     }
 
     // TODO: Add responsibilities for mutants killed
@@ -153,9 +151,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     numRuns++;
     runMutants.reset();
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
-    exceptions.clear();
-    killedMutants.clear();
-    exceptionsAndMutants.clear();
+    mutantExceptionList.clear();
 
     long startTime = System.currentTimeMillis();
 
@@ -213,9 +209,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         } else {
           t = new DiffException(cclOutcome, mclOutcome);
         }
-        exceptions.add(t.getClass().getName());
-        killedMutants.add(mutationInstance.toString());
-        exceptionsAndMutants.add("("+ t.getClass().getName()+ ", " + mutationInstance.toString() + ")");
+        mutantExceptionList.add("(" + mutationInstance.toString() + ", " +  t.getClass().getName()+")");
 
         ((MutationCoverage) runCoverage).kill(mutationInstance);
       }
