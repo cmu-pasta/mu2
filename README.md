@@ -55,14 +55,14 @@ Coverage reports should be available in `target/site/jacoco-integration-test-cov
 
 ## Differential Mutation Testing Fuzzing
 
-To use the differential fuzzing goal `mu2:diff`, instrument your tests with `@Diff` and `@Compare` annotations instead of `@Test` and use the `DiffGoal` and `MutateDiffGoal` as described below.
+To use the differential fuzzing goal `mu2:diff`, instrument your tests with `@Diff` and `@Comparison` annotations instead of `@Test` and use the `DiffGoal` and `MutateDiffGoal` as described below.
 
 ### Annotations
 
-In the differential testing framework, each test is a pair of functions, one annotated with `@Diff` and the other with `@Compare`.
+In the differential testing framework, each test is a pair of functions, one annotated with `@Diff` and the other with `@Comparison`.
 
 The function annotated with `@Diff` should **not** be `static` and should return an object (neither void nor a primitive, though boxed primitives work).
-The result of this diff function will be compared with other results using the comparison function (annotated with `@Compare`). 
+The result of this diff function will be compared with other results using the comparison function (annotated with `@Comparison`). 
 
 The comparison function should be `static`, take two arguments of the same type as the return type of any associated diff functions, and return a `Boolean` 
 (`Boolean.TRUE` if the two inputs are equivalent, `Boolean.FALSE` otherwise).
@@ -81,7 +81,7 @@ public List<Integer> testPopulate(List<Integer> input) {
     return populateList(input);
 }
 
-@Compare
+@Comparison
 public static Boolean compare(List<Integer> list1, List<Integer> list2) {
     return list1.size() == list2.size();
 }

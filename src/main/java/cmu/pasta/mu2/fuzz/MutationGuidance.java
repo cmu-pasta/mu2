@@ -96,7 +96,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private Method compare;
 
-  private final List<String> exceptions = new ArrayList<>();
+  private final List<String> mutantExceptionList = new ArrayList<>();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
@@ -138,7 +138,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
-      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptions.toString()));
+      criteria.add(String.format("+%d mutants %s", newKilledMutants, mutantExceptionList.toString()));
     }
 
     // TODO: Add responsibilities for mutants killed
@@ -167,7 +167,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       }
     };
     MutationSnoop.setMutantInfectionCallback(infectionCallback);
-    exceptions.clear();
+    mutantExceptionList.clear();
 
     long startTime = System.currentTimeMillis();
 
@@ -225,7 +225,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         } else {
           t = new DiffException(cclOutcome, mclOutcome);
         }
-        exceptions.add(t.getClass().getName());
+        mutantExceptionList.add("(" + mutationInstance.toString() + ", " +  t.getClass().getName()+")");
+
         ((MutationCoverage) runCoverage).kill(mutationInstance);
       }
 
@@ -331,10 +332,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     }
 
     String plotData = String.format(
-        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d",
+        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %d, %d, %.2f, %d, %d",
         TimeUnit.MILLISECONDS.toSeconds(now.getTime()), cyclesCompleted, currentParentInputIdx,
         numSavedInputs, 0, 0, nonZeroFraction, uniqueFailures.size(), 0, 0, intervalTrialsPerSec,
-        numValid, numTrials - numValid, nonZeroValidFraction,
+        numValid, numTrials - numValid, nonZeroValidFraction, nonZeroCount, nonZeroValidCount,
         totalFound, deadMutants.size(), ((MutationCoverage) totalCoverage).numSeenMutants(),
         recentRun.get(), testingTime, mappingTime);
     appendLineToFile(statsFile, plotData);
