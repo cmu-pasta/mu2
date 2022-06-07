@@ -49,6 +49,12 @@ public class MutationSnoop {
     callback.accept(MutationInstance.getInstance(id));
   }
 
+  /**
+   * Called when logging infection values for a mutant
+   *
+   * @param value The resulting value of mutator function
+   * @param id The id of the {@link MutationInstance}
+   */
   public static void logValue(int value, int id) {
     infectionCallback.accept(MutationInstance.getInstance(id), value);
   }
@@ -74,16 +80,21 @@ public class MutationSnoop {
   }
 
   /**
-   * Set the callback which will be run each time a mutant is run in the initial run of the tested
+   * Sets the execution callback which will be run each time a mutant is run in the initial run of the tested
    * class
    *
    * @param cb The new callback
    */
-
   public static void setMutantExecutionCallback(Consumer<MutationInstance> cb) {
     callback = cb;
   }
 
+  /**
+   * Sets the infection callback which will be run each time a mutant is run in the initial run of the tested
+   * class
+   *
+   * @param cb The new callback
+   */
   public static void setMutantInfectionCallback(BiConsumer<MutationInstance, Object> cb) {
     infectionCallback = cb;
   }

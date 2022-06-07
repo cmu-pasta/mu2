@@ -154,18 +154,19 @@ public class Cartographer extends ClassVisitor {
       }
 
       /**
-       * Instruments infection logic to invoke and log original and mutated function output values.
+       * Instruments infection logic to invoke and log mutator function output values.
        * Stack:
        *    ..., args ->
+       *    ..., args, duplicatedArgs ->
        *    ..., args, mut, duplicatedArgs ->
-       *    ..., args, id, originalResult ->
-       *    ..., args, mut, duplicatedArgs ->
-       *    ..., args, id, mutatedResult ->
+       *    ..., args, outputValue ->
+       *    ..., args, outputValue, id ->
        *    ..., args
        * @param mut The mutator to be logged
        * @param mutationId The id of the mutation instance
        * @param operandType The operand type of the mutator
        * @param numArgs The number of operands of the mutator
+       * @param runMutated Whether to run mutated function for mutator
        */
       private void logInfectionValue(Mutator mut, int mutationId, Type operandType, int numArgs, boolean runMutated) {
         String funcName = "runOriginal";

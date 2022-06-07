@@ -32,6 +32,7 @@ public class DoubleBinaryOperatorMutator extends Mutator {
         return 2;
     }
 
+    // Method descriptor uses one argument since second argument is read beforehand.
     @Override
     public String getMethodDescriptor() {
         return "(D)D";
