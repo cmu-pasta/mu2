@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import janala.instrument.SnoopInstructionTransformer;
 import java.io.IOException;
@@ -55,56 +56,59 @@ public class CartographyClassLoader extends URLClassLoader {
   }
 
   @Override
-  public Class<?> findClass(String name) throws ClassNotFoundException {
-    byte[] bytes;
-
-    String internalName = name.replace('.', '/');
-    String path = internalName.concat(".class");
-    try (InputStream in = super.getResourceAsStream(path)) {
-      if (in == null) {
-        throw new ClassNotFoundException("Cannot find class " + name);
-      }
-      bytes = in.readAllBytes();
-    } catch (IOException e) {
-      throw new ClassNotFoundException("I/O exception while loading class.", e);
-    }
-
-    // Instrument class to measure both line coverage and mutation coverage
-    //
+  public Class<?> findClass(String name) throws ClassNotFoundException, GuidanceException {
     try {
-      byte[] instrumented;
-      instrumented = lineCoverageTransformer
-          .transform(this, internalName, null, null, bytes.clone());
-        if (instrumented != null) {
-            bytes = instrumented;
+      byte[] bytes;
+
+      String internalName = name.replace('.', '/');
+      String path = internalName.concat(".class");
+      try (InputStream in = super.getResourceAsStream(path)) {
+        if (in == null) {
+          throw new ClassNotFoundException("Cannot find class " + name);
         }
-    } catch (IllegalClassFormatException __) {
-    }
-
-    // Check whether this class is mutable
-    boolean mutable = false;
-
-    for (String s : mutableClasses) {
-      if (name.startsWith(s)) {
-        mutable = true;
-        break;
+        bytes = in.readAllBytes();
+      } catch (IOException e) {
+        throw new ClassNotFoundException("I/O exception while loading class.", e);
       }
-    }
 
-    // Make cartograph
-    if (mutable) {
-      Cartographer c = Cartographer.explore(bytes.clone(), this);
-      for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
+      // Instrument class to measure both line coverage and mutation coverage
+      //
+      try {
+        byte[] instrumented;
+        instrumented = lineCoverageTransformer
+                .transform(this, internalName, null, null, bytes.clone());
+        if (instrumented != null) {
+          bytes = instrumented;
+        }
+      } catch (IllegalClassFormatException __) {
+      }
+
+      // Check whether this class is mutable
+      boolean mutable = false;
+
+      for (String s : mutableClasses) {
+        if (name.startsWith(s)) {
+          mutable = true;
+          break;
+        }
+      }
+
+      // Make cartograph
+      if (mutable) {
+        Cartographer c = Cartographer.explore(bytes.clone(), this);
+        for (List<MutationInstance> opportunities : c.getOpportunities().values()) {
           for (MutationInstance mi : opportunities) {
-              mutationInstances.add(mi);
+            mutationInstances.add(mi);
           }
+        }
+
+        bytes = c.toByteArray();
       }
 
-      bytes = c.toByteArray();
+      return defineClass(name, bytes, 0, bytes.length);
+    } catch (OutOfMemoryError e) {
+      throw new GuidanceException(e);
     }
-
-
-    return defineClass(name, bytes, 0, bytes.length);
   }
 
   public OptLevel getOptLevel() {
