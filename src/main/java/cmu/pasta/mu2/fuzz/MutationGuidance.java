@@ -97,6 +97,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   private Method compare;
 
   private final List<String> exceptions = new ArrayList<>();
+  private final List<String> killedMutants = new ArrayList<>();
+  private final List<String> exceptionsAndMutants = new ArrayList<>();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
@@ -138,7 +140,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
-      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptions.toString()));
+      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptionsAndMutants.toString()));
     }
 
     // TODO: Add responsibilities for mutants killed
@@ -152,6 +154,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     runMutants.reset();
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
     exceptions.clear();
+    killedMutants.clear();
+    exceptionsAndMutants.clear();
 
     long startTime = System.currentTimeMillis();
 
@@ -210,6 +214,9 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
           t = new DiffException(cclOutcome, mclOutcome);
         }
         exceptions.add(t.getClass().getName());
+        killedMutants.add(mutationInstance.toString());
+        exceptionsAndMutants.add("("+ t.getClass().getName()+ ", " + mutationInstance.toString() + ")");
+
         ((MutationCoverage) runCoverage).kill(mutationInstance);
       }
 
