@@ -49,7 +49,11 @@ public class MutationCoverage extends Coverage {
     return seenMutants.size();
   }
 
-  public Set<Object> getMutants() {
+  public Set<MutationInstance> getMutants() {
     return new HashSet<>(caughtMutants);
+  }
+
+  public Set<MutationInstance> getSeenMutants() {
+    return new HashSet<>(seenMutants);
   }
 }

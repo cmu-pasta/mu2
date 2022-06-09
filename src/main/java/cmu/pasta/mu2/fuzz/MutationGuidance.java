@@ -3,6 +3,7 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.instrument.Mutator;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
@@ -17,8 +18,13 @@ import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.ArrayList;
@@ -98,6 +104,9 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private final List<String> mutantExceptionList = new ArrayList<>();
 
+  /** Hack: file path for getting mutant lines **/
+  private final String MUTANT_FILE_PATH = System.getProperty("jqf.mu2.MUTANT_FILE_PATH");
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -134,7 +143,35 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   }
 
   @Override
+  public void observeGeneratedArgs(Object[] args) {
+    if (args.length == 1) {
+      appendLineToFile(dataDumpFile, String.format("Input %d: %s\n", numTrials, String.valueOf(args[0])));
+    }
+  }
+
+  protected void updateDataDumpFile() {
+    MutationCoverage newRunCoverage = (MutationCoverage) runCoverage;
+    appendLineToFile(dataDumpFile, newRunCoverage.toString());
+    for (MutationInstance mi : newRunCoverage.getSeenMutants()) {
+      String mutationStatus = "Survived";
+      if (newRunCoverage.getMutants().contains(mi)) {
+        mutationStatus = "Killed";
+      }
+      String line = "";
+      try {
+        line = Files.readAllLines(Paths.get(MUTANT_FILE_PATH, mi.getFileName())).get(mi.getLineNum() - 1);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      appendLineToFile(dataDumpFile, String.format("Mutant name: %s, Mutant ID: %d, Operator: %d, Line: %s, Status: %s",
+              mi, mi.id, Mutator.valueOf(mi.mutator.name()).ordinal(), line.trim(), mutationStatus));
+    }
+  }
+
+  @Override
   protected List<String> checkSavingCriteriaSatisfied(Result result) {
+    System.out.println("Checking saving criteria");
+    updateDataDumpFile();
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {

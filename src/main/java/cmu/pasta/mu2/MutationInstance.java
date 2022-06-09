@@ -99,6 +99,11 @@ public class MutationInstance {
     return mutationInstances.size();
   }
 
+  public String getFileName() {
+    return fileName;
+  }
+
+
   public int getLineNum() {
     return lineNum;
   }
