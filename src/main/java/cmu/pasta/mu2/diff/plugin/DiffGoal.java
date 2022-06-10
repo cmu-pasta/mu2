@@ -162,7 +162,7 @@ public class DiffGoal extends AbstractMojo {
      * Allows user to set guidance to be used in fuzzing
      * <p> If not provided, defaults to {@code MutationGuidance}.
      */
-    @Parameter(property="guidanceArg", defaultValue = "MutationGuidance")
+    @Parameter(property="guidance", defaultValue = "MutationGuidance")
     private String guidanceArg;
 
     @Override
