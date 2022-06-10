@@ -148,15 +148,15 @@ public class MutationGuidance extends ZestGuidance implements OptimizedMutationG
 
     return criteria;
   }
-  protected void setMutantCallBack(Consumer<MutationInstance> f){
-      MutationSnoop.setMutantCallback(f);
+  protected void setMutantCallBack(){
+      MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
   }
 
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
     runMutants.reset();
-    setMutantCallBack(m -> runMutants.add(m.id));
+    setMutantCallBack();
     mutantExceptionList.clear();
 
     long startTime = System.currentTimeMillis();
