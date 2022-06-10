@@ -1,8 +1,10 @@
 package cmu.pasta.mu2.diff.plugin;
 
+import cmu.pasta.mu2.diff.guidance.OptimizedMutationGuidance;
 import cmu.pasta.mu2.fuzz.MutationGuidance;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
+import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -156,10 +158,17 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="optLevel", defaultValue = "EXECUTION")
     private String optLevel;
 
+    /**
+     * Allows user to set guidance to be used in fuzzing
+     * <p> If not provided, defaults to {@code EXECUTION}.
+     */
+    @Parameter(property="guidanceArg", defaultValue = "MutationGuidance")
+    private String guidanceArg;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
-        MutationGuidance guidance;
+        OptimizedMutationGuidance guidance;
         Log log = getLog();
         PrintStream out = log.isDebugEnabled() ? System.out : null;
         Result result;
@@ -203,7 +212,12 @@ public class DiffGoal extends AbstractMojo {
             }
             MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            //TODO add new optimization guidances here
+            if(guidanceArg.equals("MutationGuidance")){
+                guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            } else {
+                guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            }
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {
