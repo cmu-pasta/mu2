@@ -3,6 +3,7 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.diff.DiffException;
 import cmu.pasta.mu2.diff.Outcome;
+import cmu.pasta.mu2.diff.guidance.OptimizedMutationGuidance;
 import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
@@ -26,6 +27,8 @@ import java.util.Random;
 import java.util.Objects;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -36,7 +39,7 @@ import org.junit.runners.model.TestClass;
  * @author Rafaello Sanna
  * @author Rohan Padhye
  */
-public class MutationGuidance extends ZestGuidance implements DiffGuidance {
+public class MutationGuidance extends ZestGuidance implements OptimizedMutationGuidance {
 
   /**
    * The classloaders for cartography and individual mutation instances
@@ -145,12 +148,15 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     return criteria;
   }
+  protected void setMutantCallBack(Consumer<MutationInstance> f){
+      MutationSnoop.setMutantCallback(f);
+  }
 
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
     runMutants.reset();
-    MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
+    setMutantCallBack(m -> runMutants.add(m.id));
     mutantExceptionList.clear();
 
     long startTime = System.currentTimeMillis();
@@ -163,6 +169,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
+    runMutants = filterMutants();
     for (MutationInstance mutationInstance : getMutationInstances()) {
       if (deadMutants.contains(mutationInstance.id)) {
         continue;
@@ -228,6 +235,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     testingTime += completeTime;
     numRuns += run;
   }
+
 
   @Override
   protected void displayStats(boolean force) {
@@ -334,5 +342,9 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       return "Mutation-Guided Fuzzing\n" +
           "--------------------------\n";
     }
-  }
 }
+  @Override
+  public ArraySet filterMutants() {
+    return runMutants;
+  }
+  }
