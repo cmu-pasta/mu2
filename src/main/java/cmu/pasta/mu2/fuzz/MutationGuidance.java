@@ -41,47 +41,47 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   /**
    * The classloaders for cartography and individual mutation instances
    */
-  private MutationClassLoaders mutationClassLoaders;
+  protected MutationClassLoaders mutationClassLoaders;
 
   /**
    * The mutants killed so far
    */
-  private ArraySet deadMutants = new ArraySet();
+  protected ArraySet deadMutants = new ArraySet();
 
   /**
    * The number of actual runs of the test
    */
-  private long numRuns = 0;
+  protected long numRuns = 0;
 
   /**
    * The number of runs done in the last interval
    */
-  private long lastNumRuns = 0;
+  protected long lastNumRuns = 0;
 
   /**
    * The total time spent in the cartography class loader
    */
-  private long mappingTime = 0;
+  protected long mappingTime = 0;
 
   /**
    * The total time spent running the tests
    */
-  private long testingTime = 0;
+  protected long testingTime = 0;
 
   /**
    * The size of the moving averages
    */
-  private static final int MOVING_AVERAGE_CAP = 10;
+  protected static final int MOVING_AVERAGE_CAP = 10;
 
   /**
    * The number of mutants run in the most recent test runs
    */
-  private MovingAverage recentRun = new MovingAverage(MOVING_AVERAGE_CAP);
+  protected MovingAverage recentRun = new MovingAverage(MOVING_AVERAGE_CAP);
 
   /**
    * Current optimization level
    */
-  private final OptLevel optLevel;
+  protected final OptLevel optLevel;
 
   /**
    * The set of mutants to execute for a given trial.
@@ -92,11 +92,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    *
    * This set must be reset/cleared before execution of every new input.
    */
-  private static ArraySet runMutants = new ArraySet();
+  protected static ArraySet runMutants = new ArraySet();
 
-  private Method compare;
+  protected Method compare;
 
-  private final List<String> mutantExceptionList = new ArrayList<>();
+  protected final List<String> mutantExceptionList = new ArrayList<>();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
