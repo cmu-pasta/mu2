@@ -1,17 +1,15 @@
 #!/bin/bash
-#runs each benchmark, repros the results, and graphs/plots them with the other scripts in the directory.
+#runs each benchmark,  graphs/plots them with the other scripts in the directory.
 #ARGS: $1 - time per run
 
-MY_PATH=$(dirname "$0")
-echo "$MY_PATH"
-echo "$0"
-echo "$BASH_SOURCE"
+MYPATH=$(dirname "$0")
 
 mvn mu2:diff  -Dclass=sort.TimSortTest -Dmethod=fuzzTimSort -Dincludes=sort.TimSort -Dguidance=$2 -Dout=fuzz-results-timsort -Dtime=$1
+
 python $MYPATH/plot_mutant_data.py target/fuzz-results-timsort/plot_data timsortPlot
 python $MYPATH/graph_log.py target/fuzz-results-timsort/fuzz.log --chartout timsortLogChart.png
 
-mvn mu2:diff -Dclass=diff.GSonTest -Dmethod=testJSONParse -Dincludes=com.google.gson.stream,com.google.gson.Gson,com.google.gson.Json -Dguidance=$2 -Dout fuzz-results-gson -Dtime=$1
+mvn mu2:diff -Dclass=diff.GsonTest -Dmethod=testJSONParser -Dincludes=com.google.gson.stream,com.google.gson.Gson,com.google.gson.Json -Dguidance=$2 -Dout=fuzz-results-gson -Dtime=$1
 
 python $MYPATH/plot_mutant_data.py target/fuzz-results-gson/plot_data gsonPlot
 python $MYPATH/graph_log.py target/fuzz-results-gson/fuzz.log --chartout gsonLogChart.png
