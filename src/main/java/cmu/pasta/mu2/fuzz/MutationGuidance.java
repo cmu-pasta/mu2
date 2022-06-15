@@ -160,10 +160,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       filters.add(new RunMutantsFilter());
     }
 
-    List<MutationInstance> mutationInstances = getMutationInstances();
-    for(MutantFilter filter : filters){
-      mutationInstances = filter.filterMutants(mutationInstances);
-    }
 
     long startTime = System.currentTimeMillis();
 
@@ -175,6 +171,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
+    List<MutationInstance> mutationInstances = getMutationInstances();
+    for(MutantFilter filter : filters){
+      mutationInstances = filter.filterMutants(mutationInstances);
+    }
 
     for (MutationInstance mutationInstance : mutationInstances) {
       // update info
