@@ -98,6 +98,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   protected final List<String> mutantExceptionList = new ArrayList<>();
 
+  protected final List<MutantFilter> filters = new ArrayList<>();
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -107,6 +109,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
+
+    filters.add(new DeadMutantsFilter(this));
+    if(optLevel != OptLevel.NONE){
+      filters.add(new RunMutantsFilter());
+    }
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
@@ -163,15 +170,12 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
-    for (MutationInstance mutationInstance : getMutationInstances()) {
-      if (deadMutants.contains(mutationInstance.id)) {
-        continue;
-      }
-      if (optLevel != OptLevel.NONE  &&
-          !runMutants.contains(mutationInstance.id)) {
-        continue;
-      }
+    List<MutationInstance> mutationInstances = getMutationInstances();
+    for(MutantFilter filter : filters){
+      mutationInstances = filter.filterMutants(mutationInstances);
+    }
 
+    for (MutationInstance mutationInstance : mutationInstances) {
       // update info
       run += 1;
       mutationInstance.resetTimer();
