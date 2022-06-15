@@ -98,6 +98,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   protected final List<String> mutantExceptionList = new ArrayList<>();
 
+  protected final List<MutantFilter> filters = new ArrayList<>();
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -107,6 +109,11 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
+
+    filters.add(new DeadMutantsFilter(this));
+    if(optLevel != OptLevel.NONE){
+      filters.add(new RunMutantsFilter());
+    }
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
@@ -152,14 +159,6 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     runMutants.reset();
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
     mutantExceptionList.clear();
-
-    List<MutantFilter> filters = new ArrayList<>();
-
-    filters.add(new DeadMutantsFilter(this));
-    if(optLevel != OptLevel.NONE){
-      filters.add(new RunMutantsFilter());
-    }
-
 
     long startTime = System.currentTimeMillis();
 
