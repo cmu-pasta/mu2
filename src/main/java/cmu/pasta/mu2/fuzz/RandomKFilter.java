@@ -10,7 +10,7 @@ public class RandomKFilter implements MutantFilter {
     
     private int k;
 
-    private RandomKFilter (int k){
+    RandomKFilter (int k){
         this.k = k;
     }
 
@@ -21,7 +21,7 @@ public class RandomKFilter implements MutantFilter {
 
         // add first k mutants in list to filtered list
         List<MutationInstance> filtered = new ArrayList<>();
-        for(int i = 0; i < k; i++){
+        for(int i = 0; i < k && i < toFilter.size(); i++){
             filtered.add(toFilter.get(i));
         }
 
