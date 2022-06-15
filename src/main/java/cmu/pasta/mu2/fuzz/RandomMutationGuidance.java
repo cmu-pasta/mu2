@@ -23,12 +23,13 @@ public class RandomMutationGuidance extends MutationGuidance implements Optimize
 
     @Override
     public ArraySet filterMutants() {
-
+        
         ArrayList<Integer> mutantList = new ArrayList<Integer>();
         int numMutants = 0;
         int size = runMutants.size();
         int n = 0;
 
+        // add all mutants in runMutants to mutantList
         while(numMutants < size){
             if (runMutants.contains(n)){
                 numMutants++;
@@ -37,10 +38,11 @@ public class RandomMutationGuidance extends MutationGuidance implements Optimize
             n++;
         }
 
+        // shuffle mutantList to randomize first k elements
         Collections.shuffle(mutantList);
 
+        // add first k mutants in mutantList to filtered ArraySet
         ArraySet filtered = new ArraySet();
-        
         for(int i = 0; i < k  && i < mutantList.size(); i++){
             filtered.add(mutantList.get(i));
         }
