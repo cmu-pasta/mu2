@@ -153,6 +153,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
     mutantExceptionList.clear();
 
+    List<MutantFilter> filters = new ArrayList<>();
+
+    filters.add(new DeadMutantsFilter(this));
+    if(optLevel != OptLevel.NONE){
+      filters.add(new RunMutantsFilter());
+    }
+
+
     long startTime = System.currentTimeMillis();
 
     //run with CCL
@@ -163,15 +171,12 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
-    for (MutationInstance mutationInstance : getMutationInstances()) {
-      if (deadMutants.contains(mutationInstance.id)) {
-        continue;
-      }
-      if (optLevel != OptLevel.NONE  &&
-          !runMutants.contains(mutationInstance.id)) {
-        continue;
-      }
+    List<MutationInstance> mutationInstances = getMutationInstances();
+    for(MutantFilter filter : filters){
+      mutationInstances = filter.filterMutants(mutationInstances);
+    }
 
+    for (MutationInstance mutationInstance : mutationInstances) {
       // update info
       run += 1;
       mutationInstance.resetTimer();
