@@ -5,9 +5,7 @@ import cmu.pasta.mu2.util.ArraySet;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Filters an input list of MutationInstances based on if they are in a given file or not.
@@ -15,7 +13,7 @@ import java.util.Scanner;
  * e.g, an example of a valid file is
  * <pre>
  * {@code
- *  TimSort.java:L593
+ *  TimSort.java:593
  *  sort.TimSort$ComparableTimSort:I_ADD_TO_SUB:28
  * }
  * </pre>
@@ -25,16 +23,19 @@ public class FileMutantFilter implements MutantFilter{
     ArraySet haveSeen = new ArraySet();
     ArraySet allowed = new ArraySet();
 
-    Scanner scanner;
+    //lines that have not been associated with a mutation instance
+    List<String> unAccountedForLines = new LinkedList<>();
 
 
     FileMutantFilter(String fileName) throws FileNotFoundException {
-        this.scanner = new Scanner(new File(fileName));
-
+        Scanner scanner = new Scanner(new File(fileName));
+        while(scanner.hasNextLine()){
+            unAccountedForLines.add(scanner.nextLine());
+        }
     }
+
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
-        scanner.reset();
         List<MutationInstance> muts = new ArrayList<>();
         for(MutationInstance m : toFilter){
             if(haveSeen.contains(m.id)){
@@ -43,10 +44,15 @@ public class FileMutantFilter implements MutantFilter{
                 }
             } else {
                 haveSeen.add(m.id);
-                if(scanner.hasNext(m.className + ":" + m.mutator + ":" + m.sequenceIdx)
-                        || scanner.hasNext(m.getFileName() +":" + m.getLineNum())){
-                   allowed.add(m.id);
-                   muts.add(m);
+                ListIterator<String> iterator = unAccountedForLines.listIterator();
+                while(iterator.hasNext()){
+                    String currLine = iterator.next();
+                    if(currLine.equals(m.className + ":" + m.mutator + ":" + m.sequenceIdx)
+                            || currLine.equals(m.getFileName() +":" + m.getLineNum())) {
+                        allowed.add(m.id);
+                        muts.add(m);
+                        iterator.remove();
+                    }
                 }
             }
         }
