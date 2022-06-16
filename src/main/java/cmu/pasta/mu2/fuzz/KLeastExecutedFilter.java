@@ -40,7 +40,7 @@ public class KLeastExecutedFilter implements MutantFilter {
     */
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
-
+ 
         // initialize filtered list to be returned
         ArrayList<MutationInstance> filteredList = new ArrayList<MutationInstance>();
 
@@ -49,8 +49,6 @@ public class KLeastExecutedFilter implements MutantFilter {
         for (MutationInstance mutant : toFilter){
             if (numMutants < k && !executionCounts.containsKey(mutant)){
                 filteredList.add(mutant);
-                // set execution count of mutant to 1
-                executionCounts.put(mutant, 1); 
                 numMutants++;
             }
         }
@@ -67,9 +65,16 @@ public class KLeastExecutedFilter implements MutantFilter {
             for(int i = 0; i < size && numMutants < k; i++){
                 MutationInstance mutant = sortedMutants.get(i).getKey();
                 filteredList.add(mutant);
-                // increment execution count of mutant by 1
-                executionCounts.put(mutant, executionCounts.get(mutant)+1);
                 numMutants++;
+            }
+        }
+
+        // increment execution count for each mutant in filteredList
+        for (MutationInstance mutant: filteredList) {
+            if (!executionCounts.containsKey(mutant)){
+                executionCounts.put(mutant, 1); 
+            } else {
+                executionCounts.put(mutant, executionCounts.get(mutant)+1);
             }
         }
 
