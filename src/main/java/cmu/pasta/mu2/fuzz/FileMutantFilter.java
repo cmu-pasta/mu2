@@ -9,24 +9,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Filters an input list of MutationInstances based on if they are in a given file or not.
+ * Each line in the file can either take the form of ClassName:MutatorName:sequenceIdx or FileName:LineNumber
+ * e.g, an example of a valid file is
+ * <pre>
+ * {@code
+ *  TimSort.java:L593
+ *  sort.TimSort$ComparableTimSort:I_ADD_TO_SUB:28
+ * }
+ * </pre>
+ */
 public class FileMutantFilter implements MutantFilter{
-    ArraySet ids = new ArraySet();
+    //used for memoizing lookup into the file
+    ArraySet haveSeen = new ArraySet();
+    ArraySet allowed = new ArraySet();
+
+    Scanner scanner;
+
 
     FileMutantFilter(String fileName) throws FileNotFoundException {
-        Scanner scanner = new Scanner(new File(fileName));
-        while(scanner.hasNextInt()){
-            ids.add(scanner.nextInt());
-        }
-        scanner.close();
+        this.scanner = new Scanner(new File(fileName));
 
     }
-
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
+        scanner.reset();
         List<MutationInstance> muts = new ArrayList<>();
         for(MutationInstance m : toFilter){
-            if(ids.contains(m.id)){
-                muts.add(m);
+            if(haveSeen.contains(m.id)){
+                if(allowed.contains(m.id)){
+                    muts.add(m);
+                }
+            } else {
+                haveSeen.add(m.id);
+                if(scanner.hasNext(m.className + ":" + m.mutator + ":" + m.sequenceIdx)
+                        || scanner.hasNext(m.getFileName() +":" + m.getLineNum())){
+                   allowed.add(m.id);
+                   muts.add(m);
+                }
             }
         }
         return muts;
