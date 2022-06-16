@@ -92,7 +92,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    *
    * This set must be reset/cleared before execution of every new input.
    */
-  protected static ArraySet runMutants = new ArraySet();
+  protected ArraySet runMutants = new ArraySet();
 
   protected Method compare;
 
@@ -112,7 +112,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     filters.add(new DeadMutantsFilter(this));
     if(optLevel != OptLevel.NONE){
-      filters.add(new RunMutantsFilter());
+      filters.add(new RunMutantsFilter(this));
     }
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
