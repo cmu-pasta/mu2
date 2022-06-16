@@ -6,14 +6,26 @@ import java.util.List;
 
 import cmu.pasta.mu2.MutationInstance;
 
-public class RandomKFilter implements MutantFilter {
-    
+/**
+ * MutantFilter that filters a list of MutationInstances
+ * by choosing a random subset of size k.
+ */
+public class KRandomFilter implements MutantFilter {
     private int k;
 
-    RandomKFilter (int k){
+    /**
+    * Constructor for KRandomFilter
+    * @param k the number of MutationInstances the filtered list should contain
+    */
+    KRandomFilter (int k){
         this.k = k;
     }
 
+    /**
+    * Constructor for KRandomFilter
+    * @param toFilter the list of MutationInstances to be filtered
+    * @return         the filtered list of k random MutationInstances
+    */
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
         // shuffle list of mutants to randomize first k elements
