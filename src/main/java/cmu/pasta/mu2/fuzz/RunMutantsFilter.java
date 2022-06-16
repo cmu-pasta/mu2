@@ -6,11 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RunMutantsFilter implements MutantFilter {
+    private MutationGuidance mutationGuidance;
+    RunMutantsFilter(MutationGuidance mutationGuidance){
+       this.mutationGuidance = mutationGuidance;
+    }
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
         List<MutationInstance> runMuts = new ArrayList<>();
         for(MutationInstance m : toFilter){
-            if(MutationGuidance.runMutants.contains(m.id)){
+            if(mutationGuidance.runMutants.contains(m.id)){
                 runMuts.add(m);
             }
         }
