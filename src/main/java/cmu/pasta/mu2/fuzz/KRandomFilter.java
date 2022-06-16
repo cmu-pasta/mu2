@@ -22,7 +22,8 @@ public class KRandomFilter implements MutantFilter {
     }
 
     /**
-    * Constructor for KRandomFilter
+    * Filter method that takes in a list of MutationInstances to be filtered
+    * and returns a filter list of k random MutationInstances.
     * @param toFilter the list of MutationInstances to be filtered
     * @return         the filtered list of k random MutationInstances
     */
