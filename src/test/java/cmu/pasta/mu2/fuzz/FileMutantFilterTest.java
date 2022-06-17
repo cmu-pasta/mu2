@@ -29,11 +29,8 @@ public class FileMutantFilterTest {
 
     @Before
     public void createFile() throws IOException {
-        testFile = new File(fileName);
-        if(!testFile.createNewFile()){
-            throw new IOException("Could not create new file for file filter test");
-        }
-         writer = new FileWriter(fileName);
+        testFile = File.createTempFile("test",null);
+        writer = new FileWriter(testFile.getAbsolutePath());
     }
 
     @After
@@ -46,7 +43,7 @@ public class FileMutantFilterTest {
     public void testFileNum() throws IOException {
         writer.write("ExampleClass2.java:42\nExampleClass.java:2\nClassThatDoesNotExist.java:1444");
         writer.close();
-        FileMutantFilter filter =  new FileMutantFilter(fileName);
+        FileMutantFilter filter =  new FileMutantFilter(testFile.getAbsolutePath());
         List<MutationInstance> filteredMutants =  filter.filterMutants(muts);
         Assert.assertTrue(filteredMutants.contains(muts.get(3)));
         Assert.assertTrue(filteredMutants.contains(muts.get(1)));
@@ -55,7 +52,7 @@ public class FileMutantFilterTest {
     public void testUniqId() throws IOException {
         writer.write("ExampleClass2:D_SUB_TO_ADD:4\nExampleClass:ARETURN_TO_NULL:2\nClassThatDoesNotExist.java:1444");
         writer.close();
-        FileMutantFilter filter =  new FileMutantFilter(fileName);
+        FileMutantFilter filter =  new FileMutantFilter(testFile.getAbsolutePath());
         List<MutationInstance> filteredMutants =  filter.filterMutants(muts);
         Assert.assertTrue(filteredMutants.contains(muts.get(1)));
         Assert.assertTrue(filteredMutants.contains(muts.get(3)));

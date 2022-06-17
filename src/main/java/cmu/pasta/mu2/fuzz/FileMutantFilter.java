@@ -32,6 +32,7 @@ public class FileMutantFilter implements MutantFilter{
         while(scanner.hasNextLine()){
             unAccountedForLines.add(scanner.nextLine());
         }
+        scanner.close();
     }
 
     @Override
