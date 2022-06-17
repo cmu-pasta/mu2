@@ -180,7 +180,7 @@
 
   <profiles>
     <profile>
-      <id>github-ci</id>
+      <id>github</id>
       <repositories>
         <repository>
           <id>central</id>
