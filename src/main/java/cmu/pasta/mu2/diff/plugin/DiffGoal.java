@@ -1,6 +1,11 @@
 package cmu.pasta.mu2.diff.plugin;
 
+import cmu.pasta.mu2.fuzz.FileMutantFilter;
+import cmu.pasta.mu2.fuzz.KLeastExecutedFilter;
+import cmu.pasta.mu2.fuzz.KRandomFilter;
+import cmu.pasta.mu2.fuzz.MutantFilter;
 import cmu.pasta.mu2.fuzz.MutationGuidance;
+import cmu.pasta.mu2.instrument.Filter;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
@@ -25,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -156,6 +162,15 @@ public class DiffGoal extends AbstractMojo {
     @Parameter(property="optLevel", defaultValue = "EXECUTION")
     private String optLevel;
 
+    /**
+     * Allows user to input list of filters to be used in mutation-guided fuzzing.
+     *
+     * <p> If not provided, defaults to no filters.
+     */
+    @Parameter(property="filters", defaultValue = "")
+    private String filters;
+
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
@@ -188,6 +203,77 @@ public class DiffGoal extends AbstractMojo {
             throw new MojoExecutionException("Invalid Mutation OptLevel!");
         }
 
+        // Set filters to default value of empty string
+        if (filters == null){
+            filters = "";
+        }
+
+        // Initialize empty list of filters
+        List<MutantFilter> filterList = new ArrayList<>();
+        int i = 0;
+        char[] filterChars = filters.toCharArray();
+        String current = "";
+        Filter f;
+        int len = filterChars.length;
+
+        // Parse input string (of format "filter1:arg1,arg2,...,filter2:arg1,arg2,...") to create list of filters
+        while(i < len){
+            char c = filterChars[i];
+            if (c == ':') {
+                try {
+                    f = Filter.valueOf(current.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new MojoExecutionException("Invalid Mutation Filter!");
+                }
+                if (f == Filter.KRANDOM){
+                    
+                    i++;
+                    String arg = "";
+                    while (i < len && filterChars[i] != ','){
+                        arg += filterChars[i];
+                        i ++;
+                    }
+                    try {
+                        filterList.add(new KRandomFilter(Integer.parseInt(arg)));
+                    } catch (NumberFormatException e) {
+                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                    }
+
+                } else if (f == Filter.KLEASTEXEC){
+
+                    i++;
+                    String arg = "";
+                    while (i < len && filterChars[i] != ','){
+                        arg += filterChars[i];
+                        i ++;
+                    }
+                    try {
+                        filterList.add(new KLeastExecutedFilter(Integer.parseInt(arg)));
+                    } catch (NumberFormatException e) {
+                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                    }
+
+                } else if (f == Filter.FILE) {
+
+                    i++;
+                    String arg = "";
+                    while (i < len && filterChars[i] != ','){
+                        arg += filterChars[i];
+                        i ++;
+                    }
+                    try {
+                        filterList.add(new FileMutantFilter(arg));
+                    } catch (FileNotFoundException e) {
+                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                    }
+                }
+                current = "";
+            } else {
+                current += c;
+            }
+            i += 1;
+        }
+
         try {
             List<String> classpathElements = project.getTestClasspathElements();
             URL[] classPath = stringsToUrls(classpathElements.toArray(new String[0]));
@@ -203,7 +289,7 @@ public class DiffGoal extends AbstractMojo {
             }
             MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, filterList);
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {
