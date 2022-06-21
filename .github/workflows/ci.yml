@@ -1,9 +1,9 @@
 name: CI
 on:
   push:
-    branches: [ kelton/ci-main ]
+    branches: [ main ]
   pull_request:
-    branches: [ kelton/ci-main ]
+    branches: [ main ]
   workflow_dispatch:
 jobs:
   build-and-test:
