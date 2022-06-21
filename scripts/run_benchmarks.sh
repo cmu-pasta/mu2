@@ -6,6 +6,8 @@
 
 MYPATH=$(dirname "$0")
 
+mkdir -p $2
+
 mvn mu2:diff -Dclass=sort.TimSortTest -Dmethod=fuzzTimSort -Dincludes=sort.TimSort -Dout=fuzz-results-timsort -Dtime=$1 -Dfilters=$3
 
 python $MYPATH/plot_mutant_data.py target/fuzz-results-timsort/plot_data $2/timsortPlot
