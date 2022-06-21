@@ -15,8 +15,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: Make settings.xml file
-        uses: s4u/maven-settings-action@v2.6.0
       - name: Cache Maven dependencies
         uses: actions/cache@v2
         with:
@@ -24,5 +22,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Make settings.xml file
+        uses: s4u/maven-settings-action@v2.6.0
       - name: Build and test mu2
         run: mvn -B verify -P github
