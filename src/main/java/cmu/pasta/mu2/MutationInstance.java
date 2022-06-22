@@ -103,6 +103,9 @@ public class MutationInstance {
   public int getLineNum() {
     return lineNum;
   }
+  public String getFileName() {
+    return fileName;
+  }
 
   @Override
   public boolean equals(Object that) {
