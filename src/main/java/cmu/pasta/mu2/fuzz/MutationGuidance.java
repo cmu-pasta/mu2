@@ -7,7 +7,6 @@ import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
@@ -22,7 +21,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -97,6 +95,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   protected final List<MutantFilter> filters = new ArrayList<>();
 
+  protected ArraySet mutantsToRun = new ArraySet();
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
@@ -109,9 +109,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     filters.add(new DeadMutantsFilter(this));
     if(optLevel != OptLevel.NONE){
-      filters.add(new ExecutedMutantsFilter());
-    } if (optLevel == OptLevel.INFECTION){
-      filters.add(new InfectedMutantsFilter());
+      filters.add(new PIEMutantFilter(this,optLevel));
     }
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
@@ -156,10 +154,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
     mutantExceptionList.clear();
-
-    for (MutantFilter f : filters) {
-      f.prepTrial();
-    }
+    mutantsToRun.reset();
 
     long startTime = System.currentTimeMillis();
 

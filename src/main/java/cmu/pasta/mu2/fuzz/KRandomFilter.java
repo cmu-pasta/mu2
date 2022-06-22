@@ -41,8 +41,4 @@ public class KRandomFilter implements MutantFilter {
         return filtered;
     }
 
-    @Override
-    public void prepTrial() {
-        return;
-    }
 }

@@ -7,5 +7,4 @@ import java.util.List;
 public interface MutantFilter {
     List<MutationInstance> filterMutants(List<MutationInstance> toFilter);
 
-    void prepTrial();
 }

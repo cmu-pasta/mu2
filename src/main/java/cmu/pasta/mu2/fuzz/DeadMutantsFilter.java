@@ -21,8 +21,4 @@ public class DeadMutantsFilter implements MutantFilter {
         return aliveMuts;
     }
 
-    @Override
-    public void prepTrial() {
-        return;
-    }
 }

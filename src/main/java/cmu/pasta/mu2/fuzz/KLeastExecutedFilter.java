@@ -81,8 +81,4 @@ public class KLeastExecutedFilter implements MutantFilter {
         return filteredList;
     }
 
-    @Override
-    public void prepTrial() {
-        return;
-    }
 }

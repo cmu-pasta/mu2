@@ -60,8 +60,4 @@ public class FileMutantFilter implements MutantFilter{
         return muts;
     }
 
-    @Override
-    public void prepTrial() {
-        return;
-    }
 }
