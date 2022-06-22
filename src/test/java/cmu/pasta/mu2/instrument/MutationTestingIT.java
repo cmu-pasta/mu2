@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -26,6 +28,12 @@ public class MutationTestingIT extends AbstractMutationTest {
     Class<?> testClass = Class.forName(testClassName, true, loader);
     Runner testRunner = Request.method(testClass, testMethod).getRunner();
     return junit.run(testRunner);
+  }
+
+  @After
+  public void cleanUpState(){
+    MutationSnoop.setMutantExecutionCallback(m -> {});
+    MutationSnoop.setMutantInfectionCallback((a,b) -> {});
   }
 
   protected void validateMutationScores(String testClassName, String testMethod,
