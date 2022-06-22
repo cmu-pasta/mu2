@@ -63,6 +63,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <runOrder>alphabetical</runOrder>
+        </configuration>
         <version>2.22.2</version>
       </plugin>
       <plugin>

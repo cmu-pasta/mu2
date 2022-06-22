@@ -30,12 +30,6 @@ public class MutationTestingIT extends AbstractMutationTest {
     return junit.run(testRunner);
   }
 
-  @After
-  public void cleanUpState(){
-    MutationSnoop.setMutantExecutionCallback(m -> {});
-    MutationSnoop.setMutantInfectionCallback((a,b) -> {});
-  }
-
   protected void validateMutationScores(String testClassName, String testMethod,
       String targetInst, OptLevel opt, int expectedMutants, int expectedRun, int expectedKilled) throws Exception  {
 
