@@ -37,6 +37,10 @@ public class MutationInstance {
   public final String className;
 
   /**
+   * Name of the enclosing method to mutate
+   */
+  public final String methodName;
+  /**
    * Numbered instance of the opportunity for mutation this classloader uses
    */
   public final long sequenceIdx;
@@ -62,13 +66,15 @@ public class MutationInstance {
    * @param mutator     the mutator being applied
    * @param sequenceIdx the index of the mutator being applied on this class
    */
-  public MutationInstance(String className, Mutator mutator, long sequenceIdx, int lineNum, String fileName) {
+  public MutationInstance(String className, Mutator mutator, long sequenceIdx, int lineNum, String fileName,
+      String methodName) {
     this.id = mutationInstances.size();
     this.className = className;
     this.mutator = mutator;
     this.sequenceIdx = sequenceIdx;
     this.lineNum = lineNum;
     this.fileName = fileName;
+    this.methodName = methodName;
 
     // Register mutation instance
     mutationInstances.add(this);

@@ -17,6 +17,10 @@ import edu.berkeley.cs.jqf.fuzz.guidance.Result;
 import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,11 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Objects;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -104,6 +104,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   private final List<String> mutantExceptionList = new ArrayList<>();
 
+  private JSONObject dataDumpJson = new JSONObject();
+
   /** Hack: file path for getting mutant lines **/
   private final String MUTANT_FILE_PATH = System.getProperty("jqf.mu2.MUTANT_FILE_PATH");
 
@@ -144,33 +146,53 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   @Override
   public void observeGeneratedArgs(Object[] args) {
+    dataDumpJson = new JSONObject();
     if (args.length == 1) {
-      appendLineToFile(dataDumpFile, String.format("Input %d: %s\n", numTrials, String.valueOf(args[0])));
+      dataDumpJson.put("input", String.valueOf(args[0]));
     }
   }
 
   protected void updateDataDumpFile() {
     MutationCoverage newRunCoverage = (MutationCoverage) runCoverage;
-    appendLineToFile(dataDumpFile, newRunCoverage.toString());
+    Map<Integer, Integer> nonZeroCounts = ((MutationCoverage) runCoverage).getNonZeroCounts();
+    JSONObject coverageJson = new JSONObject();
+    for (Integer idx : nonZeroCounts.keySet()) {
+      coverageJson.put(idx, nonZeroCounts.get(idx));
+    }
+    dataDumpJson.put("branch coverage", coverageJson);
+
+    JSONArray mutantArray = new JSONArray();
+
     for (MutationInstance mi : newRunCoverage.getSeenMutants()) {
+      JSONObject mutantJson = new JSONObject();
       String mutationStatus = "Survived";
       if (newRunCoverage.getMutants().contains(mi)) {
         mutationStatus = "Killed";
       }
+      mutantJson.put("status", mutationStatus);
+      mutantJson.put("method", mi.methodName);
+      mutantJson.put("class", mi.className);
       String line = "";
+      int lineNum = 0;
       try {
-        line = Files.readAllLines(Paths.get(MUTANT_FILE_PATH, mi.getFileName())).get(mi.getLineNum() - 1);
+        lineNum = mi.getLineNum();
+        line = Files.readAllLines(Paths.get(MUTANT_FILE_PATH, mi.getFileName())).get(lineNum - 1);
       } catch (IOException e) {
         e.printStackTrace();
       }
-      appendLineToFile(dataDumpFile, String.format("Mutant name: %s, Mutant ID: %d, Operator: %d, Line: %s, Status: %s",
-              mi, mi.id, Mutator.valueOf(mi.mutator.name()).ordinal(), line.trim(), mutationStatus));
+      mutantJson.put("mutant_name", mi.toString());
+      mutantJson.put("mutant_id", mi.id);
+      mutantJson.put("mutant_operator", Mutator.valueOf(mi.mutator.name()).ordinal());
+      mutantJson.put("line", line.trim());
+      mutantJson.put("line_num", lineNum);
+      mutantArray.add(mutantJson);
     }
+    dataDumpJson.put("mutants", mutantArray);
+    appendLineToFile(dataDumpFile, dataDumpJson.toJSONString() + ",");
   }
 
   @Override
   protected List<String> checkSavingCriteriaSatisfied(Result result) {
-    System.out.println("Checking saving criteria");
     updateDataDumpFile();
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
@@ -201,9 +223,9 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     int run = 1;
 
     for (MutationInstance mutationInstance : getMutationInstances()) {
-      if (deadMutants.contains(mutationInstance.id)) {
-        continue;
-      }
+      // if (deadMutants.contains(mutationInstance.id)) {
+      //   continue;
+      // }
       if (optLevel != OptLevel.NONE  &&
           !runMutants.contains(mutationInstance.id)) {
         continue;

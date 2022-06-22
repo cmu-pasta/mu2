@@ -36,6 +36,11 @@ public class Cartographer extends ClassVisitor {
    */
   private String className = null;
 
+  /**
+   * The name of the method we're visiting
+   */
+  private String methodName = null;
+
   /** The opt level to be used. */
   private final OptLevel optLevel;
 
@@ -99,6 +104,7 @@ public class Cartographer extends ClassVisitor {
   @Override
   public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
       String[] exceptions) {
+    methodName = name;
     return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
       /**
@@ -108,7 +114,7 @@ public class Cartographer extends ClassVisitor {
        */
       private void logMutOp(Mutator mut) {
         List<MutationInstance> ops = opportunities.get(mut);
-        MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum, fileName);
+        MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum, fileName, methodName);
         ops.add(mi);
 
         if (optLevel == OptLevel.EXECUTION) {

@@ -2,8 +2,8 @@ package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.fuzz.util.Coverage;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * Utility class to collect mutation coverage
@@ -55,5 +55,18 @@ public class MutationCoverage extends Coverage {
 
   public Set<MutationInstance> getSeenMutants() {
     return new HashSet<>(seenMutants);
+  }
+
+  public Map<Integer, Integer> getNonZeroCounts() {
+    Map<Integer, Integer> nonZeroCounts = new HashMap();
+    Collection<Integer> indices = getCovered();
+    Collection<Integer> counts = getCoveredCounts();
+    assert(indices.size() == counts.size());
+    Iterator it1 = indices.iterator();
+    Iterator it2 = counts.iterator();
+    while (it1.hasNext() && it2.hasNext()) {
+      nonZeroCounts.put((Integer) it1.next(), (Integer) it2.next());
+    }
+    return nonZeroCounts;
   }
 }
