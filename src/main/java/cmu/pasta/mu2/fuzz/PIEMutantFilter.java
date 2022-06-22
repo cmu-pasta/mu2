@@ -17,7 +17,7 @@ public class PIEMutantFilter implements MutantFilter {
     PIEMutantFilter(MutationGuidance mutationGuidance, OptLevel optLevel) {
         this.mutationGuidance = mutationGuidance;
         MutationSnoop.setMutantExecutionCallback(m -> mutationGuidance.mutantsToRun.add(m.id));
-        if(optLevel == OptLevel.INFECTION){
+        /*if(optLevel == OptLevel.INFECTION){
             BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
                 if (!infectedValueStored) {
                     infectedValue = value;
@@ -34,7 +34,7 @@ public class PIEMutantFilter implements MutantFilter {
                 }
             };
             MutationSnoop.setMutantInfectionCallback(infectionCallback);
-        }
+        }*/
     }
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
