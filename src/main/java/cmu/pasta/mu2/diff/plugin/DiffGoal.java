@@ -207,7 +207,61 @@ public class DiffGoal extends AbstractMojo {
         if (filters == null){
             filters = "";
         }
+        
+        // Parse string of filters for list of MutantFilters
+        List<MutantFilter> filterList = parseFilters(filters);
 
+        try {
+            List<String> classpathElements = project.getTestClasspathElements();
+            URL[] classPath = stringsToUrls(classpathElements.toArray(new String[0]));
+            ClassLoader baseClassLoader = getClass().getClassLoader();
+            String targetName = testClassName + "#" + testMethod;
+            Random rnd = randomSeed != null ? new Random(randomSeed) : new Random();
+            File seedsDir = inputDirectory == null ? null : new File(inputDirectory);
+            File resultsDir = new File(target, outputDirectory);
+
+            //assume MutationGuidance for the moment
+            if (includes == null) {
+                throw new MojoExecutionException("Mutation-based fuzzing requires `-Dincludes`");
+            }
+            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
+            loader = mcl.getCartographyClassLoader();
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, filterList);
+        } catch (DependencyResolutionRequiredException | MalformedURLException e) {
+            throw new MojoExecutionException("Could not get project classpath", e);
+        } catch (FileNotFoundException e) {
+            throw new MojoExecutionException("File not found", e);
+        } catch (IOException e) {
+            throw new MojoExecutionException("I/O error", e);
+        }
+
+        try {
+            result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
+        } catch (ClassNotFoundException e) {
+            throw new MojoExecutionException("Could not load test class", e);
+        } catch (IllegalArgumentException e) {
+            throw new MojoExecutionException("Bad request", e);
+        } catch (RuntimeException e) {
+            throw new MojoExecutionException("Internal error", e);
+        }
+
+        if (!result.wasSuccessful()) {
+            Throwable e = result.getFailures().get(0).getException();
+            e.printStackTrace();
+            if (result.getFailureCount() == 1) {
+                if (e instanceof GuidanceException) {
+                    throw new MojoExecutionException("Internal error", e);
+                }
+            }
+            throw new MojoFailureException(String.format("Fuzzing resulted in the test failing on " +
+                            "%d input(s). Possible bugs found. " +
+                            "Use mvn jqf:repro to reproduce failing test cases. ",
+                    result.getFailureCount()) +
+                    "Sample exception included with this message.", e);
+        }
+    }
+
+    private List<MutantFilter> parseFilters (String filterSpec) throws MojoExecutionException{
         // Initialize empty list of filters
         List<MutantFilter> filterList = new ArrayList<>();
         int i = 0;
@@ -274,53 +328,6 @@ public class DiffGoal extends AbstractMojo {
             i += 1;
         }
 
-        try {
-            List<String> classpathElements = project.getTestClasspathElements();
-            URL[] classPath = stringsToUrls(classpathElements.toArray(new String[0]));
-            ClassLoader baseClassLoader = getClass().getClassLoader();
-            String targetName = testClassName + "#" + testMethod;
-            Random rnd = randomSeed != null ? new Random(randomSeed) : new Random();
-            File seedsDir = inputDirectory == null ? null : new File(inputDirectory);
-            File resultsDir = new File(target, outputDirectory);
-
-            //assume MutationGuidance for the moment
-            if (includes == null) {
-                throw new MojoExecutionException("Mutation-based fuzzing requires `-Dincludes`");
-            }
-            MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
-            loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, filterList);
-        } catch (DependencyResolutionRequiredException | MalformedURLException e) {
-            throw new MojoExecutionException("Could not get project classpath", e);
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("File not found", e);
-        } catch (IOException e) {
-            throw new MojoExecutionException("I/O error", e);
-        }
-
-        try {
-            result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
-        } catch (ClassNotFoundException e) {
-            throw new MojoExecutionException("Could not load test class", e);
-        } catch (IllegalArgumentException e) {
-            throw new MojoExecutionException("Bad request", e);
-        } catch (RuntimeException e) {
-            throw new MojoExecutionException("Internal error", e);
-        }
-
-        if (!result.wasSuccessful()) {
-            Throwable e = result.getFailures().get(0).getException();
-            e.printStackTrace();
-            if (result.getFailureCount() == 1) {
-                if (e instanceof GuidanceException) {
-                    throw new MojoExecutionException("Internal error", e);
-                }
-            }
-            throw new MojoFailureException(String.format("Fuzzing resulted in the test failing on " +
-                            "%d input(s). Possible bugs found. " +
-                            "Use mvn jqf:repro to reproduce failing test cases. ",
-                    result.getFailureCount()) +
-                    "Sample exception included with this message.", e);
-        }
+        return filterList;
     }
 }
