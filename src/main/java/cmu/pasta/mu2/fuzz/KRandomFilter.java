@@ -40,5 +40,4 @@ public class KRandomFilter implements MutantFilter {
 
         return filtered;
     }
-
 }

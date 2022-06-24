@@ -59,5 +59,4 @@ public class FileMutantFilter implements MutantFilter{
         }
         return muts;
     }
-
 }

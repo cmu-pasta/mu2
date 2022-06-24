@@ -38,8 +38,8 @@ public class KLeastExecutedFilterTest {
         ));
     }
 
-        @Test
-        public void filteredListSizeIsCorrect1(){
+    @Test
+    public void filteredListSizeIsCorrect1(){
         int k = 3;
         // instantiate random filter with parameter k
         KLeastExecutedFilter filter = new KLeastExecutedFilter(k);
@@ -72,7 +72,7 @@ public class KLeastExecutedFilterTest {
     }
 
     /*
-     * 
+     *
      */
     @Test
     public void leastExecutedLogicWorks(){

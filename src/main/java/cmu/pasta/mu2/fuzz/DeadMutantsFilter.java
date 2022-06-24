@@ -20,5 +20,4 @@ public class DeadMutantsFilter implements MutantFilter {
         }
         return aliveMuts;
     }
-
 }
