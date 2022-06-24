@@ -103,12 +103,12 @@
                 <artifactItem>
                   <groupId>cmu.pasta</groupId>
                   <artifactId>sort-benchmarks</artifactId>
-                  <version>1.0-SNAPSHOT</version>
+                  <version>1.0</version>
                 </artifactItem>
                 <artifactItem>
                   <groupId>cmu.pasta</groupId>
                   <artifactId>sort-benchmarks</artifactId>
-                  <version>1.0-SNAPSHOT</version>
+                  <version>1.0</version>
                   <classifier>tests</classifier>
                 </artifactItem>
               </artifactItems>
@@ -178,4 +178,22 @@
     </plugins>
   </reporting>
 
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+          <id>github</id>
+          <url>https://maven.pkg.github.com/cmu-pasta/sort-benchmarks</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
 </project>
