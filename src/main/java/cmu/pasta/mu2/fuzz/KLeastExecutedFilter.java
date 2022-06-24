@@ -22,7 +22,7 @@ public class KLeastExecutedFilter implements MutantFilter {
      * A map of MutationInstances to the number of times they have been executed.
      */
     private HashMap<MutationInstance, Integer> executionCounts;
-
+    
     /**
     * Constructor for KLeastExecutedFilter
     * @param k the number of MutationInstances the filtered list should contain
@@ -31,7 +31,7 @@ public class KLeastExecutedFilter implements MutantFilter {
         this.k = k;
         this.executionCounts = new HashMap<MutationInstance, Integer>();
     }
-
+    
     /**
     * Filter method that takes in a list of MutationInstances to be filtered
     * and returns a filter list of the k least-executed MutationInstances.
@@ -40,7 +40,7 @@ public class KLeastExecutedFilter implements MutantFilter {
     */
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
-
+ 
         // initialize filtered list to be returned
         ArrayList<MutationInstance> filteredList = new ArrayList<MutationInstance>();
 
@@ -72,7 +72,7 @@ public class KLeastExecutedFilter implements MutantFilter {
         // increment execution count for each mutant in filteredList
         for (MutationInstance mutant: filteredList) {
             if (!executionCounts.containsKey(mutant)){
-                executionCounts.put(mutant, 1);
+                executionCounts.put(mutant, 1); 
             } else {
                 executionCounts.put(mutant, executionCounts.get(mutant)+1);
             }
@@ -80,4 +80,5 @@ public class KLeastExecutedFilter implements MutantFilter {
 
         return filteredList;
     }
+    
 }
