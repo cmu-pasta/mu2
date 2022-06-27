@@ -101,7 +101,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   protected final List<MutantFilter> filters = new ArrayList<>();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
-      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, List<MutantFilter> additionalFilters)
       throws IOException {
     super(testName, duration, trials, outputDirectory, seedInputDir, rand);
     this.mutationClassLoaders = mutationClassLoaders;
@@ -114,11 +114,23 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     if(optLevel != OptLevel.NONE){
       filters.add(new RunMutantsFilter(this));
     }
+    filters.addAll(additionalFilters);
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
     }
+  }
+  
+  /**
+   * Constructor that sets default value of additional filters to an empty list 
+   * if no list of filters is passed as a parameter.
+   */
+  public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
+      throws IOException {
+        this(testName, mutationClassLoaders,
+       duration, trials, outputDirectory, seedInputDir, rand, new ArrayList<>());
   }
 
   /** Retreive the latest list of mutation instances */
