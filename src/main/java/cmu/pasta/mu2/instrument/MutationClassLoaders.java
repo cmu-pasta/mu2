@@ -1,6 +1,7 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import java.io.IOException;
 import java.net.URL;
@@ -38,13 +39,17 @@ public class MutationClassLoaders {
     targetStarts = targetClasses.split(",");
     this.parentClassLoader = new URLClassLoader(paths, parent) {
       @Override
-      public Class<?> findClass(String name) throws ClassNotFoundException {
-        for (String s : targetStarts) {
-          if (name.startsWith(s)) {
-            throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
+      public Class<?> findClass(String name) throws ClassNotFoundException, GuidanceException {
+        try {
+          for (String s : targetStarts) {
+            if (name.startsWith(s)) {
+              throw new ClassNotFoundException(name + " is mutable or depends on mutable class");
+            }
           }
+          return super.findClass(name);
+        } catch (OutOfMemoryError e) {
+          throw new GuidanceException(e);
         }
-        return super.findClass(name);
       }
     };
     this.cartographyClassLoader = new CartographyClassLoader(paths, mutableClasses.split(","),

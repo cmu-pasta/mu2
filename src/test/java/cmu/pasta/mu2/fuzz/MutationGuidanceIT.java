@@ -82,6 +82,27 @@ public class MutationGuidanceIT extends AbstractMutationTest {
     // Fuzz
     GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
+    Assert.assertEquals(22, mu2.corpusCount());
+
+
+  }
+
+  @Test
+  public void fuzzTimSortO2() throws Exception {
+    // Set up test params
+    String testClassName = "sort.TimSortTest";
+    String testMethod = "fuzzTimSort";
+    String targetInst = "sort.TimSort";
+    long trials = 100;
+    Random rnd = new Random(42);
+
+
+    // Create guidance
+    MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", OptLevel.INFECTION);
+    ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+    // Fuzz
+    GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
     Assert.assertEquals(22, mu2.corpusCount());
 

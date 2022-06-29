@@ -7,7 +7,6 @@ import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
@@ -20,12 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Objects;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -41,47 +37,47 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   /**
    * The classloaders for cartography and individual mutation instances
    */
-  private MutationClassLoaders mutationClassLoaders;
+  protected MutationClassLoaders mutationClassLoaders;
 
   /**
    * The mutants killed so far
    */
-  private ArraySet deadMutants = new ArraySet();
+  protected ArraySet deadMutants = new ArraySet();
 
   /**
    * The number of actual runs of the test
    */
-  private long numRuns = 0;
+  protected long numRuns = 0;
 
   /**
    * The number of runs done in the last interval
    */
-  private long lastNumRuns = 0;
+  protected long lastNumRuns = 0;
 
   /**
    * The total time spent in the cartography class loader
    */
-  private long mappingTime = 0;
+  protected long mappingTime = 0;
 
   /**
    * The total time spent running the tests
    */
-  private long testingTime = 0;
+  protected long testingTime = 0;
 
   /**
    * The size of the moving averages
    */
-  private static final int MOVING_AVERAGE_CAP = 10;
+  protected static final int MOVING_AVERAGE_CAP = 10;
 
   /**
    * The number of mutants run in the most recent test runs
    */
-  private MovingAverage recentRun = new MovingAverage(MOVING_AVERAGE_CAP);
+  protected MovingAverage recentRun = new MovingAverage(MOVING_AVERAGE_CAP);
 
   /**
    * Current optimization level
    */
-  private final OptLevel optLevel;
+  protected final OptLevel optLevel;
 
   /**
    * The set of mutants to execute for a given trial.
@@ -92,14 +88,17 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    *
    * This set must be reset/cleared before execution of every new input.
    */
-  private static ArraySet runMutants = new ArraySet();
 
-  private Method compare;
+  protected Method compare;
 
-  private final List<String> exceptions = new ArrayList<>();
+  protected final List<String> mutantExceptionList = new ArrayList<>();
+
+  protected final List<MutantFilter> filters = new ArrayList<>();
+
+  protected ArraySet mutantsToRun = new ArraySet();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
-      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, List<MutantFilter> additionalFilters)
       throws IOException {
     super(testName, duration, trials, outputDirectory, seedInputDir, rand);
     this.mutationClassLoaders = mutationClassLoaders;
@@ -107,11 +106,28 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
+
+    filters.add(new DeadMutantsFilter(this));
+    if(optLevel != OptLevel.NONE){
+      filters.add(new PIEMutantFilter(this,optLevel));
+    }
+    filters.addAll(additionalFilters);
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
     }
+  }
+  
+  /**
+   * Constructor that sets default value of additional filters to an empty list 
+   * if no list of filters is passed as a parameter.
+   */
+  public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
+      throws IOException {
+        this(testName, mutationClassLoaders,
+       duration, trials, outputDirectory, seedInputDir, rand, new ArrayList<>());
   }
 
   /** Retreive the latest list of mutation instances */
@@ -138,7 +154,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     List<String> criteria = super.checkSavingCriteriaSatisfied(result);
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
-      criteria.add(String.format("+%d mutants %s", newKilledMutants, exceptions.toString()));
+      criteria.add(String.format("+%d mutants %s", newKilledMutants, mutantExceptionList.toString()));
     }
 
     // TODO: Add responsibilities for mutants killed
@@ -149,9 +165,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
-    runMutants.reset();
-    MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
-    exceptions.clear();
+    mutantExceptionList.clear();
+    mutantsToRun.reset();
 
     long startTime = System.currentTimeMillis();
 
@@ -163,15 +178,12 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     byte[] argBytes = Serializer.serialize(args);
     int run = 1;
 
-    for (MutationInstance mutationInstance : getMutationInstances()) {
-      if (deadMutants.contains(mutationInstance.id)) {
-        continue;
-      }
-      if (optLevel != OptLevel.NONE  &&
-          !runMutants.contains(mutationInstance.id)) {
-        continue;
-      }
+    List<MutationInstance> mutationInstances = getMutationInstances();
+    for(MutantFilter filter : filters){
+      mutationInstances = filter.filterMutants(mutationInstances);
+    }
 
+    for (MutationInstance mutationInstance : mutationInstances) {
       // update info
       run += 1;
       mutationInstance.resetTimer();
@@ -209,7 +221,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         } else {
           t = new DiffException(cclOutcome, mclOutcome);
         }
-        exceptions.add(t.getClass().getName());
+        mutantExceptionList.add("(" + mutationInstance.toString() + ", " +  t.getClass().getName()+")");
+
         ((MutationCoverage) runCoverage).kill(mutationInstance);
       }
 
@@ -234,7 +247,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     long intervalTime = now.getTime() - lastRefreshTime.getTime();
     long totalTime = now.getTime() - startTime.getTime();
 
-    if (intervalTime < STATS_REFRESH_TIME_PERIOD) {
+    if (intervalTime < STATS_REFRESH_TIME_PERIOD && !force) {
       return;
     }
 
@@ -315,10 +328,10 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     }
 
     String plotData = String.format(
-        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d",
+        "%d, %d, %d, %d, %d, %d, %.2f%%, %d, %d, %d, %.2f, %d, %d, %.2f%%, %d, %d, %d, %d, %d, %.2f, %d, %d",
         TimeUnit.MILLISECONDS.toSeconds(now.getTime()), cyclesCompleted, currentParentInputIdx,
         numSavedInputs, 0, 0, nonZeroFraction, uniqueFailures.size(), 0, 0, intervalTrialsPerSec,
-        numValid, numTrials - numValid, nonZeroValidFraction,
+        numValid, numTrials - numValid, nonZeroValidFraction, nonZeroCount, nonZeroValidCount,
         totalFound, deadMutants.size(), ((MutationCoverage) totalCoverage).numSeenMutants(),
         recentRun.get(), testingTime, mappingTime);
     appendLineToFile(statsFile, plotData);

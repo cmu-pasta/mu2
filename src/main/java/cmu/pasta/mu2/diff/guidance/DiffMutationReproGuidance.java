@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
@@ -55,6 +56,8 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
      * This set must be reset/cleared before execution of every new input.
      */
     private static ArraySet runMutants = new ArraySet();
+    private static Object infectedValue;
+    private static boolean infectedValueStored;
 
     private File reportFile;
 
@@ -71,7 +74,23 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
     @Override
     public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
         runMutants.reset();
-        MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
+        MutationSnoop.setMutantExecutionCallback(m -> runMutants.add(m.id));
+        BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
+            if (!infectedValueStored) {
+                infectedValue = value;
+                infectedValueStored = true;
+            } else {
+                if (infectedValue == null) {
+                    if (value != null) {
+                        runMutants.add(m.id);
+                    }
+                } else if (!infectedValue.equals(value)) {
+                    runMutants.add(m.id);
+                }
+                infectedValueStored = false;
+            }
+        };
+        MutationSnoop.setMutantInfectionCallback(infectionCallback);
 
         recentOutcomes.clear();
         cmpTo = null;
@@ -108,6 +127,7 @@ public class DiffMutationReproGuidance extends DiffReproGuidance {
             }
 
             MutationRunInfo mri = new MutationRunInfo(MCLs, mutationInstance, testClass, argBytes, args, method);
+            mutationInstance.resetTimer();
 
             // run with MCL
             System.out.println("Running Mutant " + mutationInstance);

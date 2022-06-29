@@ -1,6 +1,8 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -34,6 +36,8 @@ public class MutationSnoop {
    */
   private static Consumer<MutationInstance> callback = x -> {
   };
+  private static BiConsumer<MutationInstance, Object> infectionCallback = (x, id) -> {
+  };
 
   /**
    * Called when a mutant is run in the intial run
@@ -46,12 +50,52 @@ public class MutationSnoop {
   }
 
   /**
-   * Set the callback which will be run each time a mutant is run in the initial run of the tested
+   * Called when logging infection values for a mutant
+   *
+   * @param value The resulting value of mutator function
+   * @param id The id of the {@link MutationInstance}
+   */
+  public static void logValue(int value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(float value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(double value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(long value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(boolean value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  public static void logValue(Object value, int id) {
+    infectionCallback.accept(MutationInstance.getInstance(id), value);
+  }
+
+  /**
+   * Sets the execution callback which will be run each time a mutant is run in the initial run of the tested
    * class
    *
    * @param cb The new callback
    */
-  public static void setMutantCallback(Consumer<MutationInstance> cb) {
+  public static void setMutantExecutionCallback(Consumer<MutationInstance> cb) {
     callback = cb;
+  }
+
+  /**
+   * Sets the infection callback which will be run each time a mutant is run in the initial run of the tested
+   * class
+   *
+   * @param cb The new callback
+   */
+  public static void setMutantInfectionCallback(BiConsumer<MutationInstance, Object> cb) {
+    infectionCallback = cb;
   }
 }
