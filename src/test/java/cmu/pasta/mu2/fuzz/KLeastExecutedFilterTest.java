@@ -1,5 +1,6 @@
 package cmu.pasta.mu2.fuzz;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -7,8 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.instrument.Mutator;
 
+import cmu.pasta.mu2.mutators.Mutator;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -18,14 +20,24 @@ import static org.junit.Assert.*;
 @RunWith(JUnit4.class)
 public class KLeastExecutedFilterTest {
 
-    static final List<MutationInstance> toFilter = new ArrayList<>(Arrays.asList(
-            new MutationInstance("ExampleClass", Mutator.I_ADD_TO_SUB, 1, 1, "ExampleClass.java"),
-            new MutationInstance("ExampleClass", Mutator.ARETURN_TO_NULL, 2, 2, "ExampleClass.java"),
-            new MutationInstance("ExampleClass2", Mutator.I_DIV_TO_MUL, 3, 2, "ExampleClass2.java"),
-            new MutationInstance("ExampleClass2", Mutator.D_SUB_TO_ADD, 4, 42, "ExampleClass2.java"),
-            new MutationInstance("ExampleClass3", Mutator.D_SUB_TO_ADD, 5, 42, "ExampleClass3.java")
-    ));
-    
+    List<MutationInstance> toFilter;
+    @Before
+    public void initMutators()  {
+        Mutator.initializeMutators();
+        toFilter = new ArrayList<>(Arrays.asList(
+                //add to sub
+                new MutationInstance("ExampleClass", Mutator.allMutators.get(0), 1, 1, "ExampleClass.java"),
+                //mul to div
+                new MutationInstance("ExampleClass", Mutator.allMutators.get(2), 2, 2, "ExampleClass.java"),
+                //div to mul
+                new MutationInstance("ExampleClass2", Mutator.allMutators.get(3), 3, 2, "ExampleClass2.java"),
+                //sub to add
+                new MutationInstance("ExampleClass2", Mutator.allMutators.get(1), 4, 42, "ExampleClass2.java"),
+                //sub to add
+                new MutationInstance("ExampleClass3", Mutator.allMutators.get(1), 5, 42, "ExampleClass3.java")
+        ));
+    }
+
     @Test
     public void filteredListSizeIsCorrect1(){
         int k = 3;
@@ -60,15 +72,19 @@ public class KLeastExecutedFilterTest {
     }
 
     /*
-     * 
+     *
      */
     @Test
     public void leastExecutedLogicWorks(){
 
+        //TODO
         Set<MutationInstance> newMutants = new HashSet<>(Arrays.asList(
-            new MutationInstance("New1", Mutator.I_ADD_TO_SUB, 6, 1, "New1.java"),
-            new MutationInstance("New2", Mutator.ARETURN_TO_NULL, 7, 1, "New2.java"),
-            new MutationInstance("New3", Mutator.I_DIV_TO_MUL, 8, 1, "New3.java")
+            //add to sub
+            new MutationInstance("New1", Mutator.allMutators.get(0), 6, 1, "New1.java"),
+            //sub to add
+            new MutationInstance("New2", Mutator.allMutators.get(1), 7, 1, "New2.java"),
+            //div to mul
+            new MutationInstance("New3", Mutator.allMutators.get(3), 8, 1, "New3.java")
         ));
 
         KLeastExecutedFilter filter = new KLeastExecutedFilter(5);

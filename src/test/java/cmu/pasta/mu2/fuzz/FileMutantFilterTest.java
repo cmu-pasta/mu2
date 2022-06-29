@@ -1,7 +1,7 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.instrument.Mutator;
+import cmu.pasta.mu2.mutators.Mutator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,15 +20,20 @@ public class FileMutantFilterTest {
     static File testFile;
     static FileWriter writer;
 
-    static final List<MutationInstance> muts = new ArrayList<>(Arrays.asList(
-            new MutationInstance("ExampleClass", Mutator.I_ADD_TO_SUB, 1, 1, "ExampleClass.java"),
-            new MutationInstance("ExampleClass", Mutator.ARETURN_TO_NULL, 2, 2, "ExampleClass.java"),
-            new MutationInstance("ExampleClass2", Mutator.I_DIV_TO_MUL, 3, 2, "ExampleClass2.java"),
-            new MutationInstance("ExampleClass2", Mutator.D_SUB_TO_ADD, 4, 42, "ExampleClass2.java")
-    ));
-
+    List<MutationInstance> muts;
     @Before
     public void createFile() throws IOException {
+        Mutator.initializeMutators();
+         muts = new ArrayList<>(Arrays.asList(
+                  //add to sub
+                  new MutationInstance("ExampleClass", Mutator.allMutators.get(0), 1, 1, "ExampleClass.java"),
+                  //mul to div
+                  new MutationInstance("ExampleClass", Mutator.allMutators.get(2), 2, 2, "ExampleClass.java"),
+                  //div to mul
+                  new MutationInstance("ExampleClass2",Mutator.allMutators.get(3), 3, 2, "ExampleClass2.java"),
+                  //sub to add
+                  new MutationInstance("ExampleClass2",Mutator.allMutators.get(1), 4, 42, "ExampleClass2.java")
+        ));
         testFile = File.createTempFile("test",null);
         writer = new FileWriter(testFile.getAbsolutePath());
     }
@@ -50,10 +55,11 @@ public class FileMutantFilterTest {
     }
     @Test
     public void testUniqId() throws IOException {
-        writer.write("ExampleClass2:D_SUB_TO_ADD:4\nExampleClass:ARETURN_TO_NULL:2\nClassThatDoesNotExist.java:1444");
+        writer.write("ExampleClass2:I_SUB_TO_ADD:4\nExampleClass:I_MUL_TO_DIV:2\nClassThatDoesNotExist.java:1444");
         writer.close();
         FileMutantFilter filter =  new FileMutantFilter(testFile.getAbsolutePath());
         List<MutationInstance> filteredMutants =  filter.filterMutants(muts);
+        System.out.println(filteredMutants);
         Assert.assertTrue(filteredMutants.contains(muts.get(1)));
         Assert.assertTrue(filteredMutants.contains(muts.get(3)));
     }

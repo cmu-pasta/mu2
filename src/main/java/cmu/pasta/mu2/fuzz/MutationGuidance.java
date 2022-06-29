@@ -7,7 +7,6 @@ import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.diff.guidance.DiffGuidance;
 import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
@@ -20,12 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Objects;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -92,13 +88,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
    *
    * This set must be reset/cleared before execution of every new input.
    */
-  protected ArraySet runMutants = new ArraySet();
 
   protected Method compare;
 
   protected final List<String> mutantExceptionList = new ArrayList<>();
 
   protected final List<MutantFilter> filters = new ArrayList<>();
+
+  protected ArraySet mutantsToRun = new ArraySet();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, List<MutantFilter> additionalFilters)
@@ -112,7 +109,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
     filters.add(new DeadMutantsFilter(this));
     if(optLevel != OptLevel.NONE){
-      filters.add(new RunMutantsFilter(this));
+      filters.add(new PIEMutantFilter(this,optLevel));
     }
     filters.addAll(additionalFilters);
     try {
@@ -168,9 +165,8 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   @Override
   public void run(TestClass testClass, FrameworkMethod method, Object[] args) throws Throwable {
     numRuns++;
-    runMutants.reset();
-    MutationSnoop.setMutantCallback(m -> runMutants.add(m.id));
     mutantExceptionList.clear();
+    mutantsToRun.reset();
 
     long startTime = System.currentTimeMillis();
 
@@ -251,7 +247,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     long intervalTime = now.getTime() - lastRefreshTime.getTime();
     long totalTime = now.getTime() - startTime.getTime();
 
-    if (intervalTime < STATS_REFRESH_TIME_PERIOD) {
+    if (intervalTime < STATS_REFRESH_TIME_PERIOD && !force) {
       return;
     }
 

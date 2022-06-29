@@ -1,6 +1,7 @@
 package cmu.pasta.mu2;
 
-import cmu.pasta.mu2.instrument.Mutator;
+import cmu.pasta.mu2.mutators.Mutator;
+
 import java.util.ArrayList;
 
 /**

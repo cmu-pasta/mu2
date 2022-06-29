@@ -2,6 +2,7 @@ package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
+import cmu.pasta.mu2.mutators.Mutator;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import janala.instrument.SnoopInstructionTransformer;
 import java.io.IOException;
@@ -49,6 +50,7 @@ public class CartographyClassLoader extends URLClassLoader {
     this.mutableClasses = Arrays.asList(mutableClasses);
     this.mutationInstances = new ArrayList<>();
     this.optLevel = opt;
+    Mutator.initializeMutators();
   }
 
   public List<MutationInstance> getMutationInstances() {
