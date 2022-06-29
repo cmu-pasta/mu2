@@ -27,7 +27,7 @@ public class FileMutantFilter implements MutantFilter{
     List<String> unAccountedForLines = new LinkedList<>();
 
 
-    FileMutantFilter(String fileName) throws FileNotFoundException {
+    public FileMutantFilter(String fileName) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(fileName));
         while(scanner.hasNextLine()){
             unAccountedForLines.add(scanner.nextLine());

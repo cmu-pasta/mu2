@@ -17,7 +17,7 @@ public class KRandomFilter implements MutantFilter {
     * Constructor for KRandomFilter
     * @param k the number of MutationInstances the filtered list should contain
     */
-    KRandomFilter (int k){
+    public KRandomFilter (int k){
         this.k = k;
     }
 
