@@ -24,7 +24,7 @@ TIME=$7
 DIR=$8
 
 MIN=$REP
-MAX=$REP+$PROCS
+MAX=$(($REP+$PROCS-1))
 
 CURDIR=$(pwd)
 
@@ -32,7 +32,7 @@ cd $DIR
 N=$PROCS
 for i in $(seq $MIN 1 $MAX)
 do
-    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TIME &
     ((j=j%N)); ((j++==0)) && wait
+    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TIME &
 done
 wait
