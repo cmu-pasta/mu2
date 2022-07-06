@@ -10,24 +10,29 @@ fuzzZest() {
 }
 
 if [ $# -lt 8 ]; then
-	echo "Usage: $0 CONFIG FUZZMETHOD TARGETNAME MIN MAX TIME DIR" > /dev/stderr
+	echo "Usage: $0 CONFIG PROCS REP FUZZMETHOD TARGETNAME TIME DIR" > /dev/stderr
 	exit 1
 fi
 
 CONFIG=$1
-CLASS=$2
-FUZZMETHOD=$3
-TARGETNAME=$4
-MIN=$5
-MAX=$6
+PROCS=$2
+REP=$3
+CLASS=$4
+FUZZMETHOD=$5
+TARGETNAME=$6
 TIME=$7
 DIR=$8
+
+MIN=$REP
+MAX=$REP+$PROCS
 
 CURDIR=$(pwd)
 
 cd $DIR
+N=$PROCS
 for i in $(seq $MIN 1 $MAX)
 do
-    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TIME
+    fuzzZest $CLASS $FUZZMETHOD $TARGETNAME $i $TIME &
+    ((j=j%N)); ((j++==0)) && wait
 done
 wait
