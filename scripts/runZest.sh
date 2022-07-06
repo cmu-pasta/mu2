@@ -9,7 +9,7 @@ fuzzZest() {
     mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dout=$3-fuzz-results/zest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtime=$TIME
 }
 
-if [ $# -lt 8 ]; then
+if [ $# -lt 7 ]; then
 	echo "Usage: $0 CONFIG PROCS REP FUZZMETHOD TARGETNAME TIME DIR" > /dev/stderr
 	exit 1
 fi
