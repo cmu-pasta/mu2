@@ -6,32 +6,36 @@
 #     TimSort 180m 2 3 ../../sort-benchmarks
 
 fuzzMu2Time() {
-    echo mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=EXECUTION
-    mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=EXECUTION
+    echo mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=INFECTION
+    mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=INFECTION
 }
 
-if [ $# -lt 9 ]; then
-	echo "Usage: $0 CONFIG DIFFMETHOD INCLUDES TARGETINCLUDES TARGETNAME MIN MAX DIR" > /dev/stderr
+if [ $# -lt 10 ]; then
+	echo "Usage: $0 CONFIG PROCS REP CLASS DIFFMETHOD INCLUDES TARGETINCLUDES TARGETNAME TIME DIR" > /dev/stderr
 	exit 1
 fi
 
 CONFIG=$1
-CLASS=$2
-DIFFMETHOD=$3
-INCLUDES=$4
-TARGETINCLUDES=$5
-TARGETNAME=$6
-TIME=$7
-MIN=$8
-MAX=$9
+PROCS=$2
+REP=$3
+CLASS=$4
+DIFFMETHOD=$5
+INCLUDES=$6
+TARGETINCLUDES=$7
+TARGETNAME=$8
+TIME=$9
 DIR=${10}
+
+MIN=$REP
+MAX=$(($REP+$PROCS-1))
 
 CURDIR=$(pwd)
 
 cd $DIR
-
+N=$PROCS
 for i in $(seq $MIN 1 $MAX)
 do
-    fuzzMu2Time $CONFIG $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TIME
+    ((j=j%N)); ((j++==0)) && wait
+    fuzzMu2Time $CONFIG $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TIME &
 done
 wait
