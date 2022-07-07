@@ -176,7 +176,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     // set up info
     long trialTime = System.currentTimeMillis() - startTime;
     byte[] argBytes = Serializer.serialize(args);
-    int run = 1;
+    int run = 0;
 
     List<MutationInstance> mutationInstances = getMutationInstances();
     for(MutantFilter filter : filters){

@@ -43,6 +43,7 @@ public class KLeastExecutedFilter implements MutantFilter {
  
         // initialize filtered list to be returned
         ArrayList<MutationInstance> filteredList = new ArrayList<MutationInstance>();
+        ArrayList<MutationInstance> executedMutants = new ArrayList<MutationInstance>();
 
         // add (up to k) mutants in toFilter that have not been executed before to filteredList
         int numMutants = 0;
@@ -51,19 +52,22 @@ public class KLeastExecutedFilter implements MutantFilter {
                 filteredList.add(mutant);
                 numMutants++;
             }
+            // add all mutants that have already been executed before to a list
+            else if (executionCounts.containsKey(mutant)){
+                executedMutants.add(mutant);
+            }  
         }
 
-        // if numMutants < k mutants have never been executed, add the next k - numMutants least executed to filtered list
+        // if numMutants < k mutants have never been executed, add the next (k - numMutants) least executed mutants to filtered list
         if (numMutants < k){
 
-            // get list of MutationInstances sorted by execution count
-            List<Map.Entry<MutationInstance, Integer>> sortedMutants = new ArrayList<Map.Entry<MutationInstance, Integer>>(executionCounts.entrySet());
-            Collections.sort(sortedMutants, (e1, e2) -> e1.getValue().compareTo(e2.getValue()));
+            // sort list of already executed MutationInstances by execution count
+            Collections.sort(executedMutants, (e1, e2) -> executionCounts.get(e1).compareTo(executionCounts.get(e2)));
 
-            // add least executed to sortedMutants until |filteredList| = k
-            int size = sortedMutants.size();
+            // add least executed to filteredList until |filteredList| = k
+            int size = executedMutants.size();
             for(int i = 0; i < size && numMutants < k; i++){
-                MutationInstance mutant = sortedMutants.get(i).getKey();
+                MutationInstance mutant = executedMutants.get(i);
                 filteredList.add(mutant);
                 numMutants++;
             }
