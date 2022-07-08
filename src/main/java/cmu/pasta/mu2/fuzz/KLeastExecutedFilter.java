@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * MutantFilter that filters a list of MutationInstances
@@ -21,7 +20,7 @@ public class KLeastExecutedFilter implements MutantFilter {
     /**
      * A map of MutationInstances to the number of times they have been executed.
      */
-    private HashMap<MutationInstance, Integer> executionCounts;
+    HashMap<MutationInstance, Integer> executionCounts;
     
     /**
     * Constructor for KLeastExecutedFilter
