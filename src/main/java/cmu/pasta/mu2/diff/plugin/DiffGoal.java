@@ -287,10 +287,25 @@ public class DiffGoal extends AbstractMojo {
                         arg += filterChars[i];
                         i ++;
                     }
-                    try {
-                        filterList.add(new KRandomFilter(Integer.parseInt(arg)));
-                    } catch (NumberFormatException e) {
-                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                    int k;
+                    if (arg.charAt(arg.length()-1) == '%'){
+                        try {
+                            k = Integer.parseInt(arg.substring(0, arg.length()-1));
+                        } catch (NumberFormatException e) {
+                            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                        }
+                        if (k > 100 || k < 0){
+                            throw new MojoExecutionException("Invalid Percentage for Random Filter");
+                        }
+                        filterList.add(new KRandomFilter(k, true));
+                    }    
+                    else{
+                        try {
+                            k = Integer.parseInt(arg);
+                        } catch (NumberFormatException e) {
+                            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                        }
+                        filterList.add(new KRandomFilter(k));
                     }
 
                 } else if (f == Filter.KLEASTEXEC){
@@ -301,11 +316,25 @@ public class DiffGoal extends AbstractMojo {
                         arg += filterChars[i];
                         i ++;
                     }
-                    try {
-                        filterList.add(new KLeastExecutedFilter(Integer.parseInt(arg)));
-                    } catch (NumberFormatException e) {
-                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                    int k;
+                    if (arg.charAt(arg.length()-1) == '%'){
+                        try {
+                            k = Integer.parseInt(arg.substring(0, arg.length()-1));
+                        } catch (NumberFormatException e) {
+                            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                        }
+                        if (k > 100 || k < 0){
+                            throw new MojoExecutionException("Invalid Percentage for KLeastExec Filter");
+                        }
+                        filterList.add(new KLeastExecutedFilter(k, true));
+                    } else {
+                        try {
+                            filterList.add(new KLeastExecutedFilter(Integer.parseInt(arg)));
+                        } catch (NumberFormatException e) {
+                            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+                        }
                     }
+                    
 
                 } else if (f == Filter.FILE) {
 

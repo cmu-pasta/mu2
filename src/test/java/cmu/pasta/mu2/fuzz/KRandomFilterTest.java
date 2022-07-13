@@ -68,4 +68,37 @@ public class KRandomFilterTest {
         assertEquals(toFilter.size(), filteredList.size());
     }
 
+    @Test
+    public void percentFilteredListSizeIsCorrect1(){
+        int k = 60;
+        // instantiate random filter with parameter k
+        KRandomFilter filter = new KRandomFilter(k, true);
+        // call filter method to obtain filtered list
+        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
+        // filtered list should be of size k
+        assertEquals(3, filteredList.size());
+    }
+
+    @Test
+    public void percentFilteredListSizeIsCorrect2(){
+        int k = 100;
+        // instantiate random filter with parameter k
+        KRandomFilter filter = new KRandomFilter(k, true);
+        // call filter method to obtain filtered list
+        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
+        // filtered list should be of size k
+        assertEquals(5, filteredList.size());
+    }
+
+    @Test
+    public void percentFilteredListSizeIsCorrect3(){
+        int k = 0;
+        // instantiate random filter with parameter k
+        KRandomFilter filter = new KRandomFilter(k);
+        // call filter method to obtain filtered list
+        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
+        // filtered list should be of same size as toFilter
+        assertEquals(0, filteredList.size());
+    }
+
 }

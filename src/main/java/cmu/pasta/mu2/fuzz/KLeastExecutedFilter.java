@@ -7,9 +7,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 /**
  * MutantFilter that filters a list of MutationInstances
- * by choosing the k least-executed mutants.
+ * by choosing the k (or k%) least-executed mutants.
  */
 public class KLeastExecutedFilter implements MutantFilter {
     /**
@@ -17,18 +19,32 @@ public class KLeastExecutedFilter implements MutantFilter {
      * as set in the constructor.
      */
     private int k;
+    private boolean percent;
     /**
      * A map of MutationInstances to the number of times they have been executed.
      */
     HashMap<MutationInstance, Integer> executionCounts;
     
     /**
-    * Constructor for KLeastExecutedFilter
+    * Constructor for KLeastExecutedFilter (sets percent to False by default)
     * @param k the number of MutationInstances the filtered list should contain
     */
     public KLeastExecutedFilter(int k) {
         this.k = k;
         this.executionCounts = new HashMap<MutationInstance, Integer>();
+        this.percent = false;
+    }
+
+    /**
+    * Another constructor for KLeastExecutedFilter
+    * @param k the number/percentage of MutationInstances the filtered list should contain
+    * @param percent True if k is percentage, False if k is number
+    */
+    public KLeastExecutedFilter(int k, boolean percent) {
+
+        this.k = k;
+        this.executionCounts = new HashMap<MutationInstance, Integer>();
+        this.percent = percent;
     }
     
     /**
@@ -40,14 +56,17 @@ public class KLeastExecutedFilter implements MutantFilter {
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
  
+        // determine number of mutants to run
+        int n = this.percent ? (toFilter.size() * k / 100) : k;
+        
         // initialize filtered list to be returned
         ArrayList<MutationInstance> filteredList = new ArrayList<MutationInstance>();
         ArrayList<MutationInstance> executedMutants = new ArrayList<MutationInstance>();
 
-        // add (up to k) mutants in toFilter that have not been executed before to filteredList
+        // add (up to n) mutants in toFilter that have not been executed before to filteredList
         int numMutants = 0;
         for (MutationInstance mutant : toFilter){
-            if (numMutants < k && !executionCounts.containsKey(mutant)){
+            if (numMutants < n && !executionCounts.containsKey(mutant)){
                 filteredList.add(mutant);
                 numMutants++;
             }
@@ -57,15 +76,15 @@ public class KLeastExecutedFilter implements MutantFilter {
             }  
         }
 
-        // if numMutants < k mutants have never been executed, add the next (k - numMutants) least executed mutants to filtered list
-        if (numMutants < k){
+        // if numMutants < n mutants have never been executed, add the next (n - numMutants) least executed mutants to filtered list
+        if (numMutants < n){
 
             // sort list of already executed MutationInstances by execution count
             Collections.sort(executedMutants, (e1, e2) -> executionCounts.get(e1).compareTo(executionCounts.get(e2)));
 
-            // add least executed to filteredList until |filteredList| = k
+            // add least executed to filteredList until |filteredList| = n
             int size = executedMutants.size();
-            for(int i = 0; i < size && numMutants < k; i++){
+            for(int i = 0; i < size && numMutants < n; i++){
                 MutationInstance mutant = executedMutants.get(i);
                 filteredList.add(mutant);
                 numMutants++;
