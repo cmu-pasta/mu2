@@ -20,6 +20,7 @@ public class KLeastExecutedFilter implements MutantFilter {
      */
     private int k;
     private boolean percent;
+    private MutationGuidance guidance;
     /**
      * A map of MutationInstances to the number of times they have been executed.
      */
@@ -33,6 +34,7 @@ public class KLeastExecutedFilter implements MutantFilter {
         this.k = k;
         this.executionCounts = new HashMap<MutationInstance, Integer>();
         this.percent = false;
+        this.guidance = null;
     }
 
     /**
@@ -40,11 +42,12 @@ public class KLeastExecutedFilter implements MutantFilter {
     * @param k the number/percentage of MutationInstances the filtered list should contain
     * @param percent True if k is percentage, False if k is number
     */
-    public KLeastExecutedFilter(int k, boolean percent) {
+    public KLeastExecutedFilter(int k, boolean percent, MutationGuidance guidance) {
 
         this.k = k;
         this.executionCounts = new HashMap<MutationInstance, Integer>();
         this.percent = percent;
+        this.guidance = guidance;
     }
     
     /**
@@ -57,7 +60,7 @@ public class KLeastExecutedFilter implements MutantFilter {
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
  
         // determine number of mutants to run
-        int n = this.percent ? (toFilter.size() * k / 100) : k;
+        int n = this.percent ? (guidance.getSeenMutants() * k / 100) : k;
         
         // initialize filtered list to be returned
         ArrayList<MutationInstance> filteredList = new ArrayList<MutationInstance>();

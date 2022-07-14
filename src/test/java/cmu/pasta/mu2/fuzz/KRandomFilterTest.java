@@ -68,6 +68,7 @@ public class KRandomFilterTest {
         assertEquals(toFilter.size(), filteredList.size());
     }
 
+    /* 
     @Test
     public void percentFilteredListSizeIsCorrect1(){
         int k = 60;
@@ -99,6 +100,6 @@ public class KRandomFilterTest {
         List<MutationInstance> filteredList = filter.filterMutants(toFilter);
         // filtered list should be of same size as toFilter
         assertEquals(0, filteredList.size());
-    }
+    }*/
 
 }

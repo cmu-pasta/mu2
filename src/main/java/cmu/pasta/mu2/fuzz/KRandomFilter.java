@@ -15,6 +15,7 @@ import cmu.pasta.mu2.MutationInstance;
 public class KRandomFilter implements MutantFilter {
     private int k;
     private boolean percent;
+    private MutationGuidance guidance;
 
     /**
     * Constructor for KRandomFilter (sets percent to False by default)
@@ -30,9 +31,10 @@ public class KRandomFilter implements MutantFilter {
     * @param k the number of MutationInstances the filtered list should contain
     * @param percent True if k is percentage, False if k is number
     */
-    public KRandomFilter (int k, boolean percent) {
+    public KRandomFilter (int k, boolean percent, MutationGuidance guidance) {
         this.k = k;
         this.percent = percent;
+        this.guidance = guidance;
     }
 
     /**
@@ -45,7 +47,7 @@ public class KRandomFilter implements MutantFilter {
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
 
         // determine number of mutants to run
-        int n = this.percent ? (toFilter.size() * k / 100) : k;
+        int n = this.percent ? (guidance.getSeenMutants() * k / 100) : k;
 
         // shuffle list of mutants to randomize first n elements
         Collections.shuffle(toFilter);

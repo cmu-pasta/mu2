@@ -98,7 +98,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
   protected ArraySet mutantsToRun = new ArraySet();
 
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
-      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, List<MutantFilter> additionalFilters)
+      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
       throws IOException {
     super(testName, duration, trials, outputDirectory, seedInputDir, rand);
     this.mutationClassLoaders = mutationClassLoaders;
@@ -111,23 +111,21 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     if(optLevel != OptLevel.NONE){
       filters.add(new PIEMutantFilter(this,optLevel));
     }
-    filters.addAll(additionalFilters);
     try {
       compare = Objects.class.getMethod("equals", Object.class, Object.class);
     } catch (NoSuchMethodException e) {
       e.printStackTrace();
     }
   }
-  
-  /**
-   * Constructor that sets default value of additional filters to an empty list 
-   * if no list of filters is passed as a parameter.
-   */
-  public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
-      Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand)
-      throws IOException {
-        this(testName, mutationClassLoaders,
-       duration, trials, outputDirectory, seedInputDir, rand, new ArrayList<>());
+
+  /** Add filters to be used (in addition to PIE and DeadMutants) */
+  public void addFilters (List<MutantFilter> additionalFilters){
+    filters.addAll(additionalFilters);
+  }
+
+  /** Get number of mutants seen so far */
+  public int getSeenMutants() {
+    return ((MutationCoverage) totalCoverage).numSeenMutants();
   }
 
   /** Retreive the latest list of mutation instances */

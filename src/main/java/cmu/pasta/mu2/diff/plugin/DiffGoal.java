@@ -207,9 +207,6 @@ public class DiffGoal extends AbstractMojo {
         if (filters == null){
             filters = "";
         }
-        
-        // Parse string of filters for list of MutantFilters
-        List<MutantFilter> filterList = parseFilters(filters);
 
         try {
             List<String> classpathElements = project.getTestClasspathElements();
@@ -226,7 +223,9 @@ public class DiffGoal extends AbstractMojo {
             }
             MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, filterList);
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            // Parse string of filters for list of MutantFilters and add to guidance
+            guidance.addFilters(parseFilters(filters, guidance));
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {
@@ -261,7 +260,7 @@ public class DiffGoal extends AbstractMojo {
         }
     }
 
-    private List<MutantFilter> parseFilters (String filterSpec) throws MojoExecutionException{
+    private List<MutantFilter> parseFilters (String filterSpec, MutationGuidance guidance) throws MojoExecutionException{
         // Initialize empty list of filters
         List<MutantFilter> filterList = new ArrayList<>();
         int i = 0;
@@ -297,7 +296,7 @@ public class DiffGoal extends AbstractMojo {
                         if (k > 100 || k < 0){
                             throw new MojoExecutionException("Invalid Percentage for Random Filter");
                         }
-                        filterList.add(new KRandomFilter(k, true));
+                        filterList.add(new KRandomFilter(k, true, guidance));
                     }    
                     else{
                         try {
@@ -326,7 +325,7 @@ public class DiffGoal extends AbstractMojo {
                         if (k > 100 || k < 0){
                             throw new MojoExecutionException("Invalid Percentage for KLeastExec Filter");
                         }
-                        filterList.add(new KLeastExecutedFilter(k, true));
+                        filterList.add(new KLeastExecutedFilter(k, true, guidance));
                     } else {
                         try {
                             filterList.add(new KLeastExecutedFilter(Integer.parseInt(arg)));

@@ -70,7 +70,8 @@ public class KLeastExecutedFilterTest {
         // filtered list should be of same size as toFilter
         assertEquals(toFilter.size(), filteredList.size());
     }
-
+    
+    /* 
     @Test
     public void percentFilteredListSizeIsCorrect1(){
         int k = 60;
@@ -102,7 +103,7 @@ public class KLeastExecutedFilterTest {
         List<MutationInstance> filteredList = filter.filterMutants(toFilter);
         // filtered list should be of same size as toFilter
         assertEquals(0, filteredList.size());
-    }
+    } */
 
     @Test
     public void leastExecutedLogicWorks(){
