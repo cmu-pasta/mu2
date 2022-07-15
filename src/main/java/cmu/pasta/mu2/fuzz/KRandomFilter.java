@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 import cmu.pasta.mu2.MutationInstance;
 
 /**
@@ -12,13 +14,27 @@ import cmu.pasta.mu2.MutationInstance;
  */
 public class KRandomFilter implements MutantFilter {
     private int k;
+    private boolean percent;
+    private MutationGuidance guidance;
 
     /**
-    * Constructor for KRandomFilter
+    * Constructor for KRandomFilter (sets percent to False by default)
     * @param k the number of MutationInstances the filtered list should contain
     */
     public KRandomFilter (int k){
         this.k = k;
+        this.percent = false;
+    }
+
+    /**
+    * Another constructor for KRandomFilter 
+    * @param k the number of MutationInstances the filtered list should contain
+    * @param percent True if k is percentage, False if k is number
+    */
+    public KRandomFilter (int k, boolean percent, MutationGuidance guidance) {
+        this.k = k;
+        this.percent = percent;
+        this.guidance = guidance;
     }
 
     /**
@@ -29,12 +45,16 @@ public class KRandomFilter implements MutantFilter {
     */
     @Override
     public List<MutationInstance> filterMutants(List<MutationInstance> toFilter) {
-        // shuffle list of mutants to randomize first k elements
+
+        // determine number of mutants to run
+        int n = this.percent ? (guidance.getSeenMutants() * k / 100) : k;
+
+        // shuffle list of mutants to randomize first n elements
         Collections.shuffle(toFilter);
 
         // add first k mutants in list to filtered list
         List<MutationInstance> filtered = new ArrayList<>();
-        for(int i = 0; i < k && i < toFilter.size(); i++){
+        for(int i = 0; i < n && i < toFilter.size(); i++){
             filtered.add(toFilter.get(i));
         }
 
