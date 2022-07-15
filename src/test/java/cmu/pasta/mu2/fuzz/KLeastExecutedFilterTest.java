@@ -1,6 +1,5 @@
 package cmu.pasta.mu2.fuzz;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import cmu.pasta.mu2.MutationInstance;
-
 import cmu.pasta.mu2.mutators.Mutator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,40 +69,6 @@ public class KLeastExecutedFilterTest {
         // filtered list should be of same size as toFilter
         assertEquals(toFilter.size(), filteredList.size());
     }
-    
-    /* 
-    @Test
-    public void percentFilteredListSizeIsCorrect1(){
-        int k = 60;
-        // instantiate random filter with parameter k
-        KLeastExecutedFilter filter = new KLeastExecutedFilter(k, true);
-        // call filter method to obtain filtered list
-        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
-        // filtered list should be of size k
-        assertEquals(3, filteredList.size());
-    }
-
-    @Test
-    public void percentFilteredListSizeIsCorrect2(){
-        int k = 100;
-        // instantiate random filter with parameter k
-        KLeastExecutedFilter filter = new KLeastExecutedFilter(k, true);
-        // call filter method to obtain filtered list
-        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
-        // filtered list should be of size k
-        assertEquals(5, filteredList.size());
-    }
-
-    @Test
-    public void percentFilteredListSizeIsCorrect3(){
-        int k = 0;
-        // instantiate random filter with parameter k
-        KLeastExecutedFilter filter = new KLeastExecutedFilter(k);
-        // call filter method to obtain filtered list
-        List<MutationInstance> filteredList = filter.filterMutants(toFilter);
-        // filtered list should be of same size as toFilter
-        assertEquals(0, filteredList.size());
-    } */
 
     @Test
     public void leastExecutedLogicWorks(){
