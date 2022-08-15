@@ -228,3 +228,9 @@ Venn diagram script alone:
 ```
 python scripts/venn.py --filters_dir <filters_dir> --num_experiments <num_experiments> --output_img <output_img_name>
 ```
+
+## Acknowledgments
+
+This project is supported in part by the National Science Foundation under Grant Number [CCF-2120955](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2120955). Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. 
+
+This project is also partly supported by [CyLab](https://www.cylab.cmu.edu/).
