@@ -1,6 +1,8 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.mutators.IntBinaryOperatorMutator;
+import cmu.pasta.mu2.mutators.Mutator;
 import janala.instrument.SafeClassWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,8 +53,8 @@ public class Cartographer extends ClassVisitor {
     super(API, new SafeClassWriter(classReader, cl,
         ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES));
 
-    this.opportunities = new HashMap<>(Mutator.values().length);
-    for (Mutator mutator : Mutator.values()) {
+    this.opportunities = new HashMap<>(Mutator.allMutators.size());
+    for (Mutator mutator : Mutator.allMutators) {
       this.opportunities.put(mutator, new ArrayList<>());
     }
 
@@ -101,6 +103,91 @@ public class Cartographer extends ClassVisitor {
       String[] exceptions) {
     return new MethodVisitor(API, cv.visitMethod(access, name, descriptor, signature, exceptions)) {
 
+      private void dup(Type operandType, int numArgs) {
+        if (operandType.getSize() == 1) {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP);
+          } else if (numArgs == 2) {
+            super.visitInsn(Opcodes.DUP2);
+          }
+        } else if (operandType.getSize() == 2) {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP2);
+          } else if (numArgs == 2) {
+            throw new AssertionError("Cannot duplicate 2 arguments of size 2!");
+          }
+        }
+      }
+
+      /**
+       * Inserts mutator object into the stack below numArgs operands. Cannot be used
+       * for category 2 types with 2 operands.
+       * @param mut Mutator object
+       * @param numArgs Number of operands for mutator
+       */
+      private void insertMutatorObject(Mutator mut, int numArgs) {
+        Class mutatorClass = mut.getClass();
+        Type operandType = mut.getOperandType();
+        super.visitLdcInsn(mut.hashCode());
+        super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(mutatorClass),
+                "getMutator",
+                "(I)L"+Type.getInternalName(mutatorClass)+";",
+                false);
+        if (numArgs == 0) {
+          return;
+        }
+        if (operandType.getSize() == 1) {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP_X1);
+          } else if (numArgs == 2) {
+            super.visitInsn(Opcodes.DUP_X2);
+          }
+        } else if (operandType.getSize() == 2 && numArgs == 1) {
+          if (numArgs == 1) {
+            super.visitInsn(Opcodes.DUP_X2);
+          } else {
+            throw new AssertionError("Cannot insert object below 2 arguments of size 2!");
+          }
+        }
+        super.visitInsn(Opcodes.POP);
+      }
+
+      /**
+       * Instruments infection logic to invoke and log mutator function output values.
+       * Stack:
+       *    ..., args ->
+       *    ..., args, duplicatedArgs ->
+       *    ..., args, mut, duplicatedArgs ->
+       *    ..., args, outputValue ->
+       *    ..., args, outputValue, id ->
+       *    ..., args
+       * @param mut The mutator to be logged
+       * @param mutationId The id of the mutation instance
+       * @param operandType The operand type of the mutator
+       * @param numArgs The number of operands of the mutator
+       * @param runMutated Whether to run mutated function for mutator
+       */
+      private void logInfectionValue(Mutator mut, int mutationId, Type operandType, int numArgs, boolean runMutated) {
+        String funcName = "runOriginal";
+        if (runMutated) {
+          funcName = "runMutated";
+        }
+        dup(operandType, numArgs);
+        insertMutatorObject(mut, numArgs);
+        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                Type.getInternalName(mut.getClass()),
+                funcName,
+                mut.getMethodDescriptor(),
+                false);
+        super.visitLdcInsn(mutationId);
+        super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(MutationSnoop.class),
+                "logValue",
+                mut.getLogMethodDescriptor(),
+                false);
+      }
+
       /**
        * Logs that a mutator can be used at the current location in the tree.
        *
@@ -111,13 +198,42 @@ public class Cartographer extends ClassVisitor {
         MutationInstance mi = new MutationInstance(Cartographer.this.className, mut, ops.size(), lineNum, fileName);
         ops.add(mi);
 
-        if (optLevel == OptLevel.EXECUTION) {
+        if (optLevel == OptLevel.EXECUTION || (optLevel == OptLevel.INFECTION && !mut.isUseInfection())) {
           super.visitLdcInsn(mi.id);
           super.visitMethodInsn(Opcodes.INVOKESTATIC,
               Type.getInternalName(MutationSnoop.class),
               "logMutant",
               "(I)V",
               false);
+          return;
+        }
+
+        if (optLevel == OptLevel.INFECTION) {
+          Class mutatorClass = mut.getClass();
+          Type operandType = mut.getOperandType();
+          int numArgs = mut.getNumArgs();
+
+          // Special handling for double/long binary mutators due to JVM stack limitation. Reads the second operand of
+          // the original instruction and stores it in the mutator object to invoke original and mutated functions.
+          if (operandType.getSize() == 2 && numArgs == 2) {
+            insertMutatorObject(mut, 1);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "readSecondArg",
+                    String.format("(%s)V", operandType.getDescriptor()),
+                    false);
+            logInfectionValue(mut, mi.id, operandType, 1, false);
+            logInfectionValue(mut, mi.id, operandType, 1, true);
+            insertMutatorObject(mut, 0);
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    Type.getInternalName(mutatorClass),
+                    "writeSecondArg",
+                    String.format("()%s", operandType.getDescriptor()),
+                    false);
+          } else {
+            logInfectionValue(mut, mi.id, operandType, numArgs, false);
+            logInfectionValue(mut, mi.id, operandType, numArgs, true);
+          }
         }
       }
 
@@ -128,7 +244,7 @@ public class Cartographer extends ClassVisitor {
        * @param descriptor The descriptor of the method, if it has one
        */
       private void check(int opcode, String descriptor) {
-          for (Mutator m : Mutator.values()) {
+          for (Mutator m : Mutator.allMutators) {
               if (m.isOpportunity(opcode, descriptor)) {
                   logMutOp(m);
               }

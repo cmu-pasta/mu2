@@ -34,7 +34,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use for default insn
    */
-  InstructionCall(int op) {
+  public InstructionCall(int op) {
     type = CallType.INSN;
     opcode = op;
   }
@@ -42,7 +42,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use if methodInsn
    */
-  InstructionCall(int op, String ow, String n, String d, boolean i) {
+  public InstructionCall(int op, String ow, String n, String d, boolean i) {
     type = CallType.METHOD_INSN;
     opcode = op;
     owner = ow;
@@ -54,7 +54,7 @@ public class InstructionCall implements Opcodes {
   /**
    * use if ldcInsn
    */
-  InstructionCall(int op, Object arg) {
+  public InstructionCall(int op, Object arg) {
     if (op == Opcodes.LDC) {
       type = CallType.LDC_INSN;
       opcode = op;

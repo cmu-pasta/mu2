@@ -1,6 +1,7 @@
 package cmu.pasta.mu2;
 
-import cmu.pasta.mu2.instrument.Mutator;
+import cmu.pasta.mu2.mutators.Mutator;
+
 import java.util.ArrayList;
 
 /**
@@ -101,6 +102,9 @@ public class MutationInstance {
 
   public int getLineNum() {
     return lineNum;
+  }
+  public String getFileName() {
+    return fileName;
   }
 
   @Override

@@ -2,6 +2,7 @@ package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
+import cmu.pasta.mu2.mutators.Mutator;
 import janala.instrument.SafeClassWriter;
 import java.io.IOException;
 import java.io.InputStream;

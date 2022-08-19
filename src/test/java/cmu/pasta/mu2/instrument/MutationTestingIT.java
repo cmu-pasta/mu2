@@ -1,9 +1,13 @@
 package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.MutationInstance;
+
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -27,8 +31,24 @@ public class MutationTestingIT extends AbstractMutationTest {
   protected void validateMutationScores(String testClassName, String testMethod,
       String targetInst, OptLevel opt, int expectedMutants, int expectedRun, int expectedKilled) throws Exception  {
 
-    final Set<MutationInstance> seenMutants = new HashSet<>();
-    MutationSnoop.setMutantCallback(m -> seenMutants.add(m));
+    final Set<MutationInstance> mutantsToRun = new HashSet<>();
+    final HashMap<MutationInstance, Object> mutantValueMap = new HashMap<>();
+    BiConsumer<MutationInstance, Object> infectionCallback = (m, value) -> {
+      if (!mutantValueMap.containsKey(m)) {
+        mutantValueMap.put(m, value);
+      } else {
+        if (mutantValueMap.get(m) == null) {
+          if (value != null) {
+            mutantsToRun.add(m);
+          }
+        } else if (!mutantValueMap.get(m).equals(value)) {
+          mutantsToRun.add(m);
+        }
+        mutantValueMap.remove(m);
+      }
+    };
+    MutationSnoop.setMutantExecutionCallback(m -> mutantsToRun.add(m));
+    MutationSnoop.setMutantInfectionCallback(infectionCallback);
 
     // Create the JUnit test runner
     MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", opt);
@@ -43,7 +63,7 @@ public class MutationTestingIT extends AbstractMutationTest {
     int killed = 0;
     for (MutationInstance mutant : mutants) {
       // Skip if optimization is enabled
-      if (opt != OptLevel.NONE && !seenMutants.contains(mutant)) {
+      if (opt != OptLevel.NONE && !mutantsToRun.contains(mutant)) {
         continue;
       }
 
@@ -70,5 +90,11 @@ public class MutationTestingIT extends AbstractMutationTest {
   public void mutateTimSortO1() throws Exception {
     validateMutationScores("sort.TimSortTest", "testTimSort",
         "sort.TimSort",  OptLevel.EXECUTION, 503,  50,27);
+  }
+
+  @Test
+  public void mutateTimSortInfection() throws Exception {
+    validateMutationScores("sort.TimSortTest", "testTimSort",
+            "sort.TimSort",  OptLevel.INFECTION, 503, 41,27);
   }
 }
