@@ -10,10 +10,10 @@ fuzzMu2Time() {
     mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -DtargetIncludes="$5" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
 }
 
-if [ $# -lt 10 ]; then
-	echo "Usage: $0 CONFIG PROCS REP CLASS DIFFMETHOD INCLUDES TARGETINCLUDES TARGETNAME TIME DIR" > /dev/stderr
-	exit 1
-fi
+# if [ $# -lt 10 ]; then
+# 	echo "Usage: $0 CONFIG PROCS REP CLASS DIFFMETHOD INCLUDES TARGETINCLUDES TARGETNAME TIME DIR" > /dev/stderr
+# 	exit 1
+# fi
 
 CONFIG="$1"
 PROCS="$2"
