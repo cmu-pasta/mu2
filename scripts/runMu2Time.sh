@@ -6,8 +6,8 @@
 #     TimSort 180m 2 3 ../../sort-benchmarks
 
 fuzzMu2Time() {
-    echo mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
-    mvn mu2:diff -Dclass=$2 -Dmethod=$3 -Dincludes=$4 -DtargetIncludes=$5 -Dout=$6-fuzz-results/$1/exp_$7 -DrandomSeed=$7 -Dtime=$8 -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
+    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -DtargetIncludes="$5" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
+    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -DtargetIncludes="$5" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
 }
 
 if [ $# -lt 10 ]; then
@@ -15,16 +15,16 @@ if [ $# -lt 10 ]; then
 	exit 1
 fi
 
-CONFIG=$1
-PROCS=$2
-REP=$3
-CLASS=$4
-DIFFMETHOD=$5
-INCLUDES=$6
-TARGETINCLUDES=$7
-TARGETNAME=$8
-TIME=$9
-DIR=${10}
+CONFIG="$1"
+PROCS="$2"
+REP="$3"
+CLASS="$4"
+DIFFMETHOD="$5"
+INCLUDES="$6"
+TARGETINCLUDES="$7"
+TARGETNAME="$8"
+TIME="$9"
+DIR="${10}"
 
 MIN=$REP
 MAX=$(($REP+$PROCS-1))
