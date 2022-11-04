@@ -4,17 +4,22 @@ Documentation for running and understanding the implementation of mutation-guide
 
 <!-- For project writeup, see [this document](https://saphirasnow.github.io/17-355/Bella_Laybourn_17355_Project.pdf). -->
 
-For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
+For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
 ## Build + Test + Install
 
-This repository works together with the [`sort-benchmarks` repository ](https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
+This repository works together with the [`sort-benchmarks` repository ](https://github.com/cmu-pasta/sort-benchmarks) for integration testing. The current dependency structure is as follows:
 
 ```
-sort-benchmarks --> jqf-fuzz (for API only)
 mu2 --> jqf-fuzz
 mu2 --> sort-benchmarks (for testing only)
+sort-benchmarks --> jqf-fuzz (for API only)
+sort-benchmarks --> mu2 (for API only)
 ```
+
+The test infrastructure currently has a bit of a cyclic dependency, so installing can be complicated.
+
+To install Mu2 without tests (and to avoid the cycles), follow only Step 1 below. If you wish to build + test Mu2 properly, follow all three steps below.
 
 ### Step 1: Install `mu2` with no integration tests
 ```
@@ -22,6 +27,8 @@ git clone https://github.com/cmu-pasta/mu2 && cd mu2
 mvn install -DskipTests
 cd ..
 ```
+
+If you don't need to run integration tests, stop here.
 
 ### Step 2 (optional): Install `sort-benchmarks` for testing
 
@@ -40,7 +47,7 @@ mvn install
 cd ..
 ```
 
-If you don't install the `sort-benchmarks`, you can install `mu2` via `mvn install -DskipTests`. This is not recommended.
+
 
 ### Development
 
