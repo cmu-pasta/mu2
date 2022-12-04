@@ -110,14 +110,6 @@ public class MutationTestingIT extends AbstractMutationTest {
       return validCoverage.hashCode();
     }
   }
-
-
-   @Test
-   public void mutateTimSortNoOpt() throws Exception {
-     validateMutationScores("sort.TimSortTest", "testTimSort",
-         "sort.TimSort",  OptLevel.NONE, 503, 503, 27);
-   }
-
   @Test
   public void t1TimSortO1() throws Exception {
     // Set up test params
@@ -137,31 +129,17 @@ public class MutationTestingIT extends AbstractMutationTest {
 
 
     Assert.assertEquals(22, mu2.corpusCount());
-  }
 
-//  @Test
-//  public void mutateTimSortO1() throws Exception {
-//    validateMutationScores("sort.TimSortTest", "testTimSort",
-//        "sort.TimSort",  OptLevel.EXECUTION, 503,  50,27);
-//  }
-
-  @Test
-  public void t3TimSortO1() throws Exception {
-    // Set up test params
-    String testClassName = "sort.TimSortTest";
-    String testMethod = "fuzzTimSort";
-    String targetInst = "sort.TimSort";
-    long trials = 100;
-    Random rnd = new Random(42);
-
+    validateMutationScores("sort.TimSortTest", "testTimSort",
+            "sort.TimSort",  OptLevel.NONE, 503, 503, 27);
 
     // Create guidance
-    MutationClassLoaders mcls = initClassLoaders(targetInst, "sort", OptLevel.EXECUTION);
-    ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+    rnd = new Random(42);
+    mcls = initClassLoaders(targetInst, "sort", OptLevel.EXECUTION);
+    mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
 
     // Fuzz
     GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
-
 
     Assert.assertEquals(22, mu2.corpusCount());
   }
