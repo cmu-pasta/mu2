@@ -16,7 +16,9 @@ import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.*;
@@ -97,6 +99,14 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
 
   protected ArraySet mutantsToRun = new ArraySet();
 
+  /**
+   * A map of MutationInstances to the number of times they have been executed.
+   */
+  private HashMap<MutationInstance, Integer> mutantExecutionCounts;
+
+
+  private File mutantExecutionFile;
+
   public MutationGuidance(String testName, MutationClassLoaders mutationClassLoaders,
       Duration duration, Long trials, File outputDirectory, File seedInputDir, Random rand, List<MutantFilter> additionalFilters)
       throws IOException {
@@ -105,6 +115,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
     this.totalCoverage = new MutationCoverage();
     this.runCoverage = new MutationCoverage();
     this.validCoverage = new MutationCoverage();
+    this.mutantExecutionCounts = new HashMap<>();
     this.optLevel = mutationClassLoaders.getCartographyClassLoader().getOptLevel();
 
     filters.add(new DeadMutantsFilter(this));
@@ -128,6 +139,44 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       throws IOException {
         this(testName, mutationClassLoaders,
        duration, trials, outputDirectory, seedInputDir, rand, new ArrayList<>());
+  }
+
+  
+  /** Write the mutation instance execution counts to an output file. */
+  private void writeMutantExecutionsToFile() throws IOException {
+
+    mutantExecutionFile = new File(outputDirectory, "mutant_execution_counts.csv");
+    mutantExecutionFile.delete();
+
+    try (PrintWriter out = new PrintWriter(new FileWriter(mutantExecutionFile, true))) {
+      out.println("mutant,mutant_id,execution_count,killed");
+      for (MutationInstance instance : mutantExecutionCounts.keySet()) {
+        int count = mutantExecutionCounts.get(instance);
+        boolean killed = deadMutants.contains(instance.id);
+        String executionData = String.format(
+            "%s,%d,%d,%s",
+            instance.toString(),
+            instance.id,
+            count,
+            killed);
+        out.println(executionData);
+      }
+    } catch (IOException e) {
+        throw new GuidanceException(e);
+    }
+  }
+
+  @Override
+  public boolean hasInput() {
+    if (!super.hasInput()) {
+      try {
+        writeMutantExecutionsToFile();
+      } catch (IOException e) {
+        throw new GuidanceException(e);
+      }
+      return false;
+    }
+    return true;
   }
 
   /** Retreive the latest list of mutation instances */
@@ -206,6 +255,12 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
         throw e;
       } catch (Throwable e) {
         mclOutcome = new Outcome(null, e);
+      }
+
+      if (!mutantExecutionCounts.containsKey(mutationInstance)) {
+          mutantExecutionCounts.put(mutationInstance, 1); 
+      } else {
+          mutantExecutionCounts.put(mutationInstance, mutantExecutionCounts.get(mutationInstance) + 1);
       }
 
       // MCL outcome and CCL outcome should be the same (either returned same value or threw same exception)
