@@ -3,11 +3,12 @@ import os
 import pandas as pd
 import shutil
 
-TIME = 10800
+TIME = 43200
 
 def get_num_files(exp_dir):
     df = pd.read_csv(os.path.join(exp_dir, "plot_data"))
     end_time = int(df.iloc[0]["# unix_time"]) + TIME
+    print(end_time)
     rows = df[df["# unix_time"] == end_time]
     if len(rows) > 0:
         num_files = int(df[df["# unix_time"] == end_time].iloc[0][" paths_total"])

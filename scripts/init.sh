@@ -4,14 +4,15 @@
 set -e
 
 sudo apt-get -y update > /dev/null
-sudo apt-get -y install maven
+sudo apt-get -y install maven > /dev/null
+sudo apt-get install python3-pip
 
 cd $HOME
 
 # JQF 
 [ -d jqf ] || git clone -b vasu/jqf-1.9 https://github.com/rohanpadhye/JQF.git jqf
 echo "Installing JQF..."
-(cd jqf; mvn install > /dev/null && echo "Built: JQF")
+(cd jqf; git pull; mvn install > /dev/null && echo "Built: JQF")
 (cd jqf/examples; mvn install jar:test-jar > /dev/null && 
   cp target/jqf-examples-1.9-tests.jar ~/.m2/repository/edu/berkeley/cs/jqf/jqf-examples/1.9/ &&
   echo "Built: JQF")
@@ -30,10 +31,12 @@ echo "Compiling sort-benchmarks..."
 # Mu2 With Tests
 echo "Compiling Mu2..."
 (cd mu2; git pull; mvn install -DskipTests > /dev/null && echo "Built: Mu2 (with tests)")
+(cd mu2; pip install -r requirements.txt > /dev/null && echo "Installed Mu2 Python requirements")
 
 # fuzz_chocopy
 # TODO: Merge branch vasu/add_diff_chocopy to master
-# [ -d fuzz_chocopy ] || git clone -b vasu/add_diff_chocopy git@github.com:cmu-pasta/fuzz_chocopy.git
-# [ -d $HOME/fuzz_chocopy/src/main/java/chocopy/reference ] || mv $HOME/reference/ $HOME/zest_chocopy/src/main/java/chocopy/
+# rm -r fuzz_chocopy
+[ -d fuzz_chocopy ] || git clone -b vasu/add_diff_chocopy git@github.com:cmu-pasta/fuzz_chocopy.git
+[ -d $HOME/fuzz_chocopy/src/main/java/chocopy/reference ] || mv $HOME/reference/ $HOME/fuzz_chocopy/src/main/java/chocopy/
 # echo "Compiling fuzz_chocopy..."
-# (cd fuzz_chocopy; git pull; ./install_jars.sh; mvn install > /dev/null && echo "Built: fuzz_chocopy")
+(cd fuzz_chocopy; git pull; ./install-jars.sh; mvn install > /dev/null && echo "Built: fuzz_chocopy")
