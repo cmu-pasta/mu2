@@ -6,8 +6,8 @@
 #     TimSort 180m 2 3 ../../sort-benchmarks
 
 fuzzMu2Time() {
-    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
-    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
+    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
+    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
 }
 
 # if [ $# -lt 10 ]; then
@@ -25,6 +25,7 @@ TARGETINCLUDES="$7"
 TARGETNAME="$8"
 TIME="$9"
 DIR="${10}"
+EXTRA="${11}"
 
 MIN=$REP
 MAX=$(($REP+$PROCS-1))
@@ -36,6 +37,6 @@ N=$PROCS
 for i in $(seq $MIN 1 $MAX)
 do
     ((j=j%N)); ((j++==0)) && wait
-    fuzzMu2Time $CONFIG $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TIME &
+    fuzzMu2Time $CONFIG $CLASS $DIFFMETHOD $INCLUDES $TARGETINCLUDES $TARGETNAME $i $TIME $EXTRA &
 done
 wait
