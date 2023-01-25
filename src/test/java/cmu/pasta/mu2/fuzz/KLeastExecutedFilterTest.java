@@ -1,6 +1,5 @@
 package cmu.pasta.mu2.fuzz;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import cmu.pasta.mu2.MutationInstance;
-
 import cmu.pasta.mu2.mutators.Mutator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,9 +70,6 @@ public class KLeastExecutedFilterTest {
         assertEquals(toFilter.size(), filteredList.size());
     }
 
-    /*
-     *
-     */
     @Test
     public void leastExecutedLogicWorks(){
 
@@ -138,6 +134,63 @@ public class KLeastExecutedFilterTest {
         }
         assertTrue(found);
 
+    }
+
+    /**
+     * 
+     */
+    @Test
+    public void filteringDoesNotAddNewMutants(){
+
+        
+        Set<MutationInstance> newMutants = new HashSet<>(Arrays.asList(
+            //add to sub
+            new MutationInstance("New1", Mutator.allMutators.get(0), 6, 1, "New1.java"),
+            //sub to add
+            new MutationInstance("New2", Mutator.allMutators.get(1), 7, 1, "New2.java"),
+            //div to mul
+            new MutationInstance("New3", Mutator.allMutators.get(3), 8, 1, "New3.java")
+        ));
+
+        KLeastExecutedFilter filter = new KLeastExecutedFilter(5);
+
+        // Filter original mutants twice so that all are executed twice
+        List<MutationInstance> originalMutants = filter.filterMutants(filter.filterMutants(toFilter));
+        // Check that execution counts are correctly incremented
+        for (MutationInstance mutant : originalMutants){
+            assertEquals(2, filter.executionCounts.get(mutant).intValue());
+        }
+        // Filter newMutants so all are executed once (new 1, old 2, if filter old, should not contain any new)
+        List<MutationInstance> newMutantsList = new ArrayList<>(newMutants);
+        newMutantsList = filter.filterMutants(newMutantsList);
+        // Check that execution counts are correctly incremented
+        for (MutationInstance mutant : newMutantsList) {
+            assertEquals(1, filter.executionCounts.get(mutant).intValue());
+        }
+
+        // Filter original mutants with k = 5
+        originalMutants = filter.filterMutants(originalMutants);
+        // Check that all original mutants and no new mutants are in filtered list
+        for (MutationInstance mutant : originalMutants){
+            assertEquals(3, filter.executionCounts.get(mutant).intValue());
+        }
+        for (MutationInstance mutant : newMutantsList){
+            assertEquals(1, filter.executionCounts.get(mutant).intValue());
+        }
+
+        // Filter original mutants
+        originalMutants.remove(4);
+        originalMutants.remove(3);
+        List<MutationInstance> filteredOriginalMutants = filter.filterMutants(originalMutants);
+        // Check that the filtered list is of correct size
+        assertEquals(3, filteredOriginalMutants.size());
+        // Check that all original mutants and no new mutants are in filtered list
+        for (MutationInstance mutant : filteredOriginalMutants){
+            assertEquals(4, filter.executionCounts.get(mutant).intValue());
+        }
+        for (MutationInstance mutant : newMutantsList){
+            assertEquals(1, filter.executionCounts.get(mutant).intValue());
+        }
     }
 }
 
