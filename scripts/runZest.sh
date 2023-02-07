@@ -5,8 +5,8 @@
 #  ./runZest.sh diff.DiffTest fuzzTimSort TimSort 2 3 180m $HOME/Work/sort-benchmarks/
 
 fuzzZest() {
-    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dout=$3-fuzz-results/zest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtime=$TIME
-    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dout=$3-fuzz-results/zest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtime=$TIME
+    echo mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dtarget=/dev/shm/ -Dout=$3-fuzz-results/zest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtime=$TIME
+    mvn jqf:fuzz -Dclass=$1 -Dmethod=$2 -Dtarget=/dev/shm/ -Dout=$3-fuzz-results/zest/exp_$4 -Dengine=zest -DrandomSeed=$4 -Dtime=$TIME
 }
 
 if [ $# -lt 7 ]; then
