@@ -6,8 +6,8 @@
 #     TimSort 180m 2 3 ../../sort-benchmarks
 
 fuzzMu2Time() {
-    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
-    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
+    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dtarget="/dev/shm/" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
+    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Dtarget="/dev/shm/" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000 $9
 }
 
 # if [ $# -lt 10 ]; then
