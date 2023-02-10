@@ -6,10 +6,10 @@
 #     TimSort 180m 2 3 ../../sort-benchmarks
 
 fuzzMu2Time() {
-    echo python3 $CURDIR/scripts/create_time_constrained_corpus.py --exp_dir="/dev/shm/$6-fuzz-results/zest/exp_$7"
-    python3 $CURDIR/scripts/create_time_constrained_corpus.py --exp_dir="/dev/shm/$6-fuzz-results/zest/exp_$7"
-    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Din="/dev/shm/$6-fuzz-results/zest/exp_$7/time_constrained_corpus/" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
-    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Din="/dev/shm/$6-fuzz-results/zest/exp_$7/time_constrained_corpus/" -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
+    echo python3 $CURDIR/scripts/create_time_constrained_corpus.py --exp_dir="target/$6-fuzz-results/zest/exp_$7"
+    python3 $CURDIR/scripts/create_time_constrained_corpus.py --exp_dir="target/$6-fuzz-results/zest/exp_$7"
+    echo mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Din="target/$6-fuzz-results/zest/exp_$7/time_constrained_corpus/" -Dtarget=/dev/shm/ -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
+    mvn mu2:diff -Dclass="$2" -Dmethod="$3" -Dincludes="$4" -Din="target/$6-fuzz-results/zest/exp_$7/time_constrained_corpus/" -Dtarget=/dev/shm/ -Dout="$6-fuzz-results/$1/exp_$7" -DrandomSeed="$7" -Dtime="$8" -DoptLevel=INFECTION -Djqf.mutation.TIMEOUT_TICKS=10000000
 }
 
 # if [ $# -lt 10 ]; then
