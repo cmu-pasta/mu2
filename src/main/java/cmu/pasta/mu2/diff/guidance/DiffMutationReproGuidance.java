@@ -1,14 +1,15 @@
 package cmu.pasta.mu2.diff.guidance;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.diff.DiffException;
-import cmu.pasta.mu2.diff.Outcome;
 import cmu.pasta.mu2.fuzz.MutationRunInfo;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
-import cmu.pasta.mu2.util.Serializer;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.DiffException;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.DiffFuzzReproGuidance;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.Outcome;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.Serializer;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 import org.junit.runners.model.FrameworkMethod;
@@ -25,7 +26,7 @@ import java.util.function.BiConsumer;
 /**
  * to avoid the problem of the generator type registry not updating for each ClassLoader
  */
-public class DiffMutationReproGuidance extends DiffReproGuidance {
+public class DiffMutationReproGuidance extends DiffFuzzReproGuidance {
     public List<Outcome> cclOutcomes;
 
     /**

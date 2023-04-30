@@ -1,17 +1,17 @@
 package cmu.pasta.mu2.fuzz;
 
 import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.diff.DiffException;
-import cmu.pasta.mu2.diff.Outcome;
-import cmu.pasta.mu2.util.Serializer;
-import cmu.pasta.mu2.diff.guidance.DiffGuidance;
-import cmu.pasta.mu2.diff.junit.DiffTrialRunner;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.DiffException;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.DiffFuzzGuidance;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.Outcome;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.Serializer;
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
+import edu.berkeley.cs.jqf.fuzz.junit.TrialRunner;
 import edu.berkeley.cs.jqf.fuzz.util.MovingAverage;
 import edu.berkeley.cs.jqf.instrument.InstrumentationException;
 
@@ -32,7 +32,7 @@ import org.junit.runners.model.TestClass;
  * @author Rafaello Sanna
  * @author Rohan Padhye
  */
-public class MutationGuidance extends ZestGuidance implements DiffGuidance {
+public class MutationGuidance extends ZestGuidance implements DiffFuzzGuidance {
 
   /**
    * The classloaders for cartography and individual mutation instances
@@ -193,7 +193,7 @@ public class MutationGuidance extends ZestGuidance implements DiffGuidance {
       // run with MCL
       Outcome mclOutcome;
       try {
-        DiffTrialRunner dtr = new DiffTrialRunner(mri.clazz, mri.method, mri.args);
+        TrialRunner dtr = new TrialRunner(mri.clazz, mri.method, mri.args);
         dtr.run();
         if(dtr.getOutput() == null) mclOutcome = new Outcome(null, null);
         else {

@@ -3,13 +3,12 @@ package cmu.pasta.mu2.fuzz;
 import cmu.pasta.mu2.MutationInstance;
 import cmu.pasta.mu2.instrument.MutationClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
-import cmu.pasta.mu2.util.Serializer;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.Serializer;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /** separate functionality for loading with a particular MCL */

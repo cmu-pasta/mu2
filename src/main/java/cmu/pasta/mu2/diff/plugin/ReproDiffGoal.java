@@ -11,9 +11,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import cmu.pasta.mu2.diff.guidance.DiffReproGuidance;
+import edu.berkeley.cs.jqf.fuzz.difffuzz.DiffFuzzReproGuidance;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
-import edu.berkeley.cs.jqf.fuzz.repro.ReproGuidance;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -143,7 +142,7 @@ public class ReproDiffGoal extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         ClassLoader loader;
-        DiffReproGuidance guidance;
+        DiffFuzzReproGuidance guidance;
         Log log = getLog();
         PrintStream out = System.out; // TODO: Re-route to logger from super.getLog()
         Result result;
@@ -187,7 +186,7 @@ public class ReproDiffGoal extends AbstractMojo {
         }
 
         try {
-            guidance = new DiffReproGuidance(inputFile, null);
+            guidance = new DiffFuzzReproGuidance(inputFile, null);
             result = GuidedFuzzing.run(testClassName, testMethod, loader, guidance, out);
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException("Could not load test class", e);
