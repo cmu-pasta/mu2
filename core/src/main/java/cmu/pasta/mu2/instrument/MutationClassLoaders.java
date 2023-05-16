@@ -1,6 +1,5 @@
 package cmu.pasta.mu2.instrument;
 
-import cmu.pasta.mu2.MutationInstance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import java.io.IOException;

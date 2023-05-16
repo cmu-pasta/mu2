@@ -1,7 +1,5 @@
 package cmu.pasta.mu2.instrument;
 
-import cmu.pasta.mu2.MutationInstance;
-import cmu.pasta.mu2.mutators.IntBinaryOperatorMutator;
 import cmu.pasta.mu2.mutators.Mutator;
 import janala.instrument.SafeClassWriter;
 import java.util.ArrayList;

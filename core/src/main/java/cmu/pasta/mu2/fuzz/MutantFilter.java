@@ -1,6 +1,6 @@
 package cmu.pasta.mu2.fuzz;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 
 import java.util.List;
 

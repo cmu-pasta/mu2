@@ -1,6 +1,6 @@
 package cmu.pasta.mu2.fuzz;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 import edu.berkeley.cs.jqf.fuzz.util.Coverage;
 import java.util.HashSet;
 import java.util.Set;

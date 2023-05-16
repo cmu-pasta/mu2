@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 
 import cmu.pasta.mu2.mutators.Mutator;
 import org.junit.Before;

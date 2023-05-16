@@ -1,6 +1,6 @@
 package cmu.pasta.mu2.fuzz;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.util.ArraySet;
@@ -155,6 +155,7 @@ public class MutationGuidance extends ZestGuidance implements DiffFuzzGuidance {
     int newKilledMutants = ((MutationCoverage) totalCoverage).updateMutants(((MutationCoverage) runCoverage));
     if (newKilledMutants > 0) {
       criteria.add(String.format("+%d mutants %s", newKilledMutants, mutantExceptionList.toString()));
+      currentInput.setFavored();
     }
 
     // TODO: Add responsibilities for mutants killed

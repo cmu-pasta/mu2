@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class DiffIT extends AbstractMutationTest {
+public class DiffMutationGuidanceIT extends AbstractMutationTest {
     // Temp directory to store fuzz results
     protected static File resultsDir;
 
@@ -83,7 +83,26 @@ public class DiffIT extends AbstractMutationTest {
     public void noncompareBubbleSort() throws Exception {
         // Set up test params
         String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
-        String testMethod = "otherBubbleSort";
+        String testMethod = "testBubbleSortNonCompare";
+        String targetInst = "cmu.pasta.mu2.examples.sort.BubbleSort";
+        long trials = 100;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "cmu.pasta.mu2.examples.sort", OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(8, mu2.corpusCount());
+    }
+
+    @Test
+    public void fuzzBubbleSort() throws Exception {
+        // Set up test params
+        String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
+        String testMethod = "fuzzBubbleSort";
         String targetInst = "cmu.pasta.mu2.examples.sort.BubbleSort";
         long trials = 100;
         Random rnd = new Random(42);
@@ -114,14 +133,14 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(36, mu2.corpusCount());
+        Assert.assertEquals(35, mu2.corpusCount());
     }
 
     @Test
     public void noncompareTimSort() throws Exception {
         // Set up test params
         String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
-        String testMethod = "otherTimSort";
+        String testMethod = "testTimSortNonCompare";
         String targetInst = "cmu.pasta.mu2.examples.sort.TimSort";
         long trials = 100;
         Random rnd = new Random(42);
@@ -133,7 +152,9 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(36, mu2.corpusCount());
+        // With a dummy compare method, more inputs are saved since later candidates 
+        // kill mutants that would not survive with the proper compare method.
+        Assert.assertEquals(37, mu2.corpusCount());
     }
 
     @Test
@@ -152,7 +173,8 @@ public class DiffIT extends AbstractMutationTest {
         // Fuzz
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(36, mu2.corpusCount());
+        // Since this fuzz driver has no return object, this should act the same as a nonCompare method.
+        Assert.assertEquals(37, mu2.corpusCount());
     }
 
 }

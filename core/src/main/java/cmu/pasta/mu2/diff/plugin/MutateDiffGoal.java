@@ -1,6 +1,6 @@
 package cmu.pasta.mu2.diff.plugin;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 import cmu.pasta.mu2.diff.guidance.DiffMutationReproGuidance;
 import cmu.pasta.mu2.instrument.CartographyClassLoader;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;

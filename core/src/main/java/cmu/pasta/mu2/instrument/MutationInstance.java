@@ -1,4 +1,4 @@
-package cmu.pasta.mu2;
+package cmu.pasta.mu2.instrument;
 
 import cmu.pasta.mu2.mutators.Mutator;
 

@@ -1,5 +1,6 @@
 package cmu.pasta.mu2;
 
+import cmu.pasta.mu2.instrument.MutationInstance;
 import cmu.pasta.mu2.instrument.OptLevel;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.MutationClassLoaders;

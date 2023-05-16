@@ -1,6 +1,6 @@
 package cmu.pasta.mu2.diff.guidance;
 
-import cmu.pasta.mu2.MutationInstance;
+import cmu.pasta.mu2.instrument.MutationInstance;
 import cmu.pasta.mu2.fuzz.MutationRunInfo;
 import cmu.pasta.mu2.instrument.MutationSnoop;
 import cmu.pasta.mu2.instrument.OptLevel;

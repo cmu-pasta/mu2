@@ -1,7 +1,5 @@
 package cmu.pasta.mu2.instrument;
 
-import cmu.pasta.mu2.MutationInstance;
-
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
