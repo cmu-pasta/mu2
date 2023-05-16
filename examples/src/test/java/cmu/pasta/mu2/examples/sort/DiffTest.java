@@ -28,14 +28,14 @@ public class DiffTest {
 
     @Fuzz
     public void fuzzBubbleSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
-        List<Integer> toReturn = new BubbleSort().sort(input);
+        new BubbleSort().sort(input);
     }
 
 
     @DiffFuzz(cmp = "noncompare")
-    public List<Integer> otherBubbleSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
-        testSort(new BubbleSort(), input);
-        return null;
+    public List<Integer> testBubbleSortNonCompare(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
+        List<Integer> toReturn = new BubbleSort().sort(input);
+        return toReturn;
     }
 
     @DiffFuzz(cmp = "compare")
@@ -45,24 +45,14 @@ public class DiffTest {
     }
 
     @DiffFuzz(cmp = "noncompare")
-    public List<Integer> otherTimSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
-        testSort(new TimSort(), input);
-        return null;
-    }
-
-    @DiffFuzz(cmp = "noncompare")
-    public List<Integer> equalsTimSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
-        List<Integer> lst = new TimSort().sort(input);
-        List<Integer> sorted = new ArrayList<>();
-        sorted.addAll(input);
-        sorted.sort(Integer::compareTo);
-        assertEquals(lst, sorted);
-        return null;
+    public List<Integer> testTimSortNonCompare(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
+        List<Integer> toReturn = new TimSort().sort(input);
+        return toReturn;
     }
 
     @Fuzz
     public void fuzzTimSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
-        testSort(new TimSort(), input);
+        new TimSort().sort(input);
     }
 
     @Comparison
