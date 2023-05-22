@@ -10,7 +10,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mu2-examples</artifactId>
-<<<<<<< HEAD
     <repositories>
         <repository>
           <id>central</id>
@@ -22,8 +21,6 @@
           <url>https://raw.githubusercontent.com/chocopy/artifacts/main</url>
         </repository>
     </repositories>
-=======
->>>>>>> main
 
     <dependencies>
         <dependency>
