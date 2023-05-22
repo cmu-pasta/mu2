@@ -1,6 +1,6 @@
 # Mutation-Guided Fuzzing
 
-Mu2 is a fuzz testing platform for mutation-testing guided fuzzing, built on top of the [JQF](https://github.com/rohanpadhye/JQF/) platform for fuzzing Java programs. Documentation for running and understanding the implementation of mutation-guided fuzzing provided here.
+Mu2 is a fuzz testing platform for mutation-guided fuzzing, built on top of the [JQF](https://github.com/rohanpadhye/JQF/) platform for fuzzing Java programs. Documentation for running and understanding the implementation of mutation-guided fuzzing provided here.
 
 <!-- For project writeup, see [this document](https://saphirasnow.github.io/17-355/Bella_Laybourn_17355_Project.pdf). -->
 
@@ -16,6 +16,11 @@ mvn install
 ```
 
 ### Development
+
+Mu2 is a multimodule project containing the following modules:
+1.`core`: all the core instrumentation and guidance logic
+2.`examples`: example fuzz drivers for applying mutation-guided fuzzing
+3.`integration-tests`: integration tests for mutation-guided fuzzing on sorting targets in `examples`
 
 When making changes to mu2 or JQF, you only need to install that particular project's SNAPSHOT for the changes to take effect.
 
