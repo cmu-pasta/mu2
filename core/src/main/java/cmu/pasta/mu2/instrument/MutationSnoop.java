@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 public class MutationSnoop {
 
   public static final long TIMEOUT_TICKS = Integer
-      .getInteger("jqf.mutation.TIMEOUT_TICKS", 100_0000);
+      .getInteger("jqf.mutation.TIMEOUT_TICKS", 10000000);
 
   /**
    * Validates whether or not a timeout has occurred.
