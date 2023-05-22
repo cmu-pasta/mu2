@@ -31,6 +31,11 @@ public class DiffTest {
         new BubbleSort().sort(input);
     }
 
+    @Fuzz
+    public void fuzzBubbleSortWithOracle(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
+        testSort(new BubbleSort(), input);
+    }
+
 
     @DiffFuzz(cmp = "noncompare")
     public List<Integer> testBubbleSortNonCompare(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
@@ -53,6 +58,11 @@ public class DiffTest {
     @Fuzz
     public void fuzzTimSort(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
         new TimSort().sort(input);
+    }
+
+    @Fuzz
+    public void fuzzTimSortWithOracle(@Size(max=MAX_SIZE) List<@InRange(minInt=MIN_ELEMENT, maxInt=MAX_ELEMENT) Integer> input) {
+        testSort(new TimSort(), input);
     }
 
     @Comparison

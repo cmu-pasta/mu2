@@ -118,6 +118,25 @@ public class DiffMutationGuidanceIT extends AbstractMutationTest {
     }
 
     @Test
+    public void fuzzBubbleSortWithOracle() throws Exception {
+        // Set up test params
+        String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
+        String testMethod = "fuzzBubbleSortWithOracle";
+        String targetInst = "cmu.pasta.mu2.examples.sort.BubbleSort";
+        long trials = 100;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "cmu.pasta.mu2.examples.sort", OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(8, mu2.corpusCount());
+    }
+
+    @Test
     public void compareTimSort() throws Exception {
         // Set up test params
         String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
@@ -133,7 +152,7 @@ public class DiffMutationGuidanceIT extends AbstractMutationTest {
         // Fuzz
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
-        Assert.assertEquals(35, mu2.corpusCount());
+        Assert.assertEquals(36, mu2.corpusCount());
     }
 
     @Test
@@ -153,8 +172,8 @@ public class DiffMutationGuidanceIT extends AbstractMutationTest {
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         // With a dummy compare method, more inputs are saved since later candidates 
-        // kill mutants that would not survive with the proper compare method.
-        Assert.assertEquals(37, mu2.corpusCount());
+        // kill mutants that would not survive from earlier inputs with the proper compare method.
+        Assert.assertEquals(38, mu2.corpusCount());
     }
 
     @Test
@@ -174,7 +193,26 @@ public class DiffMutationGuidanceIT extends AbstractMutationTest {
         GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
 
         // Since this fuzz driver has no return object, this should act the same as a nonCompare method.
-        Assert.assertEquals(37, mu2.corpusCount());
+        Assert.assertEquals(38, mu2.corpusCount());
+    }
+
+    @Test
+    public void fuzzTimSortWithOracle() throws Exception {
+        // Set up test params
+        String testClassName = "cmu.pasta.mu2.examples.sort.DiffTest";
+        String testMethod = "fuzzTimSortWithOracle";
+        String targetInst = "cmu.pasta.mu2.examples.sort.TimSort";
+        long trials = 100;
+        Random rnd = new Random(42);
+
+        // Create guidance
+        MutationClassLoaders mcls = initClassLoaders(targetInst, "cmu.pasta.mu2.examples.sort", OptLevel.NONE);
+        ProbedMutationGuidance mu2 = new ProbedMutationGuidance(mcls, trials, rnd);
+
+        // Fuzz
+        GuidedFuzzing.run(testClassName, testMethod, mcls.getCartographyClassLoader(), mu2, null);
+
+        Assert.assertEquals(36, mu2.corpusCount());
     }
 
 }
