@@ -54,6 +54,16 @@
       <artifactId>maven-core</artifactId>
       <version>3.5.3</version>
     </dependency>
+    <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>10.1.0-M10</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.javascript</groupId>
+        <artifactId>closure-compiler</artifactId>
+        <version>v20220202</version>
+    </dependency>
   </dependencies>
 
   <build>
