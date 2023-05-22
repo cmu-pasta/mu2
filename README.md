@@ -18,9 +18,10 @@ mvn install
 ### Development
 
 Mu2 is a multimodule project containing the following modules:
-1.`core`: all the core instrumentation and guidance logic
-2.`examples`: example fuzz drivers for applying mutation-guided fuzzing
-3.`integration-tests`: integration tests for mutation-guided fuzzing on sorting targets in `examples`
+
+1. `core`: all the core instrumentation and guidance logic
+2. `examples`: example fuzz drivers for applying mutation-guided fuzzing
+3. `integration-tests`: integration tests for mutation-guided fuzzing on sorting targets in `examples`
 
 When making changes to mu2 or JQF, you only need to install that particular project's SNAPSHOT for the changes to take effect.
 
