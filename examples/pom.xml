@@ -70,6 +70,18 @@
           <version>2.2</version>
           <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>10.1.0-M10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.javascript</groupId>
+            <artifactId>closure-compiler</artifactId>
+            <version>v20220202</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
