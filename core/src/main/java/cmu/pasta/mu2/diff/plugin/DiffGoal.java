@@ -207,9 +207,6 @@ public class DiffGoal extends AbstractMojo {
         if (filters == null){
             filters = "";
         }
-        
-        // Parse string of filters for list of MutantFilters
-        List<MutantFilter> filterList = parseFilters(filters);
 
         try {
             List<String> classpathElements = project.getTestClasspathElements();
@@ -226,7 +223,9 @@ public class DiffGoal extends AbstractMojo {
             }
             MutationClassLoaders mcl = new MutationClassLoaders(classPath, includes, targetIncludes, ol, baseClassLoader);
             loader = mcl.getCartographyClassLoader();
-            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd, filterList);
+            guidance = new MutationGuidance(targetName, mcl, duration, trials, resultsDir, seedsDir, rnd);
+            // Parse string of filters for list of MutantFilters and add to guidance
+            guidance.addFilters(parseFilters(filters, guidance));
         } catch (DependencyResolutionRequiredException | MalformedURLException e) {
             throw new MojoExecutionException("Could not get project classpath", e);
         } catch (FileNotFoundException e) {
@@ -261,7 +260,7 @@ public class DiffGoal extends AbstractMojo {
         }
     }
 
-    private List<MutantFilter> parseFilters (String filterSpec) throws MojoExecutionException{
+    private List<MutantFilter> parseFilters (String filterSpec, MutationGuidance guidance) throws MojoExecutionException{
         // Initialize empty list of filters
         List<MutantFilter> filterList = new ArrayList<>();
         int i = 0;
@@ -279,7 +278,7 @@ public class DiffGoal extends AbstractMojo {
                 } catch (IllegalArgumentException e) {
                     throw new MojoExecutionException("Invalid Mutation Filter!");
                 }
-                if (f == Filter.KRANDOM){
+                if (f == Filter.KRANDOM || f == Filter.KLEASTEXEC){
                     
                     i++;
                     String arg = "";
@@ -287,26 +286,15 @@ public class DiffGoal extends AbstractMojo {
                         arg += filterChars[i];
                         i ++;
                     }
-                    try {
-                        filterList.add(new KRandomFilter(Integer.parseInt(arg)));
-                    } catch (NumberFormatException e) {
-                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
-                    }
 
-                } else if (f == Filter.KLEASTEXEC){
-
-                    i++;
-                    String arg = "";
-                    while (i < len && filterChars[i] != ','){
-                        arg += filterChars[i];
-                        i ++;
+                    if (arg.charAt(arg.length()-1) == '%'){
+                        int k = getPercent(arg);
+                        filterList.add(f == Filter.KRANDOM ? new KRandomFilter(k, true, guidance) : new KLeastExecutedFilter(k, true, guidance));
+                    }    
+                    else{
+                        int k = getNum(arg);
+                        filterList.add(f == Filter.KRANDOM ? new KRandomFilter(k): new KLeastExecutedFilter(k));
                     }
-                    try {
-                        filterList.add(new KLeastExecutedFilter(Integer.parseInt(arg)));
-                    } catch (NumberFormatException e) {
-                        throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
-                    }
-
                 } else if (f == Filter.FILE) {
 
                     i++;
@@ -329,5 +317,28 @@ public class DiffGoal extends AbstractMojo {
         }
 
         return filterList;
+    }
+
+    private int getPercent(String arg) throws MojoExecutionException{
+        int k;
+        try {
+            k = Integer.parseInt(arg.substring(0, arg.length()-1));
+        } catch (NumberFormatException e) {
+            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+        }
+        if (k > 100 || k < 0){
+            throw new MojoExecutionException("Invalid Percentage for Random Filter");
+        }
+        return k;
+    }
+
+    private int getNum(String arg) throws MojoExecutionException{
+        int k;
+        try {
+            k = Integer.parseInt(arg);
+        } catch (NumberFormatException e) {
+            throw new MojoExecutionException("Invalid Mutation Filter Argument(s)!");
+        }
+        return k;
     }
 }
