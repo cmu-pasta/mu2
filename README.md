@@ -1,57 +1,36 @@
 # Mutation-Guided Fuzzing
 
-Documentation for running and understanding the implementation of mutation-guided fuzzing provided here.
+Mu2 is a fuzz testing platform for mutation-guided fuzzing, built on top of the [JQF](https://github.com/rohanpadhye/JQF/) platform for fuzzing Java programs. Documentation for running and understanding the implementation of mutation-guided fuzzing provided here.
 
 <!-- For project writeup, see [this document](https://saphirasnow.github.io/17-355/Bella_Laybourn_17355_Project.pdf). -->
 
-For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), [Rafaello Sanna](mailto:rsanna@u.rochester.edu), or [Rohan Padhye](https://rohan.padhye.org).
+For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
 ## Build + Test + Install
 
-This repository works together with the [`sort-benchmarks` repository ](https://github.com/cmu-pasta/sort-benchmarks). The current dependency structure is as follows:
+To install Mu2, run the following:
 
-```
-sort-benchmarks --> jqf-fuzz (for API only)
-mu2 --> jqf-fuzz
-mu2 --> sort-benchmarks (for testing only)
-```
-
-### Step 1: Install `mu2` with no integration tests
 ```
 git clone https://github.com/cmu-pasta/mu2 && cd mu2
-mvn install -DskipTests
-cd ..
-```
-
-### Step 2 (optional): Install `sort-benchmarks` for testing
-
-```
-git clone https://github.com/cmu-pasta/sort-benchmarks && cd sort-benchmarks
 mvn install
-cd ..
 ```
-
-### Step 3: Reinstall `mu2` with full integration tests
-
-Install mu2 with:
-```
-cd mu2
-mvn install
-cd ..
-```
-
-If you don't install the `sort-benchmarks`, you can install `mu2` via `mvn install -DskipTests`. This is not recommended.
 
 ### Development
 
-When making changes to mu2 or JQF, you only need to install that particular project's SNAPSHOT for the changes to take effect. You do not have to do the long bootstrap build as above during regular development.
+Mu2 is a multimodule project containing the following modules:
+
+1. `core`: all the core instrumentation and guidance logic
+2. `examples`: example fuzz drivers for applying mutation-guided fuzzing
+3. `integration-tests`: integration tests for mutation-guided fuzzing on sorting targets in `examples`
+
+When making changes to mu2 or JQF, you only need to install that particular project's SNAPSHOT for the changes to take effect.
 
 To test changes to `mu2`, run the integration tests as follows from the `mu2` repository:
 ```
 mvn verify
 ```
 
-Coverage reports should be available in `target/site/jacoco-integration-test-coverage-report/index.html`.
+Coverage reports should be available in `integration-tests/target/site/jacoco-integration-test-coverage-report/index.html`.
 
 ## Differential Mutation Testing Fuzzing
 
@@ -228,3 +207,9 @@ Venn diagram script alone:
 ```
 python scripts/venn.py --filters_dir <filters_dir> --num_experiments <num_experiments> --output_img <output_img_name>
 ```
+
+## Acknowledgments
+
+This project is supported in part by the National Science Foundation under Grant Number [CCF-2120955](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2120955). Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation. 
+
+This project is also partly supported by [CyLab](https://www.cylab.cmu.edu/).
