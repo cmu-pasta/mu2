@@ -6,6 +6,12 @@ Mu2 is a fuzz testing platform for mutation-guided fuzzing, built on top of the 
 
 For more questions, feel free to email [Bella Laybourn](mailto:ilaybour@andrew.cmu.edu), [Vasu Vikram](mailto:vasumv@cmu.edu), or [Rohan Padhye](https://rohan.padhye.org).
 
+## Research Paper - ISSTA 2023
+
+Mu2 is described in the following research paper:
+
+> Vasudev Vikram, Isabella Laybourn, Ao Li, Nicole Nair, Kelton OBrien, Rafaello Sanna, and Rohan Padhye. 2023. **Guiding Greybox Fuzzing with Mutation Testing**. In Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA 2023). Association for Computing Machinery, New York, NY, USA, 929–941. https://doi.org/10.1145/3597926.3598107
+
 ## Build + Test + Install
 
 To install Mu2, run the following:
